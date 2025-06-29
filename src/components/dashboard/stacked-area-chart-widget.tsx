@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -25,6 +26,7 @@ export function StackedAreaChartWidget({
   expenses,
 }: StackedAreaChartWidgetProps) {
   const { categories } = useSettings()
+  const [hiddenSeries, setHiddenSeries] = React.useState<string[]>([])
 
   const { data, chartConfig } = React.useMemo(() => {
     if (!categories) return { data: [], chartConfig: {} }
@@ -70,6 +72,13 @@ export function StackedAreaChartWidget({
     return { data: chartData, chartConfig: config }
   }, [expenses, categories])
 
+  const handleLegendClick = (item: any) => {
+    const key = item.value
+    setHiddenSeries((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    )
+  }
+
   if (!categories) {
     return <Skeleton className="h-full w-full" />
   }
@@ -113,7 +122,12 @@ export function StackedAreaChartWidget({
         <ChartLegend
           align="center"
           verticalAlign="bottom"
-          content={<ChartLegendContent />}
+          content={
+            <ChartLegendContent
+              onItemClick={handleLegendClick}
+              inactiveKeys={hiddenSeries}
+            />
+          }
           wrapperStyle={{ paddingTop: 24 }}
         />
         {Object.keys(chartConfig).map((key) => (
@@ -125,6 +139,7 @@ export function StackedAreaChartWidget({
             fillOpacity={0.4}
             stroke={`var(--color-${key})`}
             stackId="a"
+            hide={hiddenSeries.includes(chartConfig[key].label as string)}
           />
         ))}
       </AreaChart>

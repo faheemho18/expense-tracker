@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -5,6 +6,7 @@ import { Cell, Pie, PieChart, Tooltip } from "recharts"
 
 import { useSettings } from "@/contexts/settings-context"
 import type { Expense } from "@/lib/types"
+import { cn } from "@/lib/utils"
 import {
   ChartContainer,
   type ChartConfig,
@@ -27,6 +29,9 @@ export function AccountTypePieChartWidget({
   expenses,
 }: AccountTypePieChartWidgetProps) {
   const { accountTypes } = useSettings()
+  const [inactiveAccountTypes, setInactiveAccountTypes] = React.useState<
+    string[]
+  >([])
 
   const data = React.useMemo(() => {
     const accountTypeTotals = expenses.reduce(
@@ -61,6 +66,15 @@ export function AccountTypePieChartWidget({
     })
     return config
   }, [data])
+
+  const handleLegendClick = (item: any) => {
+    const accountType = item.value
+    setInactiveAccountTypes((prev) =>
+      prev.includes(accountType)
+        ? prev.filter((c) => c !== accountType)
+        : [...prev, accountType]
+    )
+  }
 
   if (!accountTypes) {
     return <Skeleton className="h-full w-full" />
@@ -97,12 +111,24 @@ export function AccountTypePieChartWidget({
               fill={
                 chartConfig[entry.accountType]?.color || generateColor(index)
               }
+              className={cn(
+                "transition-opacity",
+                inactiveAccountTypes.includes(entry.accountType)
+                  ? "opacity-30"
+                  : "opacity-100"
+              )}
             />
           ))}
         </Pie>
         <ChartLegend
           verticalAlign="bottom"
-          content={<ChartLegendContent nameKey="accountType" />}
+          content={
+            <ChartLegendContent
+              nameKey="accountType"
+              onItemClick={handleLegendClick}
+              inactiveKeys={inactiveAccountTypes}
+            />
+          }
         />
       </PieChart>
     </ChartContainer>

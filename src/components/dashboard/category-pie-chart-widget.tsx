@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -5,6 +6,7 @@ import { Cell, Pie, PieChart, Tooltip } from "recharts"
 
 import { useSettings } from "@/contexts/settings-context"
 import type { Expense } from "@/lib/types"
+import { cn } from "@/lib/utils"
 import {
   ChartContainer,
   type ChartConfig,
@@ -22,6 +24,7 @@ export function CategoryPieChartWidget({
   expenses,
 }: CategoryPieChartWidgetProps) {
   const { categories } = useSettings()
+  const [inactiveCategories, setInactiveCategories] = React.useState<string[]>([])
 
   const { data, chartConfig } = React.useMemo(() => {
     if (!categories) return { data: [], chartConfig: {} }
@@ -59,6 +62,15 @@ export function CategoryPieChartWidget({
     return { data: chartData, chartConfig: config }
   }, [expenses, categories])
 
+  const handleLegendClick = (item: any) => {
+    const category = item.value
+    setInactiveCategories((prev) =>
+      prev.includes(category)
+        ? prev.filter((c) => c !== category)
+        : [...prev, category]
+    )
+  }
+
   if (!categories) {
     return <Skeleton className="h-full w-full" />
   }
@@ -89,12 +101,27 @@ export function CategoryPieChartWidget({
           strokeWidth={5}
         >
           {data.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={entry.fill} />
+            <Cell
+              key={`cell-${index}`}
+              fill={entry.fill}
+              className={cn(
+                "transition-opacity",
+                inactiveCategories.includes(entry.category)
+                  ? "opacity-30"
+                  : "opacity-100"
+              )}
+            />
           ))}
         </Pie>
         <ChartLegend
           verticalAlign="bottom"
-          content={<ChartLegendContent nameKey="category" />}
+          content={
+            <ChartLegendContent
+              nameKey="category"
+              onItemClick={handleLegendClick}
+              inactiveKeys={inactiveCategories}
+            />
+          }
         />
       </PieChart>
     </ChartContainer>

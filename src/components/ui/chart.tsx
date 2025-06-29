@@ -265,10 +265,20 @@ const ChartLegendContent = React.forwardRef<
     Pick<RechartsPrimitive.LegendProps, "payload" | "verticalAlign"> & {
       hideIcon?: boolean
       nameKey?: string
+      onItemClick?: (item: any) => void
+      inactiveKeys?: string[]
     }
 >(
   (
-    { className, hideIcon = false, payload, verticalAlign = "bottom", nameKey },
+    {
+      className,
+      hideIcon = false,
+      payload,
+      verticalAlign = "bottom",
+      nameKey,
+      onItemClick,
+      inactiveKeys,
+    },
     ref
   ) => {
     const { config } = useChart()
@@ -289,12 +299,24 @@ const ChartLegendContent = React.forwardRef<
         {payload.map((item) => {
           const key = `${nameKey || item.dataKey || "value"}`
           const itemConfig = getPayloadConfigFromPayload(config, item, key)
+          const isInactive = inactiveKeys?.includes(item.value)
 
           return (
             <div
               key={item.value}
+              role="button"
+              tabIndex={onItemClick ? 0 : -1}
+              onClick={() => onItemClick?.(item)}
+              onKeyDown={(e) => {
+                if (onItemClick && (e.key === "Enter" || e.key === " ")) {
+                  e.preventDefault()
+                  onItemClick(item)
+                }
+              }}
               className={cn(
-                "flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-muted-foreground"
+                "flex items-center gap-1.5 transition-opacity [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-muted-foreground",
+                onItemClick ? "cursor-pointer" : "",
+                isInactive ? "opacity-50" : "opacity-100"
               )}
             >
               {itemConfig?.icon && !hideIcon ? (
