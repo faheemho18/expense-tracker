@@ -2,7 +2,7 @@
 "use client"
 
 import * as React from "react"
-import { Edit, PlusCircle, Trash2 } from "lucide-react"
+import { Edit, PlusCircle, Save, Trash2 } from "lucide-react"
 
 import { useSettings } from "@/contexts/settings-context"
 import { ICONS, type IconName } from "@/lib/constants"
@@ -37,9 +37,13 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
+import { toast } from "@/hooks/use-toast"
 
 export function ManageCategories() {
   const { categories, setCategories } = useSettings()
+  const [localCategories, setLocalCategories] = React.useState<
+    Category[] | null
+  >(null)
   const [isFormDialogOpen, setIsFormDialogOpen] = React.useState(false)
   const [editingCategory, setEditingCategory] = React.useState<Category | null>(
     null
@@ -50,6 +54,13 @@ export function ManageCategories() {
   // Form state for dialog
   const [label, setLabel] = React.useState("")
   const [icon, setIcon] = React.useState<IconName | "">("")
+
+  React.useEffect(() => {
+    // Deep copy to prevent mutating the original state from context directly
+    if (categories) {
+      setLocalCategories(JSON.parse(JSON.stringify(categories)))
+    }
+  }, [categories])
 
   const resetForm = () => {
     setLabel("")
@@ -82,7 +93,7 @@ export function ManageCategories() {
     }
   }
 
-  const handleSave = () => {
+  const handleSaveNameAndIcon = () => {
     if (!label || !icon) return
 
     if (editingCategory) {
@@ -106,10 +117,9 @@ export function ManageCategories() {
 
   const handleBudgetChange = (categoryValue: string, budgetStr: string) => {
     const budgetAmount = parseFloat(budgetStr)
-    setCategories((cats) =>
+    setLocalCategories((cats) =>
       (cats || []).map((c) => {
         if (c.value === categoryValue) {
-          // if empty, budget is undefined. if not a number or negative, keep existing budget. otherwise update.
           const newBudget =
             budgetStr === ""
               ? undefined
@@ -124,27 +134,40 @@ export function ManageCategories() {
   }
 
   const handleColorChange = (categoryValue: string, newColor: string) => {
-    setCategories((cats) =>
+    setLocalCategories((cats) =>
       (cats || []).map((c) =>
         c.value === categoryValue ? { ...c, color: newColor } : c
       )
     )
   }
 
-  if (!categories) {
+  const handleSaveChanges = () => {
+    if (localCategories) {
+      setCategories(localCategories)
+      toast({
+        title: "Settings Updated",
+        description: "Your category budgets and colors have been saved.",
+      })
+    }
+  }
+
+  if (!localCategories) {
     return <Skeleton className="h-48 w-full" />
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <Button onClick={handleSaveChanges}>
+          <Save className="mr-2 h-4 w-4" /> Save Changes
+        </Button>
         <Button onClick={handleAddClick}>
           <PlusCircle className="mr-2 h-4 w-4" /> Add Category
         </Button>
       </div>
       <div className="rounded-md border">
         <ul className="divide-y divide-border">
-          {categories.map((category) => {
+          {localCategories.map((category) => {
             const Icon = getIcon(category.icon)
             return (
               <li
@@ -273,7 +296,7 @@ export function ManageCategories() {
             >
               Cancel
             </Button>
-            <Button onClick={handleSave}>Save</Button>
+            <Button onClick={handleSaveNameAndIcon}>Save</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
