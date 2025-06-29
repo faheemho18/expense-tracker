@@ -2,14 +2,27 @@
 "use client"
 
 import * as React from "react"
-import { Filter, Plus } from "lucide-react"
-import { format, startOfMonth } from "date-fns"
+import { ChevronLeft, ChevronRight, Filter, Plus } from "lucide-react"
+import {
+  addMonths,
+  format,
+  isAfter,
+  startOfMonth,
+  subMonths,
+} from "date-fns"
 
 import { useLocalStorage } from "@/hooks/use-local-storage"
 import type { Expense } from "@/lib/types"
 
+import { AppLayout } from "@/components/app-layout"
+import { CategoryGaugesWidget } from "@/components/dashboard/category-gauges-widget"
+import { AddExpenseSheet } from "@/components/expenses/add-expense-sheet"
+import { ExportExpensesButton } from "@/components/expenses/export-expenses-button"
+import { ExpensesFilters } from "@/components/expenses/expenses-filters"
+import { ExpensesTable } from "@/components/expenses/expenses-table"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
 import {
   Sheet,
   SheetContent,
@@ -17,13 +30,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { Separator } from "@/components/ui/separator"
-import { AppLayout } from "@/components/app-layout"
-import { AddExpenseSheet } from "@/components/expenses/add-expense-sheet"
-import { ExpensesFilters } from "@/components/expenses/expenses-filters"
-import { ExpensesTable } from "@/components/expenses/expenses-table"
-import { ExportExpensesButton } from "@/components/expenses/export-expenses-button"
-import { CategoryGaugesWidget } from "@/components/dashboard/category-gauges-widget"
 
 export default function HomePage() {
   const [expenses, setExpenses] = useLocalStorage<Expense[]>("expenses", [])
@@ -38,6 +44,15 @@ export default function HomePage() {
     category: [],
     accountType: [],
   })
+  const [gaugesMonth, setGaugesMonth] = React.useState(new Date())
+
+  const handlePreviousMonth = () => {
+    setGaugesMonth((prev) => subMonths(prev, 1))
+  }
+
+  const handleNextMonth = () => {
+    setGaugesMonth((prev) => addMonths(prev, 1))
+  }
 
   const addExpense = (expense: Omit<Expense, "id">) => {
     const newExpense = { ...expense, id: crypto.randomUUID() }
@@ -105,15 +120,15 @@ export default function HomePage() {
     })
   }, [expenses, filters])
 
-  const currentMonthExpenses = React.useMemo(() => {
+  const gaugesMonthExpenses = React.useMemo(() => {
     if (!expenses) return []
-    const currentMonth = format(startOfMonth(new Date()), "yyyy-MM")
+    const selectedMonth = format(startOfMonth(gaugesMonth), "yyyy-MM")
     return expenses.filter((expense) => {
       const expenseDate = new Date(expense.date)
       const expenseMonth = format(startOfMonth(expenseDate), "yyyy-MM")
-      return expenseMonth === currentMonth
+      return expenseMonth === selectedMonth
     })
-  }, [expenses])
+  }, [expenses, gaugesMonth])
 
   return (
     <AppLayout>
@@ -125,10 +140,37 @@ export default function HomePage() {
           <CardContent>
             <div className="space-y-6">
               <div>
-                <h3 className="mb-4 text-lg font-semibold tracking-tight">
-                  Monthly Budget Progress
-                </h3>
-                <CategoryGaugesWidget expenses={currentMonthExpenses} />
+                <div className="mb-4 flex items-center justify-between">
+                  <h3 className="text-lg font-semibold tracking-tight">
+                    Monthly Budget Progress
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={handlePreviousMonth}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      <span className="sr-only">Previous month</span>
+                    </Button>
+                    <span className="w-32 text-center font-medium">
+                      {format(gaugesMonth, "MMMM yyyy")}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={handleNextMonth}
+                      disabled={isAfter(
+                        startOfMonth(gaugesMonth),
+                        startOfMonth(new Date())
+                      )}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                      <span className="sr-only">Next month</span>
+                    </Button>
+                  </div>
+                </div>
+                <CategoryGaugesWidget expenses={gaugesMonthExpenses} />
               </div>
               <Separator />
               <div>
