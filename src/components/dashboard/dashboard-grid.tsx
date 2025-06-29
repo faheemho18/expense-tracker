@@ -8,7 +8,7 @@ import {
   Droppable,
   type DropResult,
 } from "@hello-pangea/dnd"
-import { format, startOfMonth } from "date-fns"
+import { format, getYear, startOfMonth } from "date-fns"
 import { BarChart } from "lucide-react"
 
 import type { Expense, WidgetConfig, WidgetFilters } from "@/lib/types"
@@ -31,6 +31,7 @@ interface DashboardGridProps {
   onDragEnd: (result: DropResult) => void
   updateWidgetFilters: (id: string, filters: WidgetFilters) => void
   availableMonths: { value: string; label: string }[]
+  availableYears: { value: string; label: string }[]
   areGlobalFiltersActive: boolean
 }
 
@@ -76,6 +77,7 @@ export function DashboardGrid({
   onDragEnd,
   updateWidgetFilters,
   availableMonths,
+  availableYears,
   areGlobalFiltersActive,
 }: DashboardGridProps) {
   if (widgets.length === 0) {
@@ -104,7 +106,8 @@ export function DashboardGrid({
               const widgetFilters = widget.filters
               const hasWidgetFilters =
                 widgetFilters &&
-                ((widgetFilters.month?.length ?? 0) > 0 ||
+                ((widgetFilters.year?.length ?? 0) > 0 ||
+                  (widgetFilters.month?.length ?? 0) > 0 ||
                   (widgetFilters.category?.length ?? 0) > 0 ||
                   (widgetFilters.accountType?.length ?? 0) > 0)
 
@@ -124,6 +127,7 @@ export function DashboardGrid({
               // Apply widget-specific filters
               else if (hasWidgetFilters) {
                 const {
+                  year = [],
                   month = [],
                   category = [],
                   accountType = [],
@@ -131,11 +135,14 @@ export function DashboardGrid({
 
                 widgetExpenses = expenses.filter((expense) => {
                   const expenseDate = new Date(expense.date)
+                  const expenseYear = getYear(expenseDate).toString()
                   const expenseMonth = format(
                     startOfMonth(expenseDate),
                     "yyyy-MM"
                   )
 
+                  const yearMatch =
+                    year.length === 0 || year.includes(expenseYear)
                   const monthMatch =
                     month.length === 0 || month.includes(expenseMonth)
                   const categoryMatch =
@@ -145,7 +152,9 @@ export function DashboardGrid({
                     accountType.length === 0 ||
                     accountType.includes(expense.accountType)
 
-                  return monthMatch && categoryMatch && accountTypeMatch
+                  return (
+                    yearMatch && monthMatch && categoryMatch && accountTypeMatch
+                  )
                 })
               }
 
@@ -167,6 +176,7 @@ export function DashboardGrid({
                       dragHandleProps={provided.dragHandleProps}
                       updateWidgetFilters={updateWidgetFilters}
                       availableMonths={availableMonths}
+                      availableYears={availableYears}
                     >
                       {renderWidget(widget, widgetExpenses)}
                     </WidgetWrapper>

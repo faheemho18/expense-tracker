@@ -36,10 +36,12 @@ export default function HomePage() {
   const [isAddSheetOpen, setIsAddSheetOpen] = React.useState(false)
   const [isFilterSheetOpen, setIsFilterSheetOpen] = React.useState(false)
   const [filters, setFilters] = React.useState<{
+    year: string[]
     month: string[]
     category: string[]
     accountType: string[]
   }>({
+    year: [],
     month: [format(new Date(), "yyyy-MM")],
     category: [],
     accountType: [],
@@ -79,7 +81,7 @@ export default function HomePage() {
   }
 
   const clearFilters = () => {
-    setFilters({ month: [], category: [], accountType: [] })
+    setFilters({ year: [], month: [], category: [], accountType: [] })
   }
 
   const availableMonths = React.useMemo(() => {
@@ -101,12 +103,30 @@ export default function HomePage() {
     )
   }, [expenses])
 
+  const availableYears = React.useMemo(() => {
+    if (!expenses) return []
+    const yearsMap = expenses.reduce((acc, expense) => {
+      const yearValue = new Date(expense.date).getFullYear().toString()
+      if (!acc.has(yearValue)) {
+        acc.set(yearValue, { value: yearValue, label: yearValue })
+      }
+      return acc
+    }, new Map<string, { value: string; label: string }>())
+
+    return Array.from(yearsMap.values()).sort((a, b) =>
+      b.value.localeCompare(a.value)
+    )
+  }, [expenses])
+
   const filteredExpenses = React.useMemo(() => {
     if (!expenses) return []
     return expenses.filter((expense) => {
       const expenseDate = new Date(expense.date)
+      const expenseYear = expenseDate.getFullYear().toString()
       const expenseMonth = format(startOfMonth(expenseDate), "yyyy-MM")
 
+      const yearMatch =
+        filters.year.length === 0 || filters.year.includes(expenseYear)
       const monthMatch =
         filters.month.length === 0 || filters.month.includes(expenseMonth)
       const categoryMatch =
@@ -116,7 +136,7 @@ export default function HomePage() {
         filters.accountType.length === 0 ||
         filters.accountType.includes(expense.accountType)
 
-      return monthMatch && categoryMatch && accountTypeMatch
+      return yearMatch && monthMatch && categoryMatch && accountTypeMatch
     })
   }, [expenses, filters])
 
@@ -224,6 +244,7 @@ export default function HomePage() {
               onFilterChange={handleFilterChange}
               onClearFilters={clearFilters}
               months={availableMonths}
+              years={availableYears}
             />
           </div>
           <Separator />

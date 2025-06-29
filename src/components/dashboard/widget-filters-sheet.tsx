@@ -21,6 +21,7 @@ interface WidgetFiltersSheetProps {
   widget: WidgetConfig
   updateWidgetFilters: (id: string, filters: WidgetFilters) => void
   months: { value: string; label: string }[]
+  years: { value: string; label: string }[]
 }
 
 export function WidgetFiltersSheet({
@@ -29,9 +30,10 @@ export function WidgetFiltersSheet({
   widget,
   updateWidgetFilters,
   months,
+  years,
 }: WidgetFiltersSheetProps) {
   const [filters, setFilters] = React.useState<WidgetFilters>(
-    widget.filters || { month: [], category: [], accountType: [] }
+    widget.filters || { year: [], month: [], category: [], accountType: [] }
   )
 
   const handleFilterChange = (
@@ -48,7 +50,7 @@ export function WidgetFiltersSheet({
   }
 
   const clearFilters = () => {
-    setFilters({ month: [], category: [], accountType: [] })
+    setFilters({ year: [], month: [], category: [], accountType: [] })
   }
 
   const handleApply = () => {
@@ -58,7 +60,9 @@ export function WidgetFiltersSheet({
 
   React.useEffect(() => {
     if (isOpen) {
-      setFilters(widget.filters || { month: [], category: [], accountType: [] })
+      setFilters(
+        widget.filters || { year: [], month: [], category: [], accountType: [] }
+      )
     }
   }, [isOpen, widget.filters])
 
@@ -78,6 +82,7 @@ export function WidgetFiltersSheet({
               onFilterChange={handleFilterChange}
               onClearFilters={clearFilters}
               months={months}
+              years={years}
             />
           </div>
           <div className="mt-auto border-t pt-4">

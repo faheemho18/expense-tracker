@@ -34,6 +34,7 @@ export type WidgetType =
   | "category-gauges"
 
 export type WidgetFilters = {
+  year?: string[]
   month?: string[]
   category?: string[]
   accountType?: string[]

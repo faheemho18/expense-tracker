@@ -19,16 +19,18 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 interface ExpensesFiltersProps {
   filters: {
+    year: string[]
     month: string[]
     category: string[]
     accountType: string[]
   }
   onFilterChange: (
-    filterType: "month" | "category" | "accountType",
+    filterType: "year" | "month" | "category" | "accountType",
     value: string
   ) => void
   onClearFilters: () => void
   months: { value: string; label: string }[]
+  years: { value: string; label: string }[]
 }
 
 const FilterSection = ({
@@ -73,6 +75,7 @@ export function ExpensesFilters({
   onFilterChange,
   onClearFilters,
   months,
+  years,
 }: ExpensesFiltersProps) {
   const { categories, accountTypes } = useSettings()
 
@@ -81,6 +84,7 @@ export function ExpensesFilters({
   }
 
   const hasActiveFilters =
+    filters.year.length > 0 ||
     filters.month.length > 0 ||
     filters.category.length > 0 ||
     filters.accountType.length > 0
@@ -94,8 +98,14 @@ export function ExpensesFilters({
       <Accordion
         type="multiple"
         className="w-full"
-        defaultValue={["months", "categories", "account-types"]}
+        defaultValue={["years", "months", "categories", "account-types"]}
       >
+        <FilterSection
+          title="Years"
+          items={years}
+          selectedItems={filters.year}
+          onSelectionChange={(value) => onFilterChange("year", value)}
+        />
         <FilterSection
           title="Months"
           items={months}
@@ -104,13 +114,13 @@ export function ExpensesFilters({
         />
         <FilterSection
           title="Categories"
-          items={categories}
+          items={categories || []}
           selectedItems={filters.category}
           onSelectionChange={(value) => onFilterChange("category", value)}
         />
         <FilterSection
           title="Account Types"
-          items={accountTypes}
+          items={accountTypes || []}
           selectedItems={filters.accountType}
           onSelectionChange={(value) => onFilterChange("accountType", value)}
         />

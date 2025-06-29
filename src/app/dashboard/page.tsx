@@ -4,7 +4,7 @@
 import * as React from "react"
 import { Filter, Plus } from "lucide-react"
 import type { DropResult } from "@hello-pangea/dnd"
-import { format, startOfMonth } from "date-fns"
+import { format, getYear, startOfMonth } from "date-fns"
 
 import { useLocalStorage } from "@/hooks/use-local-storage"
 import type { Expense, WidgetConfig, WidgetFilters } from "@/lib/types"
@@ -37,6 +37,7 @@ export default function DashboardPage() {
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
   const [isFilterSheetOpen, setIsFilterSheetOpen] = React.useState(false)
   const [filters, setFilters] = React.useState<WidgetFilters>({
+    year: [],
     month: [],
     category: [],
     accountType: [],
@@ -100,6 +101,21 @@ export default function DashboardPage() {
     )
   }, [expenses])
 
+  const availableYears = React.useMemo(() => {
+    if (!expenses) return []
+    const yearsMap = expenses.reduce((acc, expense) => {
+      const yearValue = getYear(new Date(expense.date)).toString()
+      if (!acc.has(yearValue)) {
+        acc.set(yearValue, { value: yearValue, label: yearValue })
+      }
+      return acc
+    }, new Map<string, { value: string; label: string }>())
+
+    return Array.from(yearsMap.values()).sort((a, b) =>
+      b.value.localeCompare(a.value)
+    )
+  }, [expenses])
+
   const handleFilterChange = (
     filterType: keyof WidgetFilters,
     value: string
@@ -114,11 +130,12 @@ export default function DashboardPage() {
   }
 
   const clearFilters = () => {
-    setFilters({ month: [], category: [], accountType: [] })
+    setFilters({ year: [], month: [], category: [], accountType: [] })
   }
 
   const areGlobalFiltersActive = React.useMemo(() => {
     return (
+      (filters.year?.length ?? 0) > 0 ||
       (filters.month?.length ?? 0) > 0 ||
       (filters.category?.length ?? 0) > 0 ||
       (filters.accountType?.length ?? 0) > 0
@@ -129,8 +146,13 @@ export default function DashboardPage() {
     if (!expenses) return []
     return expenses.filter((expense) => {
       const expenseDate = new Date(expense.date)
+      const expenseYear = getYear(expenseDate).toString()
       const expenseMonth = format(startOfMonth(expenseDate), "yyyy-MM")
 
+      const yearMatch =
+        !filters.year ||
+        filters.year.length === 0 ||
+        filters.year.includes(expenseYear)
       const monthMatch =
         !filters.month ||
         filters.month.length === 0 ||
@@ -144,7 +166,7 @@ export default function DashboardPage() {
         filters.accountType.length === 0 ||
         filters.accountType.includes(expense.accountType)
 
-      return monthMatch && categoryMatch && accountTypeMatch
+      return yearMatch && monthMatch && categoryMatch && accountTypeMatch
     })
   }, [expenses, filters])
 
@@ -171,6 +193,7 @@ export default function DashboardPage() {
           onDragEnd={onDragEnd}
           updateWidgetFilters={updateWidgetFilters}
           availableMonths={availableMonths}
+          availableYears={availableYears}
           areGlobalFiltersActive={areGlobalFiltersActive}
         />
       </div>
@@ -202,6 +225,7 @@ export default function DashboardPage() {
               onFilterChange={handleFilterChange}
               onClearFilters={clearFilters}
               months={availableMonths}
+              years={availableYears}
             />
           </div>
         </SheetContent>

@@ -35,6 +35,7 @@ interface WidgetWrapperProps extends React.HTMLAttributes<HTMLDivElement> {
   dragHandleProps: DraggableProvided["dragHandleProps"] | null | undefined
   updateWidgetFilters: (id: string, filters: WidgetFilters) => void
   availableMonths: { value: string; label: string }[]
+  availableYears: { value: string; label: string }[]
 }
 
 export const WidgetWrapper = React.forwardRef<
@@ -53,6 +54,7 @@ export const WidgetWrapper = React.forwardRef<
       dragHandleProps,
       updateWidgetFilters,
       availableMonths,
+      availableYears,
       ...props
     },
     ref
@@ -120,6 +122,7 @@ export const WidgetWrapper = React.forwardRef<
           widget={widget}
           updateWidgetFilters={updateWidgetFilters}
           months={availableMonths}
+          years={availableYears}
         />
       </div>
     )
