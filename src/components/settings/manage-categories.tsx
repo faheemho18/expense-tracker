@@ -208,7 +208,7 @@ export function ManageCategories() {
                       handleThresholdChange(category.value, e.target.value)
                     }
                     placeholder="Threshold"
-                    className="w-28"
+                    className="w-32 text-sm"
                   />
                 </div>
 
