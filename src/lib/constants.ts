@@ -23,3 +23,10 @@ export const CATEGORIES: Category[] = [
   { value: "gifts", label: "Gifts & Donations", icon: Gift },
   { value: "other", label: "Other", icon: Grip },
 ]
+
+export const ACCOUNT_TYPES = [
+  { value: "cash", label: "Cash" },
+  { value: "credit", label: "Credit Card" },
+  { value: "debit", label: "Debit Card" },
+  { value: "bank", label: "Bank Transfer" },
+] as const;

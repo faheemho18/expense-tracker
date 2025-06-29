@@ -8,7 +8,7 @@ import { z } from "zod"
 import { format } from "date-fns"
 
 import { cn } from "@/lib/utils"
-import { CATEGORIES } from "@/lib/constants"
+import { ACCOUNT_TYPES, CATEGORIES } from "@/lib/constants"
 import type { Expense } from "@/lib/types"
 
 import { Button } from "@/components/ui/button"
@@ -48,6 +48,7 @@ const expenseSchema = z.object({
   amount: z.coerce.number().refine(val => val !== 0, "Amount cannot be zero"),
   date: z.date(),
   category: z.string().min(1, "Category is required"),
+  accountType: z.string().min(1, "Account type is required"),
 })
 
 type ExpenseFormValues = z.infer<typeof expenseSchema>
@@ -64,6 +65,7 @@ export function AddExpenseSheet({
   addExpense,
 }: AddExpenseSheetProps) {
   const [isPending, startTransition] = React.useTransition()
+  const [isDatePickerOpen, setIsDatePickerOpen] = React.useState(false)
 
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseSchema),
@@ -72,6 +74,7 @@ export function AddExpenseSheet({
       amount: 0,
       date: new Date(),
       category: "",
+      accountType: "",
     },
   })
 
@@ -146,7 +149,7 @@ export function AddExpenseSheet({
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>Date</FormLabel>
-                  <Popover>
+                  <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
                     <PopoverTrigger asChild>
                       <FormControl>
                         <Button
@@ -169,7 +172,10 @@ export function AddExpenseSheet({
                       <Calendar
                         mode="single"
                         selected={field.value}
-                        onSelect={field.onChange}
+                        onSelect={(date) => {
+                          field.onChange(date)
+                          setIsDatePickerOpen(false)
+                        }}
                         initialFocus
                       />
                     </PopoverContent>
@@ -200,6 +206,33 @@ export function AddExpenseSheet({
                             <category.icon className="h-4 w-4" />
                             {category.label}
                           </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="accountType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Account Type</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select an account type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {ACCOUNT_TYPES.map((accountType) => (
+                        <SelectItem key={accountType.value} value={accountType.value}>
+                          {accountType.label}
                         </SelectItem>
                       ))}
                     </SelectContent>

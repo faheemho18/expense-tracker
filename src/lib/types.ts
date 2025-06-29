@@ -12,6 +12,7 @@ export type Expense = {
   amount: number
   date: string // ISO string
   category: string // category value
+  accountType: string // account type value
 }
 
 export type WidgetType = "stats" | "category-pie" | "over-time-bar"

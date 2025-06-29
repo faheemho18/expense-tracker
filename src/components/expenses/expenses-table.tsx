@@ -3,7 +3,7 @@
 import { format } from "date-fns"
 import { MoreHorizontal, Trash2 } from "lucide-react"
 
-import { CATEGORIES } from "@/lib/constants"
+import { ACCOUNT_TYPES, CATEGORIES } from "@/lib/constants"
 import { cn, formatCurrency } from "@/lib/utils"
 import type { Expense } from "@/lib/types"
 
@@ -34,6 +34,10 @@ export function ExpensesTable({ expenses, deleteExpense }: ExpensesTableProps) {
     return CATEGORIES.find((c) => c.value === value)
   }
 
+  const getAccountTypeLabel = (value: string) => {
+    return ACCOUNT_TYPES.find((a) => a.value === value)?.label || "N/A"
+  }
+
   return (
     <div className="rounded-md border">
       <Table>
@@ -42,6 +46,7 @@ export function ExpensesTable({ expenses, deleteExpense }: ExpensesTableProps) {
             <TableHead>Date</TableHead>
             <TableHead>Description</TableHead>
             <TableHead>Category</TableHead>
+            <TableHead>Account</TableHead>
             <TableHead className="text-right">Amount</TableHead>
             <TableHead className="w-[50px]"></TableHead>
           </TableRow>
@@ -65,6 +70,7 @@ export function ExpensesTable({ expenses, deleteExpense }: ExpensesTableProps) {
                       </Badge>
                     )}
                   </TableCell>
+                  <TableCell>{getAccountTypeLabel(expense.accountType)}</TableCell>
                   <TableCell
                     className={cn(
                       "text-right font-mono",
@@ -97,7 +103,7 @@ export function ExpensesTable({ expenses, deleteExpense }: ExpensesTableProps) {
             })
           ) : (
             <TableRow>
-              <TableCell colSpan={5} className="h-24 text-center">
+              <TableCell colSpan={6} className="h-24 text-center">
                 No expenses recorded yet.
               </TableCell>
             </TableRow>
