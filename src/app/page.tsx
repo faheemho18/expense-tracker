@@ -174,74 +174,73 @@ export default function HomePage() {
   return (
     <AppLayout>
       <div className="flex-1 space-y-4 p-4 sm:p-8">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Monthly Report</CardTitle>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handlePreviousMonth}
-              >
-                <ChevronLeft className="h-4 w-4" />
-                <span className="sr-only">Previous month</span>
-              </Button>
-              <span className="w-32 text-center font-medium">
-                {format(gaugesMonth, "MMMM yyyy")}
-              </span>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleNextMonth}
-                disabled={isAfter(
-                  startOfMonth(gaugesMonth),
-                  startOfMonth(new Date())
-                )}
-              >
-                <ChevronRight className="h-4 w-4" />
-                <span className="sr-only">Next month</span>
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              <div>
-                <h3 className="mb-4 text-lg font-semibold tracking-tight">
-                  Projected Savings
-                </h3>
-                <ProjectedSavingsWidget expenses={gaugesMonthExpenses} />
-              </div>
-              <Separator />
-              <div>
-                <h3 className="mb-4 text-lg font-semibold tracking-tight">
-                  Monthly Threshold Progress
-                </h3>
-                <CategoryGaugesWidget expenses={gaugesMonthExpenses} />
-              </div>
-              <Separator />
-              <div>
-                <div className="mb-4 flex items-center justify-between">
-                  <h3 className="text-lg font-semibold tracking-tight">
-                    Transactions
-                  </h3>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsFilterSheetOpen(true)}
-                  >
-                    <Filter className="mr-2 h-4 w-4" />
-                    Filters
-                  </Button>
-                </div>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
+          <div className="lg:col-span-3">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Transactions</CardTitle>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsFilterSheetOpen(true)}
+                >
+                  <Filter className="mr-2 h-4 w-4" />
+                  Filters
+                </Button>
+              </CardHeader>
+              <CardContent>
                 <ExpensesTable
                   expenses={filteredExpenses}
                   deleteExpense={deleteExpense}
                   editExpense={handleEdit}
                 />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="lg:col-span-2">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Monthly Report</CardTitle>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handlePreviousMonth}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    <span className="sr-only">Previous month</span>
+                  </Button>
+                  <span className="w-32 text-center font-medium">
+                    {format(gaugesMonth, "MMMM yyyy")}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleNextMonth}
+                    disabled={isAfter(
+                      startOfMonth(gaugesMonth),
+                      startOfMonth(new Date())
+                    )}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                    <span className="sr-only">Next month</span>
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <ProjectedSavingsWidget expenses={gaugesMonthExpenses} />
+                <Separator />
+                <div>
+                  <h3 className="mb-4 text-lg font-semibold tracking-tight">
+                    Monthly Threshold Progress
+                  </h3>
+                  <CategoryGaugesWidget expenses={gaugesMonthExpenses} />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
       <Button
         onClick={() => {
