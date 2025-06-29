@@ -105,22 +105,22 @@ export default function HomePage() {
     })
   }, [expenses, filters])
 
+  const currentMonthExpenses = React.useMemo(() => {
+    if (!expenses) return []
+    const currentMonth = format(startOfMonth(new Date()), "yyyy-MM")
+    return expenses.filter((expense) => {
+      const expenseDate = new Date(expense.date)
+      const expenseMonth = format(startOfMonth(expenseDate), "yyyy-MM")
+      return expenseMonth === currentMonth
+    })
+  }, [expenses])
+
   return (
     <AppLayout>
       <div className="flex-1 space-y-4 p-4 sm:p-8">
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between gap-4">
-              <CardTitle>Monthly Report</CardTitle>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsFilterSheetOpen(true)}
-              >
-                <Filter className="mr-2 h-4 w-4" />
-                Filters
-              </Button>
-            </div>
+            <CardTitle>Monthly Report</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
@@ -128,13 +128,23 @@ export default function HomePage() {
                 <h3 className="mb-4 text-lg font-semibold tracking-tight">
                   Monthly Budget Progress
                 </h3>
-                <CategoryGaugesWidget expenses={filteredExpenses} />
+                <CategoryGaugesWidget expenses={currentMonthExpenses} />
               </div>
               <Separator />
               <div>
-                <h3 className="mb-4 text-lg font-semibold tracking-tight">
-                  Transactions
-                </h3>
+                <div className="mb-4 flex items-center justify-between">
+                  <h3 className="text-lg font-semibold tracking-tight">
+                    Transactions
+                  </h3>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsFilterSheetOpen(true)}
+                  >
+                    <Filter className="mr-2 h-4 w-4" />
+                    Filters
+                  </Button>
+                </div>
                 <ExpensesTable
                   expenses={filteredExpenses}
                   deleteExpense={deleteExpense}
