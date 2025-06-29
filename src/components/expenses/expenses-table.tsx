@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
+  DialogHeader,
+  DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
 import {
@@ -106,6 +108,11 @@ export function ExpensesTable({ expenses, deleteExpense }: ExpensesTableProps) {
                               </Button>
                             </DialogTrigger>
                             <DialogContent className="max-w-xl">
+                              <DialogHeader>
+                                <DialogTitle>
+                                  Receipt for "{expense.description}"
+                                </DialogTitle>
+                              </DialogHeader>
                               <img
                                 src={expense.receiptImage}
                                 alt={`Receipt for ${expense.description}`}
