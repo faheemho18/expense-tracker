@@ -6,7 +6,7 @@ import { Cell, Pie, PieChart, Tooltip } from "recharts"
 
 import { useSettings } from "@/contexts/settings-context"
 import type { Expense } from "@/lib/types"
-import { cn } from "@/lib/utils"
+import { cn, formatCurrency } from "@/lib/utils"
 import {
   ChartContainer,
   type ChartConfig,
@@ -23,6 +23,36 @@ interface AccountTypePieChartWidgetProps {
 const generateColor = (index: number) => {
   const hue = (index * 137.508) % 360 // Use golden angle approximation
   return `hsl(${hue}, 50%, 60%)`
+}
+
+const renderCustomizedLabel = ({
+  cx,
+  cy,
+  midAngle,
+  outerRadius,
+  percent,
+  payload,
+}: any) => {
+  const RADIAN = Math.PI / 180
+  const radius = outerRadius + 25
+  const x = cx + radius * Math.cos(-midAngle * RADIAN)
+  const y = cy + radius * Math.sin(-midAngle * RADIAN)
+  const value = payload.total
+
+  return (
+    <text
+      x={x}
+      y={y}
+      className="fill-foreground text-xs"
+      textAnchor={x > cx ? "start" : "end"}
+      dominantBaseline="central"
+    >
+      {`${(percent * 100).toFixed(0)}%`}
+      <tspan x={x} dy="1.2em">
+        {formatCurrency(value, "compact")}
+      </tspan>
+    </text>
+  )
 }
 
 export function AccountTypePieChartWidget({
@@ -93,7 +123,7 @@ export function AccountTypePieChartWidget({
       config={chartConfig}
       className="mx-auto aspect-square h-full"
     >
-      <PieChart>
+      <PieChart margin={{ top: 40, right: 40, bottom: 40, left: 40 }}>
         <Tooltip
           cursor={false}
           content={<ChartTooltipContent hideLabel nameKey="accountType" />}
@@ -102,8 +132,11 @@ export function AccountTypePieChartWidget({
           data={data}
           dataKey="total"
           nameKey="accountType"
-          innerRadius={60}
+          innerRadius={50}
+          outerRadius={70}
           strokeWidth={5}
+          label={renderCustomizedLabel}
+          labelLine
         >
           {data.map((entry, index) => (
             <Cell
