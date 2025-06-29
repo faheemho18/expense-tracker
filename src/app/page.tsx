@@ -17,7 +17,6 @@ import type { Expense } from "@/lib/types"
 import { AppLayout } from "@/components/app-layout"
 import { CategoryGaugesWidget } from "@/components/dashboard/category-gauges-widget"
 import { AddExpenseSheet } from "@/components/expenses/add-expense-sheet"
-import { ExportExpensesButton } from "@/components/expenses/export-expenses-button"
 import { ExpensesFilters } from "@/components/expenses/expenses-filters"
 import { ExpensesTable } from "@/components/expenses/expenses-table"
 import { Button } from "@/components/ui/button"
@@ -232,9 +231,9 @@ export default function HomePage() {
       <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
         <SheetContent>
           <SheetHeader>
-            <SheetTitle>Filters & Export</SheetTitle>
+            <SheetTitle>Filters</SheetTitle>
             <SheetDescription>
-              Refine your view and export your expense data.
+              Refine your view of transactions.
             </SheetDescription>
           </SheetHeader>
           <div className="space-y-4 py-4">
@@ -246,10 +245,6 @@ export default function HomePage() {
               months={availableMonths}
               years={availableYears}
             />
-          </div>
-          <Separator />
-          <div className="py-4">
-            <ExportExpensesButton expenses={filteredExpenses} />
           </div>
         </SheetContent>
       </Sheet>

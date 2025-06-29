@@ -53,6 +53,43 @@ export function exportToCsv<T extends Record<string, any>>(
   document.body.removeChild(link)
 }
 
+/**
+ * Parses a CSV string into an array of objects.
+ * Note: This is a simple parser and may not handle all CSV edge cases,
+ * such as commas within quoted fields.
+ * @param csvText The CSV content as a string.
+ * @returns An array of objects.
+ */
+export function parseCsv<T>(csvText: string): Partial<T>[] {
+  const lines = csvText
+    .trim()
+    .split(/\r\n|\n/)
+    .filter((line) => line.trim() !== "")
+
+  if (lines.length < 2) {
+    return []
+  }
+
+  const headers = lines[0]
+    .split(",")
+    .map((h) => h.trim().replace(/"/g, ""))
+
+  const rows = lines.slice(1).map((line) => {
+    // This regex handles simple cases and quoted fields without escaped quotes inside.
+    const values = line.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g) || []
+
+    const rowObject: { [key: string]: string } = {}
+    headers.forEach((header, index) => {
+      if (values[index]) {
+        rowObject[header] = values[index].replace(/"/g, "").trim()
+      }
+    })
+    return rowObject as Partial<T>
+  })
+
+  return rows
+}
+
 export function getIcon(
   name: IconName | string
 ): React.FC<LucideProps> {

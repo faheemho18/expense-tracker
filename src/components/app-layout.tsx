@@ -4,7 +4,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Settings, Wallet } from "lucide-react"
+import { Database, LayoutDashboard, Settings, Wallet } from "lucide-react"
 
 import {
   Sidebar,
@@ -38,6 +38,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     []
   )
   const settingsTooltip = React.useMemo(() => ({ children: "Settings" }), [])
+  const dataTooltip = React.useMemo(() => ({ children: "Import/Export" }), [])
 
   return (
     <SidebarProvider>
@@ -80,6 +81,18 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 <Link href="/settings">
                   <Settings />
                   <span>Settings</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={isActive("/data")}
+                tooltip={dataTooltip}
+              >
+                <Link href="/data">
+                  <Database />
+                  <span>Data</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
