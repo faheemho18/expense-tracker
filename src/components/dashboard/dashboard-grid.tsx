@@ -67,15 +67,17 @@ export function DashboardGrid({
   // react-beautiful-dnd doesn't work well with SSR, so we only render it on the client
   if (!isClient) {
     return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="flex flex-wrap -m-2">
         {widgets.map((widget) => (
-          <Skeleton
+          <div
             key={widget.id}
             className={cn(
-              "h-[422px]",
-              widget.type === "stats" ? "md:col-span-2 lg:col-span-3" : ""
+              "p-2 w-full",
+              widget.type === "stats" ? "" : "md:w-1/2 lg:w-1/3"
             )}
-          />
+          >
+            <Skeleton className="h-[422px] w-full" />
+          </div>
         ))}
       </div>
     )
@@ -83,12 +85,12 @@ export function DashboardGrid({
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <Droppable droppableId="dashboard">
+      <Droppable droppableId="dashboard" type="widgets">
         {(provided) => (
           <div
             {...provided.droppableProps}
             ref={provided.innerRef}
-            className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
+            className="flex flex-wrap -m-2"
           >
             {widgets.map((widget, index) => (
               <Draggable key={widget.id} draggableId={widget.id} index={index}>
@@ -97,11 +99,12 @@ export function DashboardGrid({
                     ref={provided.innerRef}
                     widget={widget}
                     removeWidget={removeWidget}
-                    className={
+                    className={cn(
+                      "p-2",
                       widget.type === "stats"
-                        ? "md:col-span-2 lg:col-span-3"
-                        : ""
-                    }
+                        ? "w-full"
+                        : "w-full md:w-1/2 lg:w-1/3"
+                    )}
                     isDragging={snapshot.isDragging}
                     draggableProps={provided.draggableProps}
                     dragHandleProps={provided.dragHandleProps}
