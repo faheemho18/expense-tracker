@@ -6,10 +6,10 @@ import {
   Droppable,
   Draggable,
   type DropResult,
+  type DroppableProps,
 } from "react-beautiful-dnd"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 import { BarChart } from "lucide-react"
 import type { Expense, WidgetConfig } from "@/lib/types"
@@ -18,6 +18,26 @@ import { CategoryPieChartWidget } from "./category-pie-chart-widget"
 import { OverTimeBarChartWidget } from "./over-time-bar-chart-widget"
 import { StatsWidget } from "./stats-widget"
 import { WidgetWrapper } from "./widget-wrapper"
+
+// Wrapper to make react-beautiful-dnd work with React 18 Strict Mode
+const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
+  const [enabled, setEnabled] = React.useState(false)
+
+  React.useEffect(() => {
+    const animation = requestAnimationFrame(() => setEnabled(true))
+
+    return () => {
+      cancelAnimationFrame(animation)
+      setEnabled(false)
+    }
+  }, [])
+
+  if (!enabled) {
+    return null
+  }
+
+  return <Droppable {...props}>{children}</Droppable>
+}
 
 interface DashboardGridProps {
   expenses: Expense[]
@@ -45,12 +65,6 @@ export function DashboardGrid({
   removeWidget,
   onDragEnd,
 }: DashboardGridProps) {
-  const [isClient, setIsClient] = React.useState(false)
-
-  React.useEffect(() => {
-    setIsClient(true)
-  }, [])
-
   if (widgets.length === 0) {
     return (
       <Alert>
@@ -64,28 +78,9 @@ export function DashboardGrid({
     )
   }
 
-  // react-beautiful-dnd doesn't work well with SSR, so we only render it on the client
-  if (!isClient) {
-    return (
-      <div className="flex flex-wrap -m-2">
-        {widgets.map((widget) => (
-          <div
-            key={widget.id}
-            className={cn(
-              "p-2 w-full",
-              widget.type === "stats" ? "" : "md:w-1/2 lg:w-1/3"
-            )}
-          >
-            <Skeleton className="h-[422px] w-full" />
-          </div>
-        ))}
-      </div>
-    )
-  }
-
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <Droppable droppableId="dashboard">
+      <StrictModeDroppable droppableId="dashboard">
         {(provided) => (
           <div
             {...provided.droppableProps}
@@ -117,7 +112,7 @@ export function DashboardGrid({
             {provided.placeholder}
           </div>
         )}
-      </Droppable>
+      </StrictModeDroppable>
     </DragDropContext>
   )
 }
