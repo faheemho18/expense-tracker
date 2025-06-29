@@ -60,12 +60,16 @@ interface AddExpenseSheetProps {
   isOpen: boolean
   setIsOpen: (isOpen: boolean) => void
   addExpense: (expense: Omit<Expense, "id">) => void
+  expenseToEdit?: Expense | null
+  updateExpense?: (expense: Expense) => void
 }
 
 export function AddExpenseSheet({
   isOpen,
   setIsOpen,
   addExpense,
+  expenseToEdit,
+  updateExpense,
 }: AddExpenseSheetProps) {
   const [isPending, startTransition] = React.useTransition()
   const [isDatePickerOpen, setIsDatePickerOpen] = React.useState(false)
@@ -76,6 +80,8 @@ export function AddExpenseSheet({
   const [hasCameraPermission, setHasCameraPermission] = React.useState<
     boolean | null
   >(null)
+
+  const isEditMode = !!expenseToEdit
 
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseSchema),
@@ -88,6 +94,30 @@ export function AddExpenseSheet({
       receiptImage: "",
     },
   })
+
+  React.useEffect(() => {
+    if (isOpen) {
+      if (isEditMode && expenseToEdit) {
+        form.reset({
+          description: expenseToEdit.description,
+          amount: expenseToEdit.amount,
+          date: new Date(expenseToEdit.date),
+          category: expenseToEdit.category,
+          accountType: expenseToEdit.accountType,
+          receiptImage: expenseToEdit.receiptImage || "",
+        })
+      } else {
+        form.reset({
+          description: "",
+          amount: 0,
+          date: new Date(),
+          category: "",
+          accountType: "",
+          receiptImage: "",
+        })
+      }
+    }
+  }, [isOpen, isEditMode, expenseToEdit, form])
 
   React.useEffect(() => {
     let stream: MediaStream | null = null
@@ -131,13 +161,24 @@ export function AddExpenseSheet({
   const onSubmit = (values: ExpenseFormValues) => {
     startTransition(() => {
       try {
-        addExpense({ ...values, date: values.date.toISOString() })
-        toast({
-          title: "Expense added",
-          description: "Your expense has been successfully recorded.",
-        })
+        if (isEditMode && updateExpense && expenseToEdit) {
+          updateExpense({
+            ...values,
+            id: expenseToEdit.id,
+            date: values.date.toISOString(),
+          })
+          toast({
+            title: "Expense updated",
+            description: "Your expense has been successfully updated.",
+          })
+        } else {
+          addExpense({ ...values, date: values.date.toISOString() })
+          toast({
+            title: "Expense added",
+            description: "Your expense has been successfully recorded.",
+          })
+        }
         setIsOpen(false)
-        form.reset()
         setShowCamera(false)
       } catch (error) {
         toast({
@@ -173,16 +214,19 @@ export function AddExpenseSheet({
       onOpenChange={(open) => {
         if (!open) {
           setShowCamera(false)
-          form.reset()
         }
         setIsOpen(open)
       }}
     >
       <SheetContent className="overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>Add New Expense</SheetTitle>
+          <SheetTitle>
+            {isEditMode ? "Edit Expense" : "Add New Expense"}
+          </SheetTitle>
           <SheetDescription>
-            Enter the details of your expense. Click save when you're done.
+            {isEditMode
+              ? "Update the details of your expense."
+              : "Enter the details of your expense. Click save when you're done."}
           </SheetDescription>
         </SheetHeader>
         {isLoading ? (
@@ -286,6 +330,7 @@ export function AddExpenseSheet({
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
+                      value={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -322,6 +367,7 @@ export function AddExpenseSheet({
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
+                      value={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -445,7 +491,7 @@ export function AddExpenseSheet({
               />
               <Button type="submit" className="w-full" disabled={isPending}>
                 {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Save Expense
+                {isEditMode ? "Save Changes" : "Save Expense"}
               </Button>
             </form>
           </Form>

@@ -3,7 +3,7 @@
 
 import * as React from "react"
 import { format } from "date-fns"
-import { MoreHorizontal, Trash2, FileImage } from "lucide-react"
+import { MoreHorizontal, Trash2, FileImage, Edit } from "lucide-react"
 
 import { useSettings } from "@/contexts/settings-context"
 import type { Expense } from "@/lib/types"
@@ -36,9 +36,14 @@ import {
 interface ExpensesTableProps {
   expenses: Expense[]
   deleteExpense: (id: string) => void
+  editExpense: (expense: Expense) => void
 }
 
-export function ExpensesTable({ expenses, deleteExpense }: ExpensesTableProps) {
+export function ExpensesTable({
+  expenses,
+  deleteExpense,
+  editExpense,
+}: ExpensesTableProps) {
   const { categories, accountTypes } = useSettings()
 
   const getCategory = (value: string) => {
@@ -170,6 +175,12 @@ export function ExpensesTable({ expenses, deleteExpense }: ExpensesTableProps) {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => editExpense(expense)}
+                          >
+                            <Edit className="mr-2 h-4 w-4" />
+                            Edit
+                          </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => deleteExpense(expense.id)}
                             className="text-destructive"
