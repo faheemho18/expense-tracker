@@ -70,10 +70,10 @@ export function HeatmapCalendarWidget({
 
   const intensityClasses = [
     "bg-muted/50",
-    "bg-primary/20",
-    "bg-primary/40",
-    "bg-primary/60",
-    "bg-primary/80",
+    "bg-destructive/20",
+    "bg-destructive/40",
+    "bg-destructive/60",
+    "bg-destructive/80",
   ]
 
   return (
