@@ -23,7 +23,7 @@ export function CategoryGaugesWidget({ expenses }: CategoryGaugesWidgetProps) {
   const { categories, categoryThresholds } = useSettings()
 
   const gaugeData = React.useMemo(() => {
-    if (!categories || !categoryThresholds) return []
+    if (!categories) return []
 
     const categoryTotals = expenses.reduce(
       (acc, expense) => {
@@ -35,33 +35,39 @@ export function CategoryGaugesWidget({ expenses }: CategoryGaugesWidgetProps) {
       {} as Record<string, number>
     )
 
-    return categoryThresholds
-      .map((threshold) => {
-        const category = categories.find(
-          (c) => c.value === threshold.categoryValue
-        )
-        if (!category) return null
+    const thresholdMap = (categoryThresholds || []).reduce(
+      (acc, t) => {
+        acc[t.categoryValue] = t.threshold
+        return acc
+      },
+      {} as Record<string, number>
+    )
 
-        const spent = categoryTotals[threshold.categoryValue] || 0
-        const budget = threshold.threshold
-        const percentage = budget > 0 ? Math.round((spent / budget) * 100) : 0
+    return categories.map((category) => {
+      const spent = categoryTotals[category.value] || 0
+      const budget = thresholdMap[category.value] || 0
+      const percentage = budget > 0 ? Math.round((spent / budget) * 100) : 0
 
-        return {
-          category,
-          spent,
-          budget,
-          percentage,
-          data: [
-            { name: "spent", value: spent, fill: "var(--color-spent)" },
-            {
-              name: "remaining",
-              value: Math.max(0, budget - spent),
-              fill: "var(--color-remaining)",
-            },
-          ],
-        }
-      })
-      .filter(Boolean) as {
+      const pieData =
+        budget > 0
+          ? [
+              { name: "spent", value: spent, fill: "var(--color-spent)" },
+              {
+                name: "remaining",
+                value: Math.max(0, budget - spent),
+                fill: "var(--color-remaining)",
+              },
+            ]
+          : [{ name: "unset", value: 1, fill: "hsl(var(--muted)/0.5)" }]
+
+      return {
+        category,
+        spent,
+        budget,
+        percentage,
+        data: pieData,
+      }
+    }) as {
       category: { value: string; label: string; icon: string }
       spent: number
       budget: number
@@ -70,14 +76,14 @@ export function CategoryGaugesWidget({ expenses }: CategoryGaugesWidgetProps) {
     }[]
   }, [expenses, categories, categoryThresholds])
 
-  if (!categories || !categoryThresholds) {
+  if (!categories) {
     return <Skeleton className="h-full w-full" />
   }
 
   if (gaugeData.length === 0) {
     return (
       <div className="flex h-full min-h-[150px] items-center justify-center rounded-md border border-dashed text-muted-foreground">
-        No budgets set or no expense data for the selected period.
+        No categories defined. Go to Settings to add them.
       </div>
     )
   }
@@ -90,6 +96,7 @@ export function CategoryGaugesWidget({ expenses }: CategoryGaugesWidgetProps) {
           const chartConfig = {
             spent: { label: "Spent", color: "hsl(var(--primary))" },
             remaining: { label: "Remaining", color: "hsl(var(--muted))" },
+            unset: { label: "Unset", color: "hsl(var(--muted))" },
           }
           return (
             <div
@@ -115,37 +122,43 @@ export function CategoryGaugesWidget({ expenses }: CategoryGaugesWidgetProps) {
                     nameKey="name"
                     innerRadius={35}
                     outerRadius={45}
-                    cornerRadius={99}
-                    startAngle={220}
-                    endAngle={-40}
+                    cornerRadius={item.budget > 0 ? 99 : 0}
+                    startAngle={item.budget > 0 ? 220 : undefined}
+                    endAngle={item.budget > 0 ? -40 : undefined}
                   >
-                    <Label
-                      content={({ viewBox }) => {
-                        if (viewBox && "cx" in viewBox && "cy" in viewBox) {
-                          return (
-                            <text
-                              x={viewBox.cx}
-                              y={viewBox.cy}
-                              textAnchor="middle"
-                              dominantBaseline="middle"
-                            >
-                              <tspan
+                    {item.budget > 0 && (
+                      <Label
+                        content={({ viewBox }) => {
+                          if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                            return (
+                              <text
                                 x={viewBox.cx}
                                 y={viewBox.cy}
-                                className="fill-foreground text-xl font-bold"
+                                textAnchor="middle"
+                                dominantBaseline="middle"
                               >
-                                {item.percentage.toLocaleString()}%
-                              </tspan>
-                            </text>
-                          )
-                        }
-                      }}
-                    />
+                                <tspan
+                                  x={viewBox.cx}
+                                  y={viewBox.cy}
+                                  className="fill-foreground text-xl font-bold"
+                                >
+                                  {item.percentage.toLocaleString()}%
+                                </tspan>
+                              </text>
+                            )
+                          }
+                        }}
+                      />
+                    )}
                   </Pie>
                 </PieChart>
               </ChartContainer>
               <div className="text-xs text-muted-foreground">
-                {formatCurrency(item.spent)} of {formatCurrency(item.budget)}
+                {item.budget > 0
+                  ? `${formatCurrency(item.spent)} of ${formatCurrency(
+                      item.budget
+                    )}`
+                  : "Budget not set"}
               </div>
             </div>
           )
