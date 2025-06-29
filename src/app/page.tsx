@@ -173,36 +173,37 @@ export default function HomePage() {
   return (
     <AppLayout>
       <div className="flex-1 space-y-4 p-4 sm:p-8">
-        <ProjectedSavingsWidget expenses={gaugesMonthExpenses} />
-
         <div className="space-y-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Monthly Report</CardTitle>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={handlePreviousMonth}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  <span className="sr-only">Previous month</span>
-                </Button>
-                <span className="w-32 text-center font-medium">
-                  {format(gaugesMonth, "MMMM yyyy")}
-                </span>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={handleNextMonth}
-                  disabled={isAfter(
-                    startOfMonth(gaugesMonth),
-                    startOfMonth(new Date())
-                  )}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                  <span className="sr-only">Next month</span>
-                </Button>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handlePreviousMonth}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    <span className="sr-only">Previous month</span>
+                  </Button>
+                  <span className="w-32 text-center font-medium">
+                    {format(gaugesMonth, "MMMM yyyy")}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleNextMonth}
+                    disabled={isAfter(
+                      startOfMonth(gaugesMonth),
+                      startOfMonth(new Date())
+                    )}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                    <span className="sr-only">Next month</span>
+                  </Button>
+                </div>
+                <ProjectedSavingsWidget expenses={gaugesMonthExpenses} />
               </div>
             </CardHeader>
             <CardContent>

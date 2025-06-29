@@ -9,6 +9,11 @@ import type { Expense } from "@/lib/types"
 import { formatCurrency } from "@/lib/utils"
 
 import { Skeleton } from "@/components/ui/skeleton"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 interface ProjectedSavingsWidgetProps {
   expenses: Expense[]
@@ -50,22 +55,24 @@ export function ProjectedSavingsWidget({
   if (!categories) {
     return (
       <div className="flex justify-center">
-        <Skeleton className="h-32 w-32 rounded-full" />
+        <Skeleton className="h-12 w-12 rounded-full" />
       </div>
     )
   }
 
   return (
-    <div className="relative mb-4 flex h-32 items-center justify-center">
-      <PiggyBank className="absolute h-32 w-32 text-muted-foreground/20" />
-      <div className="relative flex flex-col items-center">
-        <div className="text-3xl font-bold text-emerald-500">
-          + {formatCurrency(projectedSavings)}
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div className="relative flex h-12 w-12 items-center justify-center">
+          <PiggyBank className="absolute h-12 w-12 text-muted-foreground/20" />
+          <div className="relative text-sm font-bold text-emerald-500">
+            +{formatCurrency(projectedSavings, "compact")}
+          </div>
         </div>
-        <p className="text-xs text-muted-foreground">
-          Projected Monthly Savings
-        </p>
-      </div>
-    </div>
+      </TooltipTrigger>
+      <TooltipContent>
+        <p>Projected Savings: {formatCurrency(projectedSavings)}</p>
+      </TooltipContent>
+    </Tooltip>
   )
 }
