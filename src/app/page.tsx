@@ -175,7 +175,7 @@ export default function HomePage() {
       <div className="flex-1 space-y-4 p-4 sm:p-8">
         <div className="space-y-6">
           <Card>
-            <CardHeader className="grid grid-cols-3 items-center">
+            <CardHeader className="relative grid grid-cols-3 items-center">
               <CardTitle>Monthly Report</CardTitle>
               <div className="flex items-center justify-center gap-2">
                 <Button
@@ -203,17 +203,15 @@ export default function HomePage() {
                 </Button>
               </div>
               <div />
+              <div className="absolute right-6 top-1/2 z-10 -translate-y-1/2">
+                <ProjectedSavingsWidget expenses={gaugesMonthExpenses} />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="relative">
-                <div className="absolute right-4 top-12 z-10">
-                  <ProjectedSavingsWidget expenses={gaugesMonthExpenses} />
-                </div>
-                <h3 className="mb-4 text-lg font-semibold tracking-tight">
-                  Monthly Threshold Progress
-                </h3>
-                <CategoryGaugesWidget expenses={gaugesMonthExpenses} />
-              </div>
+              <h3 className="mb-4 text-lg font-semibold tracking-tight">
+                Monthly Threshold Progress
+              </h3>
+              <CategoryGaugesWidget expenses={gaugesMonthExpenses} />
             </CardContent>
           </Card>
 
