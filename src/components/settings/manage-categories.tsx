@@ -50,6 +50,7 @@ export function ManageCategories() {
   )
   const [categoryToDelete, setCategoryToDelete] =
     React.useState<Category | null>(null)
+  const [isConfirmSaveOpen, setIsConfirmSaveOpen] = React.useState(false)
 
   // Form state for dialog
   const [label, setLabel] = React.useState("")
@@ -61,6 +62,9 @@ export function ManageCategories() {
       setLocalCategories(JSON.parse(JSON.stringify(categories)))
     }
   }, [categories])
+
+  const hasUnsavedChanges =
+    JSON.stringify(localCategories) !== JSON.stringify(categories)
 
   const resetForm = () => {
     setLabel("")
@@ -141,7 +145,7 @@ export function ManageCategories() {
     )
   }
 
-  const handleSaveChanges = () => {
+  const handleConfirmSave = () => {
     if (localCategories) {
       // Force a deep copy to ensure all components recognize the change
       setCategories(JSON.parse(JSON.stringify(localCategories)))
@@ -150,16 +154,20 @@ export function ManageCategories() {
         description: "Your category budgets and colors have been saved.",
       })
     }
+    setIsConfirmSaveOpen(false)
   }
 
-  if (!localCategories) {
+  if (!localCategories || !categories) {
     return <Skeleton className="h-48 w-full" />
   }
 
   return (
     <div className="space-y-4">
       <div className="flex justify-end gap-2">
-        <Button onClick={handleSaveChanges}>
+        <Button
+          onClick={() => setIsConfirmSaveOpen(true)}
+          disabled={!hasUnsavedChanges}
+        >
           <Save className="mr-2 h-4 w-4" /> Save Changes
         </Button>
         <Button onClick={handleAddClick}>
@@ -170,6 +178,9 @@ export function ManageCategories() {
         <ul className="divide-y divide-border">
           {localCategories.map((category) => {
             const Icon = getIcon(category.icon)
+            const originalCategory = categories.find(
+              (c) => c.value === category.value
+            )
             return (
               <li
                 key={category.value}
@@ -177,7 +188,7 @@ export function ManageCategories() {
               >
                 <Icon
                   className="h-5 w-5 flex-shrink-0"
-                  color={category.color}
+                  color={originalCategory?.color || category.color}
                 />
                 <div className="flex-1 font-medium">{category.label}</div>
 
@@ -242,6 +253,26 @@ export function ManageCategories() {
           })}
         </ul>
       </div>
+
+      <AlertDialog
+        open={isConfirmSaveOpen}
+        onOpenChange={setIsConfirmSaveOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Changes</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to save the changes to budgets and colors?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmSave}>
+              Save
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Dialog open={isFormDialogOpen} onOpenChange={setIsFormDialogOpen}>
         <DialogContent>
