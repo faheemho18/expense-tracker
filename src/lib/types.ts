@@ -12,6 +12,7 @@ export type Category = {
 export type AccountType = {
   value: string
   label: string
+  icon: string // Corresponds to a key in the ICONS map
 }
 
 export type Expense = {

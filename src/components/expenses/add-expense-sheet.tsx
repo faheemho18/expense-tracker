@@ -255,14 +255,20 @@ export function AddExpenseSheet({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {accountTypes.map((accountType) => (
-                          <SelectItem
-                            key={accountType.value}
-                            value={accountType.value}
-                          >
-                            {accountType.label}
-                          </SelectItem>
-                        ))}
+                        {accountTypes.map((accountType) => {
+                          const Icon = getIcon(accountType.icon)
+                          return (
+                            <SelectItem
+                              key={accountType.value}
+                              value={accountType.value}
+                            >
+                              <div className="flex items-center gap-2">
+                                <Icon className="h-4 w-4" />
+                                {accountType.label}
+                              </div>
+                            </SelectItem>
+                          )
+                        })}
                       </SelectContent>
                     </Select>
                     <FormMessage />

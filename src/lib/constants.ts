@@ -80,8 +80,8 @@ export const DEFAULT_CATEGORIES: Category[] = [
 ]
 
 export const DEFAULT_ACCOUNT_TYPES: AccountType[] = [
-  { value: "cash", label: "Cash" },
-  { value: "credit", label: "Credit Card" },
-  { value: "debit", label: "Debit Card" },
-  { value: "bank", label: "Bank Transfer" },
+  { value: "cash", label: "Cash", icon: "Wallet" },
+  { value: "credit", label: "Credit Card", icon: "CreditCard" },
+  { value: "debit", label: "Debit Card", icon: "CreditCard" },
+  { value: "bank", label: "Bank Transfer", icon: "Wallet" },
 ]

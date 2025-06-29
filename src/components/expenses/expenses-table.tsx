@@ -37,8 +37,8 @@ export function ExpensesTable({ expenses, deleteExpense }: ExpensesTableProps) {
     return (categories || []).find((c) => c.value === value)
   }
 
-  const getAccountTypeLabel = (value: string) => {
-    return (accountTypes || []).find((a) => a.value === value)?.label || "N/A"
+  const getAccountType = (value: string) => {
+    return (accountTypes || []).find((a) => a.value === value)
   }
 
   if (!categories || !accountTypes) {
@@ -73,7 +73,12 @@ export function ExpensesTable({ expenses, deleteExpense }: ExpensesTableProps) {
               )
               .map((expense) => {
                 const category = getCategory(expense.category)
-                const Icon = category ? getIcon(category.icon) : null
+                const CategoryIcon = category ? getIcon(category.icon) : null
+
+                const accountType = getAccountType(expense.accountType)
+                const AccountIcon = accountType
+                  ? getIcon(accountType.icon)
+                  : null
                 return (
                   <TableRow key={expense.id}>
                     <TableCell>
@@ -88,8 +93,8 @@ export function ExpensesTable({ expenses, deleteExpense }: ExpensesTableProps) {
                           variant="outline"
                           className="flex max-w-min items-center gap-2 whitespace-nowrap"
                         >
-                          {Icon && (
-                            <Icon
+                          {CategoryIcon && (
+                            <CategoryIcon
                               className="h-4 w-4"
                               color={category.color}
                             />
@@ -99,7 +104,16 @@ export function ExpensesTable({ expenses, deleteExpense }: ExpensesTableProps) {
                       )}
                     </TableCell>
                     <TableCell>
-                      {getAccountTypeLabel(expense.accountType)}
+                      {accountType ? (
+                        <div className="flex items-center gap-2">
+                          {AccountIcon && (
+                            <AccountIcon className="h-4 w-4 text-muted-foreground" />
+                          )}
+                          <span>{accountType.label}</span>
+                        </div>
+                      ) : (
+                        "N/A"
+                      )}
                     </TableCell>
                     <TableCell
                       className={cn(
