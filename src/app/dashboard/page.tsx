@@ -17,6 +17,17 @@ export default function DashboardPage() {
   const [widgets, setWidgets] = useLocalStorage<WidgetConfig[]>("widgets", [])
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
 
+  // Initialize with some widgets for demo purposes if none exist
+  React.useEffect(() => {
+    if (widgets === null || widgets.length === 0) {
+      setWidgets([
+        { id: "1", type: "stats", title: "Overview" },
+        { id: "2", type: "category-pie", title: "Spending by Category" },
+        { id: "3", type: "over-time-bar", title: "Monthly Spending" },
+      ])
+    }
+  }, [widgets, setWidgets])
+
   const addWidget = (widget: Omit<WidgetConfig, "id">) => {
     const newWidget = { ...widget, id: crypto.randomUUID() }
     setWidgets((prev) => [...(prev || []), newWidget])

@@ -4,7 +4,7 @@ import * as React from "react"
 import { Plus } from "lucide-react"
 
 import { useLocalStorage } from "@/hooks/use-local-storage"
-import type { Expense, WidgetConfig } from "@/lib/types"
+import type { Expense } from "@/lib/types"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -28,25 +28,6 @@ export default function HomePage() {
     )
   }
 
-  // Initialize with some expenses for demo purposes if none exist
-  React.useEffect(() => {
-    if (expenses === null) {
-      setExpenses([])
-    }
-  }, [expenses, setExpenses])
-
-  // Initialize with some widgets for demo purposes if none exist
-  const [widgets, setWidgets] = useLocalStorage<WidgetConfig[]>("widgets", [])
-  React.useEffect(() => {
-    if (widgets === null || widgets.length === 0) {
-      setWidgets([
-        { id: "1", type: "stats", title: "Overview" },
-        { id: "2", type: "category-pie", title: "Spending by Category" },
-        { id: "3", type: "over-time-bar", title: "Monthly Spending" },
-      ])
-    }
-  }, [widgets, setWidgets])
-
   return (
     <AppLayout>
       <div className="flex-1 space-y-4 p-4 sm:p-8">
@@ -67,7 +48,7 @@ export default function HomePage() {
       </div>
       <Button
         onClick={() => setIsSheetOpen(true)}
-        className="fixed bottom-6 right-6 z-40 h-14 w-14 rounded-full shadow-lg"
+        className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg"
         size="icon"
       >
         <span className="sr-only">Add Expense</span>
