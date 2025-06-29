@@ -5,21 +5,23 @@ import * as React from "react"
 import { X } from "lucide-react"
 
 import { useSettings } from "@/contexts/settings-context"
-import { Button } from "@/components/ui/button"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
 
 interface ExpensesFiltersProps {
   filters: {
-    month: string
-    category: string
-    accountType: string
+    month: string[]
+    category: string[]
+    accountType: string[]
   }
   onFilterChange: (
     filterType: "month" | "category" | "accountType",
@@ -28,6 +30,43 @@ interface ExpensesFiltersProps {
   onClearFilters: () => void
   months: { value: string; label: string }[]
 }
+
+const FilterSection = ({
+  title,
+  items,
+  selectedItems,
+  onSelectionChange,
+}: {
+  title: string
+  items: { value: string; label: string }[]
+  selectedItems: string[]
+  onSelectionChange: (value: string) => void
+}) => (
+  <AccordionItem value={title.toLowerCase().replace(" ", "-")}>
+    <AccordionTrigger>{title}</AccordionTrigger>
+    <AccordionContent>
+      <ScrollArea className="h-48">
+        <div className="space-y-2 pr-4">
+          {items.map((item) => (
+            <div key={item.value} className="flex items-center space-x-2">
+              <Checkbox
+                id={`${title}-${item.value}`}
+                checked={selectedItems.includes(item.value)}
+                onCheckedChange={() => onSelectionChange(item.value)}
+              />
+              <Label
+                htmlFor={`${title}-${item.value}`}
+                className="w-full cursor-pointer font-normal"
+              >
+                {item.label}
+              </Label>
+            </div>
+          ))}
+        </div>
+      </ScrollArea>
+    </AccordionContent>
+  </AccordionItem>
+)
 
 export function ExpensesFilters({
   filters,
@@ -41,10 +80,10 @@ export function ExpensesFilters({
     onClearFilters()
   }
 
-  const showClearButton =
-    filters.month !== "all" ||
-    filters.category !== "all" ||
-    filters.accountType !== "all"
+  const hasActiveFilters =
+    filters.month.length > 0 ||
+    filters.category.length > 0 ||
+    filters.accountType.length > 0
 
   if (!categories || !accountTypes) {
     return <Skeleton className="h-40 w-full" />
@@ -52,57 +91,31 @@ export function ExpensesFilters({
 
   return (
     <div className="flex flex-col gap-4">
-      <Select
-        value={filters.month}
-        onValueChange={(value) => onFilterChange("month", value)}
+      <Accordion
+        type="multiple"
+        className="w-full"
+        defaultValue={["months", "categories", "account-types"]}
       >
-        <SelectTrigger className="w-full">
-          <SelectValue placeholder="Filter by month" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Months</SelectItem>
-          {months.map((month) => (
-            <SelectItem key={month.value} value={month.value}>
-              {month.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <Select
-        value={filters.category}
-        onValueChange={(value) => onFilterChange("category", value)}
-      >
-        <SelectTrigger className="w-full">
-          <SelectValue placeholder="Filter by category" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Categories</SelectItem>
-          {categories.map((category) => (
-            <SelectItem key={category.value} value={category.value}>
-              {category.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <Select
-        value={filters.accountType}
-        onValueChange={(value) => onFilterChange("accountType", value)}
-      >
-        <SelectTrigger className="w-full">
-          <SelectValue placeholder="Filter by account" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Accounts</SelectItem>
-          {accountTypes.map((account) => (
-            <SelectItem key={account.value} value={account.value}>
-              {account.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      {showClearButton && (
+        <FilterSection
+          title="Months"
+          items={months}
+          selectedItems={filters.month}
+          onSelectionChange={(value) => onFilterChange("month", value)}
+        />
+        <FilterSection
+          title="Categories"
+          items={categories}
+          selectedItems={filters.category}
+          onSelectionChange={(value) => onFilterChange("category", value)}
+        />
+        <FilterSection
+          title="Account Types"
+          items={accountTypes}
+          selectedItems={filters.accountType}
+          onSelectionChange={(value) => onFilterChange("accountType", value)}
+        />
+      </Accordion>
+      {hasActiveFilters && (
         <Button
           variant="ghost"
           onClick={handleClearFilters}

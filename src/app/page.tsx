@@ -29,13 +29,13 @@ export default function HomePage() {
   const [isAddSheetOpen, setIsAddSheetOpen] = React.useState(false)
   const [isFilterSheetOpen, setIsFilterSheetOpen] = React.useState(false)
   const [filters, setFilters] = React.useState<{
-    month: string
-    category: string
-    accountType: string
+    month: string[]
+    category: string[]
+    accountType: string[]
   }>({
-    month: format(new Date(), "yyyy-MM"),
-    category: "all",
-    accountType: "all",
+    month: [format(new Date(), "yyyy-MM")],
+    category: [],
+    accountType: [],
   })
 
   const addExpense = (expense: Omit<Expense, "id">) => {
@@ -53,11 +53,17 @@ export default function HomePage() {
     filterType: keyof typeof filters,
     value: string
   ) => {
-    setFilters((prev) => ({ ...prev, [filterType]: value }))
+    setFilters((prev) => {
+      const currentValues = prev[filterType]
+      const newValues = currentValues.includes(value)
+        ? currentValues.filter((v) => v !== value)
+        : [...currentValues, value]
+      return { ...prev, [filterType]: newValues }
+    })
   }
 
   const clearFilters = () => {
-    setFilters({ month: "all", category: "all", accountType: "all" })
+    setFilters({ month: [], category: [], accountType: [] })
   }
 
   const availableMonths = React.useMemo(() => {
@@ -86,12 +92,13 @@ export default function HomePage() {
       const expenseMonth = format(startOfMonth(expenseDate), "yyyy-MM")
 
       const monthMatch =
-        filters.month === "all" || expenseMonth === filters.month
+        filters.month.length === 0 || filters.month.includes(expenseMonth)
       const categoryMatch =
-        filters.category === "all" || expense.category === filters.category
+        filters.category.length === 0 ||
+        filters.category.includes(expense.category)
       const accountTypeMatch =
-        filters.accountType === "all" ||
-        expense.accountType === filters.accountType
+        filters.accountType.length === 0 ||
+        filters.accountType.includes(expense.accountType)
 
       return monthMatch && categoryMatch && accountTypeMatch
     })
