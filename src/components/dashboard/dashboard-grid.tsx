@@ -8,9 +8,10 @@ import {
   Droppable,
   type DropResult,
 } from "@hello-pangea/dnd"
+import { format, startOfMonth } from "date-fns"
 import { BarChart } from "lucide-react"
 
-import type { Expense, WidgetConfig } from "@/lib/types"
+import type { Expense, WidgetConfig, WidgetFilters } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
@@ -26,6 +27,8 @@ interface DashboardGridProps {
   removeWidget: (id: string) => void
   updateWidgetTitle: (id: string, title: string) => void
   onDragEnd: (result: DropResult) => void
+  updateWidgetFilters: (id: string, filters: WidgetFilters) => void
+  availableMonths: { value: string; label: string }[]
 }
 
 const renderWidget = (widget: WidgetConfig, expenses: Expense[]) => {
@@ -43,12 +46,47 @@ const renderWidget = (widget: WidgetConfig, expenses: Expense[]) => {
   }
 }
 
+// Helper function to filter expenses based on widget's specific filters
+const filterExpensesForWidget = (
+  allExpenses: Expense[],
+  widgetFilters?: WidgetFilters
+): Expense[] => {
+  if (!widgetFilters) {
+    return allExpenses
+  }
+
+  const {
+    month = [],
+    category = [],
+    accountType = [],
+  } = widgetFilters
+
+  if (month.length === 0 && category.length === 0 && accountType.length === 0) {
+    return allExpenses
+  }
+
+  return allExpenses.filter((expense) => {
+    const expenseDate = new Date(expense.date)
+    const expenseMonth = format(startOfMonth(expenseDate), "yyyy-MM")
+
+    const monthMatch = month.length === 0 || month.includes(expenseMonth)
+    const categoryMatch =
+      category.length === 0 || category.includes(expense.category)
+    const accountTypeMatch =
+      accountType.length === 0 || accountType.includes(expense.accountType)
+
+    return monthMatch && categoryMatch && accountTypeMatch
+  })
+}
+
 export function DashboardGrid({
   expenses,
   widgets,
   removeWidget,
   updateWidgetTitle,
   onDragEnd,
+  updateWidgetFilters,
+  availableMonths,
 }: DashboardGridProps) {
   if (widgets.length === 0) {
     return (
@@ -72,29 +110,41 @@ export function DashboardGrid({
             ref={provided.innerRef}
             className="-m-2 flex flex-wrap"
           >
-            {widgets.map((widget, index) => (
-              <Draggable key={widget.id} draggableId={widget.id} index={index}>
-                {(provided, snapshot) => (
-                  <WidgetWrapper
-                    ref={provided.innerRef}
-                    widget={widget}
-                    removeWidget={removeWidget}
-                    updateWidgetTitle={updateWidgetTitle}
-                    className={cn(
-                      "p-2",
-                      widget.type === "stats"
-                        ? "w-full"
-                        : "w-full md:w-1/2 lg:w-1/3"
-                    )}
-                    isDragging={snapshot.isDragging}
-                    draggableProps={provided.draggableProps}
-                    dragHandleProps={provided.dragHandleProps}
-                  >
-                    {renderWidget(widget, expenses)}
-                  </WidgetWrapper>
-                )}
-              </Draggable>
-            ))}
+            {widgets.map((widget, index) => {
+              const widgetExpenses = filterExpensesForWidget(
+                expenses,
+                widget.filters
+              )
+              return (
+                <Draggable
+                  key={widget.id}
+                  draggableId={widget.id}
+                  index={index}
+                >
+                  {(provided, snapshot) => (
+                    <WidgetWrapper
+                      ref={provided.innerRef}
+                      widget={widget}
+                      removeWidget={removeWidget}
+                      updateWidgetTitle={updateWidgetTitle}
+                      className={cn(
+                        "p-2",
+                        widget.type === "stats"
+                          ? "w-full"
+                          : "w-full md:w-1/2 lg:w-1/3"
+                      )}
+                      isDragging={snapshot.isDragging}
+                      draggableProps={provided.draggableProps}
+                      dragHandleProps={provided.dragHandleProps}
+                      updateWidgetFilters={updateWidgetFilters}
+                      availableMonths={availableMonths}
+                    >
+                      {renderWidget(widget, widgetExpenses)}
+                    </WidgetWrapper>
+                  )}
+                </Draggable>
+              )
+            })}
             {provided.placeholder}
           </div>
         )}

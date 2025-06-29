@@ -1,3 +1,4 @@
+
 import type { LucideIcon } from "lucide-react"
 
 export type Category = {
@@ -26,8 +27,15 @@ export type WidgetType =
   | "over-time-bar"
   | "account-type-pie"
 
+export type WidgetFilters = {
+  month?: string[]
+  category?: string[]
+  accountType?: string[]
+}
+
 export type WidgetConfig = {
   id: string
   type: WidgetType
   title: string
+  filters?: WidgetFilters
 }

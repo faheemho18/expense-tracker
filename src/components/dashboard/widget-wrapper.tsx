@@ -2,10 +2,10 @@
 "use client"
 
 import * as React from "react"
-import { Edit, Grip, MoreVertical, Trash } from "lucide-react"
+import { Edit, Filter, Grip, MoreVertical, Trash } from "lucide-react"
 import type { DraggableProvided } from "@hello-pangea/dnd"
 
-import type { WidgetConfig } from "@/lib/types"
+import type { WidgetConfig, WidgetFilters } from "@/lib/types"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -18,10 +18,12 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
 import { EditWidgetDialog } from "./edit-widget-dialog"
+import { WidgetFiltersSheet } from "./widget-filters-sheet"
 
 interface WidgetWrapperProps extends React.HTMLAttributes<HTMLDivElement> {
   widget: WidgetConfig
@@ -31,6 +33,8 @@ interface WidgetWrapperProps extends React.HTMLAttributes<HTMLDivElement> {
   isDragging?: boolean
   draggableProps: DraggableProvided["draggableProps"]
   dragHandleProps: DraggableProvided["dragHandleProps"] | null | undefined
+  updateWidgetFilters: (id: string, filters: WidgetFilters) => void
+  availableMonths: { value: string; label: string }[]
 }
 
 export const WidgetWrapper = React.forwardRef<
@@ -47,11 +51,14 @@ export const WidgetWrapper = React.forwardRef<
       isDragging,
       draggableProps,
       dragHandleProps,
+      updateWidgetFilters,
+      availableMonths,
       ...props
     },
     ref
   ) => {
     const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false)
+    const [isFilterSheetOpen, setIsFilterSheetOpen] = React.useState(false)
 
     return (
       <div ref={ref} {...draggableProps} {...props} className={className}>
@@ -82,6 +89,11 @@ export const WidgetWrapper = React.forwardRef<
                   <Edit className="mr-2 h-4 w-4" />
                   Edit title
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setIsFilterSheetOpen(true)}>
+                  <Filter className="mr-2 h-4 w-4" />
+                  Filters
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => removeWidget(widget.id)}
                   className="text-destructive"
@@ -99,6 +111,13 @@ export const WidgetWrapper = React.forwardRef<
           setIsOpen={setIsEditDialogOpen}
           widget={widget}
           updateWidgetTitle={updateWidgetTitle}
+        />
+        <WidgetFiltersSheet
+          isOpen={isFilterSheetOpen}
+          setIsOpen={setIsFilterSheetOpen}
+          widget={widget}
+          updateWidgetFilters={updateWidgetFilters}
+          months={availableMonths}
         />
       </div>
     )
