@@ -14,21 +14,19 @@ import { AppLayout } from "@/components/app-layout"
 import { AddWidgetDialog } from "@/components/dashboard/add-widget-dialog"
 import { DashboardGrid } from "@/components/dashboard/dashboard-grid"
 
+const DEFAULT_WIDGETS: WidgetConfig[] = [
+  { id: "1", type: "stats", title: "Overview" },
+  { id: "2", type: "category-pie", title: "Spending by Category" },
+  { id: "3", type: "over-time-bar", title: "Monthly Spending" },
+]
+
 export default function DashboardPage() {
   const [expenses, setExpenses] = useLocalStorage<Expense[]>("expenses", [])
-  const [widgets, setWidgets] = useLocalStorage<WidgetConfig[]>("widgets", [])
+  const [widgets, setWidgets] = useLocalStorage<WidgetConfig[]>(
+    "widgets",
+    DEFAULT_WIDGETS
+  )
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
-
-  // Initialize with some widgets for demo purposes if none exist
-  React.useEffect(() => {
-    if (widgets === null || widgets.length === 0) {
-      setWidgets([
-        { id: "1", type: "stats", title: "Overview" },
-        { id: "2", type: "category-pie", title: "Spending by Category" },
-        { id: "3", type: "over-time-bar", title: "Monthly Spending" },
-      ])
-    }
-  }, [widgets, setWidgets])
 
   const addWidget = (widget: Omit<WidgetConfig, "id">) => {
     const newWidget = { ...widget, id: crypto.randomUUID() }
