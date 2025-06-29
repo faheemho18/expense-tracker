@@ -16,6 +16,7 @@ import type { Expense } from "@/lib/types"
 
 import { AppLayout } from "@/components/app-layout"
 import { CategoryGaugesWidget } from "@/components/dashboard/category-gauges-widget"
+import { ProjectedSavingsWidget } from "@/components/dashboard/projected-savings-widget"
 import { AddExpenseSheet } from "@/components/expenses/add-expense-sheet"
 import { ExpensesFilters } from "@/components/expenses/expenses-filters"
 import { ExpensesTable } from "@/components/expenses/expenses-table"
@@ -174,42 +175,47 @@ export default function HomePage() {
     <AppLayout>
       <div className="flex-1 space-y-4 p-4 sm:p-8">
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Monthly Report</CardTitle>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handlePreviousMonth}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                <span className="sr-only">Previous month</span>
+              </Button>
+              <span className="w-32 text-center font-medium">
+                {format(gaugesMonth, "MMMM yyyy")}
+              </span>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleNextMonth}
+                disabled={isAfter(
+                  startOfMonth(gaugesMonth),
+                  startOfMonth(new Date())
+                )}
+              >
+                <ChevronRight className="h-4 w-4" />
+                <span className="sr-only">Next month</span>
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
               <div>
-                <div className="mb-4 flex items-center justify-between">
-                  <h3 className="text-lg font-semibold tracking-tight">
-                    Monthly Threshold Progress
-                  </h3>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={handlePreviousMonth}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                      <span className="sr-only">Previous month</span>
-                    </Button>
-                    <span className="w-32 text-center font-medium">
-                      {format(gaugesMonth, "MMMM yyyy")}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={handleNextMonth}
-                      disabled={isAfter(
-                        startOfMonth(gaugesMonth),
-                        startOfMonth(new Date())
-                      )}
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                      <span className="sr-only">Next month</span>
-                    </Button>
-                  </div>
-                </div>
+                <h3 className="mb-4 text-lg font-semibold tracking-tight">
+                  Projected Savings
+                </h3>
+                <ProjectedSavingsWidget expenses={gaugesMonthExpenses} />
+              </div>
+              <Separator />
+              <div>
+                <h3 className="mb-4 text-lg font-semibold tracking-tight">
+                  Monthly Threshold Progress
+                </h3>
                 <CategoryGaugesWidget expenses={gaugesMonthExpenses} />
               </div>
               <Separator />
