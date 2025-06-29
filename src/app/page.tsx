@@ -337,7 +337,7 @@ export default function HomePage() {
                 </Button>
               </div>
               <div />
-              <div className="absolute right-6 top-1/2 z-10 -translate-y-1/2">
+              <div className="absolute right-16 top-1/2 z-10 -translate-y-1/2">
                 <ProjectedSavingsWidget expenses={gaugesMonthExpenses} />
               </div>
             </CardHeader>
