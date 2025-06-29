@@ -35,6 +35,14 @@ export function StackedAreaChartWidget({
   const { data, chartConfig } = React.useMemo(() => {
     if (!categories) return { data: [], chartConfig: {} }
 
+    const config: ChartConfig = categories.reduce((acc, category, index) => {
+      acc[category.value] = {
+        label: category.label,
+        color: generateColor(index),
+      }
+      return acc
+    }, {} as ChartConfig)
+
     const monthlyData: Record<string, Record<string, number | string>> = {}
 
     expenses.forEach((expense) => {
@@ -43,9 +51,15 @@ export function StackedAreaChartWidget({
       const month = format(startOfMonth(new Date(expense.date)), "yyyy-MM")
       if (!monthlyData[month]) {
         monthlyData[month] = { month }
+        Object.keys(config).forEach((categoryKey) => {
+          monthlyData[month][categoryKey] = 0
+        })
       }
-      monthlyData[month][expense.category] =
-        ((monthlyData[month][expense.category] as number) || 0) + expense.amount
+      if (config[expense.category]) {
+        monthlyData[month][expense.category] =
+          ((monthlyData[month][expense.category] as number) || 0) +
+          expense.amount
+      }
     })
 
     const chartData = Object.values(monthlyData)
@@ -58,14 +72,6 @@ export function StackedAreaChartWidget({
         const dateB = parse(b.month, "MMM yy", new Date())
         return dateA.getTime() - dateB.getTime()
       })
-
-    const config: ChartConfig = categories.reduce((acc, category, index) => {
-      acc[category.value] = {
-        label: category.label,
-        color: generateColor(index),
-      }
-      return acc
-    }, {} as ChartConfig)
 
     return { data: chartData, chartConfig: config }
   }, [expenses, categories])
