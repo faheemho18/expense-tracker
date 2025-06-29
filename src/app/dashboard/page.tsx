@@ -12,13 +12,13 @@ import { AddWidgetDialog } from "@/components/dashboard/add-widget-dialog"
 import { DashboardGrid } from "@/components/dashboard/dashboard-grid"
 
 export default function DashboardPage() {
-  const [expenses] = useLocalStorage<Expense[]>("expenses", [])
+  const [expenses, setExpenses] = useLocalStorage<Expense[]>("expenses", [])
   const [widgets, setWidgets] = useLocalStorage<WidgetConfig[]>("widgets", [])
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
 
   const addWidget = (widget: Omit<WidgetConfig, "id">) => {
     const newWidget = { ...widget, id: crypto.randomUUID() }
-    setWidgets([...(widgets || []), newWidget])
+    setWidgets((prev) => [...(prev || []), newWidget])
   }
 
   const removeWidget = (id: string) => {
@@ -40,7 +40,7 @@ export default function DashboardPage() {
       </div>
       <Button
         onClick={() => setIsDialogOpen(true)}
-        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg"
+        className="fixed bottom-6 right-6 z-40 h-14 w-14 rounded-full shadow-lg"
         size="icon"
       >
         <span className="sr-only">Add Widget</span>
