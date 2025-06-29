@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -32,7 +33,7 @@ export default function HomePage() {
     category: string
     accountType: string
   }>({
-    month: "all",
+    month: format(new Date(), "yyyy-MM"),
     category: "all",
     accountType: "all",
   })
