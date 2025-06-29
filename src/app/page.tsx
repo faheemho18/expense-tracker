@@ -38,6 +38,12 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 type SortableKey =
   | "date"
@@ -71,6 +77,9 @@ export default function HomePage() {
   } | null>(null)
   const [currentPage, setCurrentPage] = React.useState(1)
   const { categories, accountTypes } = useSettings()
+  const [gaugeSortOrder, setGaugeSortOrder] = React.useState<
+    "ascending" | "descending" | null
+  >(null)
 
   const ITEMS_PER_PAGE = 8
 
@@ -80,6 +89,10 @@ export default function HomePage() {
 
   const handleNextMonth = () => {
     setGaugesMonth((prev) => addMonths(prev, 1))
+  }
+
+  const handleToggleGaugeSort = (direction: "ascending" | "descending") => {
+    setGaugeSortOrder((prev) => (prev === direction ? null : direction))
   }
 
   const addExpense = (expense: Omit<Expense, "id">) => {
@@ -311,10 +324,57 @@ export default function HomePage() {
               </div>
             </CardHeader>
             <CardContent>
-              <h3 className="mb-4 text-lg font-semibold tracking-tight">
-                Monthly Threshold Progress
-              </h3>
-              <CategoryGaugesWidget expenses={gaugesMonthExpenses} />
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-lg font-semibold tracking-tight">
+                  Monthly Threshold Progress
+                </h3>
+                <div className="flex items-center gap-1">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 data-[active=true]:bg-accent"
+                          onClick={() => handleToggleGaugeSort("ascending")}
+                          data-active={gaugeSortOrder === "ascending"}
+                        >
+                          <ArrowUp className="h-4 w-4" />
+                          <span className="sr-only">
+                            Sort ascending by percentage
+                          </span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Sort Ascending</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 data-[active=true]:bg-accent"
+                          onClick={() => handleToggleGaugeSort("descending")}
+                          data-active={gaugeSortOrder === "descending"}
+                        >
+                          <ArrowDown className="h-4 w-4" />
+                          <span className="sr-only">
+                            Sort descending by percentage
+                          </span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Sort Descending</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              </div>
+              <CategoryGaugesWidget
+                expenses={gaugesMonthExpenses}
+                sortOrder={gaugeSortOrder}
+              />
             </CardContent>
           </Card>
 

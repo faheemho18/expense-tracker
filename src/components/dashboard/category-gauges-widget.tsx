@@ -17,9 +17,13 @@ import { formatCurrency, getIcon } from "@/lib/utils"
 
 interface CategoryGaugesWidgetProps {
   expenses: Expense[]
+  sortOrder: "ascending" | "descending" | null
 }
 
-export function CategoryGaugesWidget({ expenses }: CategoryGaugesWidgetProps) {
+export function CategoryGaugesWidget({
+  expenses,
+  sortOrder,
+}: CategoryGaugesWidgetProps) {
   const { categories } = useSettings()
 
   const gaugeData = React.useMemo(() => {
@@ -35,10 +39,11 @@ export function CategoryGaugesWidget({ expenses }: CategoryGaugesWidgetProps) {
       {} as Record<string, number>
     )
 
-    return categories.map((category) => {
+    const data = categories.map((category) => {
       const spent = categoryTotals[category.value] || 0
       const threshold = category.threshold || 0
-      const percentage = threshold > 0 ? Math.round((spent / threshold) * 100) : 0
+      const percentage =
+        threshold > 0 ? Math.round((spent / threshold) * 100) : 0
 
       const pieData =
         threshold > 0
@@ -60,7 +65,18 @@ export function CategoryGaugesWidget({ expenses }: CategoryGaugesWidgetProps) {
         data: pieData,
       }
     })
-  }, [expenses, categories])
+
+    if (sortOrder) {
+      data.sort((a, b) => {
+        if (sortOrder === "ascending") {
+          return a.percentage - b.percentage
+        }
+        return b.percentage - a.percentage
+      })
+    }
+
+    return data
+  }, [expenses, categories, sortOrder])
 
   if (!categories) {
     return <Skeleton className="h-full w-full" />
