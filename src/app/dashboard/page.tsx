@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { PlusCircle } from "lucide-react"
+import { Plus } from "lucide-react"
 
 import { useLocalStorage } from "@/hooks/use-local-storage"
 import type { Expense, WidgetConfig } from "@/lib/types"
@@ -30,10 +30,6 @@ export default function DashboardPage() {
       <div className="flex-1 space-y-4 p-4 sm:p-8">
         <div className="flex items-center justify-between space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <Button onClick={() => setIsDialogOpen(true)}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Add Widget
-          </Button>
         </div>
 
         <DashboardGrid
@@ -42,6 +38,14 @@ export default function DashboardPage() {
           removeWidget={removeWidget}
         />
       </div>
+      <Button
+        onClick={() => setIsDialogOpen(true)}
+        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg"
+        size="icon"
+      >
+        <span className="sr-only">Add Widget</span>
+        <Plus className="h-6 w-6" />
+      </Button>
       <AddWidgetDialog
         isOpen={isDialogOpen}
         setIsOpen={setIsDialogOpen}

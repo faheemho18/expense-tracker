@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { PlusCircle } from "lucide-react"
+import { Plus } from "lucide-react"
 
 import { useLocalStorage } from "@/hooks/use-local-storage"
 import type { Expense, WidgetConfig } from "@/lib/types"
@@ -19,11 +19,11 @@ export default function HomePage() {
 
   const addExpense = (expense: Omit<Expense, "id">) => {
     const newExpense = { ...expense, id: crypto.randomUUID() }
-    setExpenses([...expenses, newExpense])
+    setExpenses([...(expenses || []), newExpense])
   }
 
   const deleteExpense = (id: string) => {
-    setExpenses(expenses.filter((expense) => expense.id !== id))
+    setExpenses((expenses || []).filter((expense) => expense.id !== id))
   }
   
   // Initialize with some expenses for demo purposes if none exist
@@ -54,10 +54,6 @@ export default function HomePage() {
             <CardTitle>Your Expenses</CardTitle>
             <div className="flex items-center gap-2">
               <ExportExpensesButton expenses={expenses || []} />
-              <Button onClick={() => setIsSheetOpen(true)}>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add Expense
-              </Button>
             </div>
           </CardHeader>
           <CardContent>
@@ -65,6 +61,14 @@ export default function HomePage() {
           </CardContent>
         </Card>
       </div>
+      <Button
+        onClick={() => setIsSheetOpen(true)}
+        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg"
+        size="icon"
+      >
+        <span className="sr-only">Add Expense</span>
+        <Plus className="h-6 w-6" />
+      </Button>
       <AddExpenseSheet
         isOpen={isSheetOpen}
         setIsOpen={setIsSheetOpen}
