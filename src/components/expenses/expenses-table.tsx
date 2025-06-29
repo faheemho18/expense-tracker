@@ -1,14 +1,20 @@
 
 "use client"
 
+import * as React from "react"
 import { format } from "date-fns"
-import { MoreHorizontal, Trash2 } from "lucide-react"
+import { MoreHorizontal, Trash2, FileImage } from "lucide-react"
 
 import { useSettings } from "@/contexts/settings-context"
 import type { Expense } from "@/lib/types"
 import { cn, formatCurrency, getIcon } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -85,7 +91,30 @@ export function ExpensesTable({ expenses, deleteExpense }: ExpensesTableProps) {
                       {format(new Date(expense.date), "dd MMM, yyyy")}
                     </TableCell>
                     <TableCell className="font-medium">
-                      {expense.description}
+                      <div className="flex items-center gap-1.5">
+                        <span>{expense.description}</span>
+                        {expense.receiptImage && (
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 shrink-0"
+                              >
+                                <FileImage className="h-4 w-4" />
+                                <span className="sr-only">View Receipt</span>
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-xl">
+                              <img
+                                src={expense.receiptImage}
+                                alt={`Receipt for ${expense.description}`}
+                                className="h-auto w-full rounded-md object-contain"
+                              />
+                            </DialogContent>
+                          </Dialog>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
                       {category && (

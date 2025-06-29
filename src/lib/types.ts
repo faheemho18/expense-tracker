@@ -22,6 +22,7 @@ export type Expense = {
   date: string // ISO string
   category: string // category value
   accountType: string // account type value
+  receiptImage?: string // Optional data URI of the receipt image
 }
 
 export type WidgetType =
