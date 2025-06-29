@@ -2,7 +2,6 @@
 "use client"
 
 import * as React from "react"
-import { format, startOfMonth } from "date-fns"
 import { Label, Pie, PieChart } from "recharts"
 
 import { useSettings } from "@/contexts/settings-context"
@@ -26,18 +25,15 @@ export function CategoryGaugesWidget({ expenses }: CategoryGaugesWidgetProps) {
   const gaugeData = React.useMemo(() => {
     if (!categories || !categoryThresholds) return []
 
-    // Filter to current month's expenses for gauge calculations
-    const currentMonth = format(new Date(), "yyyy-MM")
-    const currentMonthExpenses = expenses.filter(
-      (e) => format(startOfMonth(new Date(e.date)), "yyyy-MM") === currentMonth
+    const categoryTotals = expenses.reduce(
+      (acc, expense) => {
+        if (expense.amount > 0) {
+          acc[expense.category] = (acc[expense.category] || 0) + expense.amount
+        }
+        return acc
+      },
+      {} as Record<string, number>
     )
-
-    const categoryTotals = currentMonthExpenses.reduce((acc, expense) => {
-      if (expense.amount > 0) {
-        acc[expense.category] = (acc[expense.category] || 0) + expense.amount
-      }
-      return acc
-    }, {} as Record<string, number>)
 
     return categoryThresholds
       .map((threshold) => {
@@ -80,8 +76,8 @@ export function CategoryGaugesWidget({ expenses }: CategoryGaugesWidgetProps) {
 
   if (gaugeData.length === 0) {
     return (
-      <div className="flex h-full items-center justify-center text-muted-foreground">
-        No budgets set or no expenses for this month.
+      <div className="flex h-full min-h-[150px] items-center justify-center rounded-md border border-dashed text-muted-foreground">
+        No budgets set or no expense data for the selected period.
       </div>
     )
   }

@@ -23,6 +23,7 @@ import { AddExpenseSheet } from "@/components/expenses/add-expense-sheet"
 import { ExpensesFilters } from "@/components/expenses/expenses-filters"
 import { ExpensesTable } from "@/components/expenses/expenses-table"
 import { ExportExpensesButton } from "@/components/expenses/export-expenses-button"
+import { CategoryGaugesWidget } from "@/components/dashboard/category-gauges-widget"
 
 export default function HomePage() {
   const [expenses, setExpenses] = useLocalStorage<Expense[]>("expenses", [])
@@ -110,7 +111,7 @@ export default function HomePage() {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between gap-4">
-              <CardTitle>Your Expenses</CardTitle>
+              <CardTitle>Monthly Report</CardTitle>
               <Button
                 variant="outline"
                 size="sm"
@@ -122,10 +123,24 @@ export default function HomePage() {
             </div>
           </CardHeader>
           <CardContent>
-            <ExpensesTable
-              expenses={filteredExpenses}
-              deleteExpense={deleteExpense}
-            />
+            <div className="space-y-6">
+              <div>
+                <h3 className="mb-4 text-lg font-semibold tracking-tight">
+                  Monthly Budget Progress
+                </h3>
+                <CategoryGaugesWidget expenses={filteredExpenses} />
+              </div>
+              <Separator />
+              <div>
+                <h3 className="mb-4 text-lg font-semibold tracking-tight">
+                  Transactions
+                </h3>
+                <ExpensesTable
+                  expenses={filteredExpenses}
+                  deleteExpense={deleteExpense}
+                />
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>

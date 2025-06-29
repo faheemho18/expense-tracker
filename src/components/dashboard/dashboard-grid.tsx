@@ -16,7 +16,6 @@ import { cn } from "@/lib/utils"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 import { AccountTypePieChartWidget } from "./account-type-pie-chart-widget"
-import { CategoryGaugesWidget } from "./category-gauges-widget"
 import { CategoryPieChartWidget } from "./category-pie-chart-widget"
 import { HeatmapCalendarWidget } from "./heatmap-calendar-widget"
 import { OverTimeBarChartWidget } from "./over-time-bar-chart-widget"
@@ -48,8 +47,6 @@ const renderWidget = (widget: WidgetConfig, expenses: Expense[]) => {
       return <StackedAreaChartWidget expenses={expenses} />
     case "heatmap-calendar":
       return <HeatmapCalendarWidget expenses={expenses} />
-    case "category-gauges":
-      return <CategoryGaugesWidget expenses={expenses} />
     default:
       return null
   }
@@ -59,7 +56,6 @@ const getWidgetWidthClass = (widgetType: WidgetConfig["type"]) => {
   switch (widgetType) {
     case "stats":
     case "stacked-area":
-    case "category-gauges":
       return "w-full"
     case "heatmap-calendar":
       return "w-full md:w-1/2"

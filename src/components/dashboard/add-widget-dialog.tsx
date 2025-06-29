@@ -45,7 +45,6 @@ const widgetSchema = z.object({
       "account-type-pie",
       "stacked-area",
       "heatmap-calendar",
-      "category-gauges",
     ],
     {
       required_error: "Widget type is required",
@@ -68,7 +67,6 @@ const WIDGET_TYPE_OPTIONS: { value: WidgetType; label: string }[] = [
   { value: "account-type-pie", label: "Spending by Account Type (Pie Chart)" },
   { value: "stacked-area", label: "Monthly Spending Breakdown (Area Chart)" },
   { value: "heatmap-calendar", label: "Yearly Spending Heatmap" },
-  { value: "category-gauges", label: "Category Budget Gauges" },
 ]
 
 export function AddWidgetDialog({
