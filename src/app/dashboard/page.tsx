@@ -2,7 +2,7 @@
 "use client"
 
 import * as React from "react"
-import { Plus } from "lucide-react"
+import { Filter, Plus } from "lucide-react"
 import type { DropResult } from "@hello-pangea/dnd"
 import { format, startOfMonth } from "date-fns"
 
@@ -13,14 +13,14 @@ import { Button } from "@/components/ui/button"
 import { AppLayout } from "@/components/app-layout"
 import { AddWidgetDialog } from "@/components/dashboard/add-widget-dialog"
 import { DashboardGrid } from "@/components/dashboard/dashboard-grid"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { ExpensesFilters } from "@/components/expenses/expenses-filters"
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet"
 
 const DEFAULT_WIDGETS: WidgetConfig[] = [
   { id: "1", type: "stats", title: "Overview" },
@@ -35,6 +35,7 @@ export default function DashboardPage() {
     DEFAULT_WIDGETS
   )
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
+  const [isFilterSheetOpen, setIsFilterSheetOpen] = React.useState(false)
   const [filters, setFilters] = React.useState<WidgetFilters>({
     month: [],
     category: [],
@@ -144,25 +145,15 @@ export default function DashboardPage() {
       <div className="flex-1 space-y-4 p-4 sm:p-8">
         <div className="flex items-center justify-between space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsFilterSheetOpen(true)}
+          >
+            <Filter className="mr-2 h-4 w-4" />
+            Filters
+          </Button>
         </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Global Dashboard Filters</CardTitle>
-            <CardDescription>
-              Apply filters to all widgets on the dashboard. Widget-specific
-              filters can still be applied individually.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ExpensesFilters
-              filters={filters}
-              onFilterChange={handleFilterChange}
-              onClearFilters={clearFilters}
-              months={availableMonths}
-            />
-          </CardContent>
-        </Card>
 
         <DashboardGrid
           expenses={filteredExpenses || []}
@@ -187,6 +178,25 @@ export default function DashboardPage() {
         setIsOpen={setIsDialogOpen}
         addWidget={addWidget}
       />
+      <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Global Dashboard Filters</SheetTitle>
+            <SheetDescription>
+              Apply filters to all widgets on the dashboard.
+            </SheetDescription>
+          </SheetHeader>
+          <div className="space-y-4 py-4">
+            <h4 className="text-sm font-medium">Filter by</h4>
+            <ExpensesFilters
+              filters={filters}
+              onFilterChange={handleFilterChange}
+              onClearFilters={clearFilters}
+              months={availableMonths}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
     </AppLayout>
   )
 }
