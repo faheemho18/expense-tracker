@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { Plus } from "lucide-react"
+import type { DropResult } from "react-beautiful-dnd"
 
 import { useLocalStorage } from "@/hooks/use-local-storage"
 import type { Expense, WidgetConfig } from "@/lib/types"
@@ -22,7 +23,21 @@ export default function DashboardPage() {
   }
 
   const removeWidget = (id: string) => {
-    setWidgets((widgets || []).filter((widget) => widget.id !== id))
+    setWidgets((prevWidgets) =>
+      (prevWidgets || []).filter((widget) => widget.id !== id)
+    )
+  }
+
+  const onDragEnd = (result: DropResult) => {
+    if (!result.destination || !widgets) {
+      return
+    }
+
+    const items = Array.from(widgets)
+    const [reorderedItem] = items.splice(result.source.index, 1)
+    items.splice(result.destination.index, 0, reorderedItem)
+
+    setWidgets(items)
   }
 
   return (
@@ -36,11 +51,12 @@ export default function DashboardPage() {
           expenses={expenses || []}
           widgets={widgets || []}
           removeWidget={removeWidget}
+          onDragEnd={onDragEnd}
         />
       </div>
       <Button
         onClick={() => setIsDialogOpen(true)}
-        className="fixed bottom-6 right-6 z-40 h-14 w-14 rounded-full shadow-lg"
+        className="fixed bottom-6 right-6 z-50 h-16 w-16 rounded-full shadow-lg"
         size="icon"
       >
         <span className="sr-only">Add Widget</span>
