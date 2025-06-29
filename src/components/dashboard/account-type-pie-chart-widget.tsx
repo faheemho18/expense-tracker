@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -9,6 +8,8 @@ import type { Expense } from "@/lib/types"
 import {
   ChartContainer,
   type ChartConfig,
+  ChartLegend,
+  ChartLegendContent,
   ChartTooltipContent,
 } from "@/components/ui/chart"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -99,6 +100,10 @@ export function AccountTypePieChartWidget({
             />
           ))}
         </Pie>
+        <ChartLegend
+          verticalAlign="bottom"
+          content={<ChartLegendContent nameKey="accountType" />}
+        />
       </PieChart>
     </ChartContainer>
   )

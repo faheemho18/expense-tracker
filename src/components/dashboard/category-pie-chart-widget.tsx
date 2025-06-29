@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -9,9 +8,15 @@ import type { Expense } from "@/lib/types"
 import {
   ChartContainer,
   type ChartConfig,
+  ChartLegend,
+  ChartLegendContent,
   ChartTooltipContent,
 } from "@/components/ui/chart"
 import { Skeleton } from "@/components/ui/skeleton"
+
+interface CategoryPieChartWidgetProps {
+  expenses: Expense[]
+}
 
 export function CategoryPieChartWidget({
   expenses,
@@ -87,6 +92,10 @@ export function CategoryPieChartWidget({
             <Cell key={`cell-${index}`} fill={entry.fill} />
           ))}
         </Pie>
+        <ChartLegend
+          verticalAlign="bottom"
+          content={<ChartLegendContent nameKey="category" />}
+        />
       </PieChart>
     </ChartContainer>
   )

@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -113,9 +112,9 @@ export function StackedAreaChartWidget({
         />
         <ChartLegend
           align="center"
-          verticalAlign="top"
+          verticalAlign="bottom"
           content={<ChartLegendContent />}
-          wrapperStyle={{ paddingTop: 16 }}
+          wrapperStyle={{ paddingTop: 24 }}
         />
         {Object.keys(chartConfig).map((key) => (
           <Area

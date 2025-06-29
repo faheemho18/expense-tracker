@@ -6,6 +6,8 @@ import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
 
 import {
   ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
@@ -69,6 +71,7 @@ export function OverTimeBarChartWidget({ expenses }: OverTimeBarChartWidgetProps
           cursor={false}
           content={<ChartTooltipContent formatter={(value, name) => <div>{name}: {formatCurrency(Number(value))}</div>} />}
         />
+        <ChartLegend verticalAlign="bottom" content={<ChartLegendContent />} />
         <Bar dataKey="expenses" fill="var(--color-expenses)" radius={4} />
          <Bar dataKey="refunds" fill="var(--color-refunds)" radius={4} />
       </BarChart>
