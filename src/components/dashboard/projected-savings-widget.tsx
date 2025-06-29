@@ -8,7 +8,6 @@ import { useSettings } from "@/contexts/settings-context"
 import type { Expense } from "@/lib/types"
 import { formatCurrency } from "@/lib/utils"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 
 interface ProjectedSavingsWidgetProps {
@@ -49,25 +48,24 @@ export function ProjectedSavingsWidget({
   }, [expenses, categories])
 
   if (!categories) {
-    return <Skeleton className="h-[110px] w-full" />
+    return (
+      <div className="flex justify-center">
+        <Skeleton className="h-32 w-32 rounded-full" />
+      </div>
+    )
   }
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">
-          Projected Monthly Savings
-        </CardTitle>
-        <PiggyBank className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold text-emerald-500">
+    <div className="relative mb-4 flex h-32 items-center justify-center">
+      <PiggyBank className="absolute h-32 w-32 text-muted-foreground/20" />
+      <div className="relative flex flex-col items-center">
+        <div className="text-3xl font-bold text-emerald-500">
           + {formatCurrency(projectedSavings)}
         </div>
         <p className="text-xs text-muted-foreground">
-          Based on remaining thresholds for this month.
+          Projected Monthly Savings
         </p>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
