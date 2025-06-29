@@ -13,6 +13,14 @@ import { Button } from "@/components/ui/button"
 import { AppLayout } from "@/components/app-layout"
 import { AddWidgetDialog } from "@/components/dashboard/add-widget-dialog"
 import { DashboardGrid } from "@/components/dashboard/dashboard-grid"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { ExpensesFilters } from "@/components/expenses/expenses-filters"
 
 const DEFAULT_WIDGETS: WidgetConfig[] = [
   { id: "1", type: "stats", title: "Overview" },
@@ -27,6 +35,11 @@ export default function DashboardPage() {
     DEFAULT_WIDGETS
   )
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
+  const [filters, setFilters] = React.useState<WidgetFilters>({
+    month: [],
+    category: [],
+    accountType: [],
+  })
 
   const addWidget = (widget: Omit<WidgetConfig, "id">) => {
     const newWidget = { ...widget, id: crypto.randomUUID() }
@@ -86,6 +99,46 @@ export default function DashboardPage() {
     )
   }, [expenses])
 
+  const handleFilterChange = (
+    filterType: keyof WidgetFilters,
+    value: string
+  ) => {
+    setFilters((prev) => {
+      const currentValues = prev[filterType] || []
+      const newValues = currentValues.includes(value)
+        ? currentValues.filter((v) => v !== value)
+        : [...currentValues, value]
+      return { ...prev, [filterType]: newValues }
+    })
+  }
+
+  const clearFilters = () => {
+    setFilters({ month: [], category: [], accountType: [] })
+  }
+
+  const filteredExpenses = React.useMemo(() => {
+    if (!expenses) return []
+    return expenses.filter((expense) => {
+      const expenseDate = new Date(expense.date)
+      const expenseMonth = format(startOfMonth(expenseDate), "yyyy-MM")
+
+      const monthMatch =
+        !filters.month ||
+        filters.month.length === 0 ||
+        filters.month.includes(expenseMonth)
+      const categoryMatch =
+        !filters.category ||
+        filters.category.length === 0 ||
+        filters.category.includes(expense.category)
+      const accountTypeMatch =
+        !filters.accountType ||
+        filters.accountType.length === 0 ||
+        filters.accountType.includes(expense.accountType)
+
+      return monthMatch && categoryMatch && accountTypeMatch
+    })
+  }, [expenses, filters])
+
   return (
     <AppLayout>
       <div className="flex-1 space-y-4 p-4 sm:p-8">
@@ -93,8 +146,26 @@ export default function DashboardPage() {
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
         </div>
 
+        <Card>
+          <CardHeader>
+            <CardTitle>Global Dashboard Filters</CardTitle>
+            <CardDescription>
+              Apply filters to all widgets on the dashboard. Widget-specific
+              filters can still be applied individually.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ExpensesFilters
+              filters={filters}
+              onFilterChange={handleFilterChange}
+              onClearFilters={clearFilters}
+              months={availableMonths}
+            />
+          </CardContent>
+        </Card>
+
         <DashboardGrid
-          expenses={expenses || []}
+          expenses={filteredExpenses || []}
           widgets={widgets || []}
           removeWidget={removeWidget}
           updateWidgetTitle={updateWidgetTitle}
