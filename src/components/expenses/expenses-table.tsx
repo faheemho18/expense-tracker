@@ -132,7 +132,7 @@ export function ExpensesTable({
                       {category && (
                         <Badge
                           variant="outline"
-                          className="flex max-w-min items-center gap-2 whitespace-nowrap"
+                          className="max-w-min gap-2 whitespace-nowrap"
                         >
                           {CategoryIcon && (
                             <CategoryIcon
