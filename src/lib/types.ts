@@ -3,7 +3,12 @@ import type { LucideIcon } from "lucide-react"
 export type Category = {
   value: string
   label: string
-  icon: LucideIcon
+  icon: string // Corresponds to a key in the ICONS map
+}
+
+export type AccountType = {
+  value: string
+  label: string
 }
 
 export type Expense = {
@@ -15,7 +20,11 @@ export type Expense = {
   accountType: string // account type value
 }
 
-export type WidgetType = "stats" | "category-pie" | "over-time-bar"
+export type WidgetType =
+  | "stats"
+  | "category-pie"
+  | "over-time-bar"
+  | "account-type-pie"
 
 export type WidgetConfig = {
   id: string

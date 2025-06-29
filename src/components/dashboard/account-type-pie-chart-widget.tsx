@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/chart"
 import { Skeleton } from "@/components/ui/skeleton"
 
-interface CategoryPieChartWidgetProps {
+interface AccountTypePieChartWidgetProps {
   expenses: Expense[]
 }
 
@@ -22,46 +22,46 @@ const generateColor = (index: number) => {
   return `hsl(${hue}, 50%, 60%)`
 }
 
-export function CategoryPieChartWidget({
+export function AccountTypePieChartWidget({
   expenses,
-}: CategoryPieChartWidgetProps) {
-  const { categories } = useSettings()
+}: AccountTypePieChartWidgetProps) {
+  const { accountTypes } = useSettings()
 
   const data = React.useMemo(() => {
-    const categoryTotals = expenses.reduce(
+    const accountTypeTotals = expenses.reduce(
       (acc, expense) => {
-        // Only include actual expenses, not refunds/rebates
         if (expense.amount > 0) {
-          acc[expense.category] = (acc[expense.category] || 0) + expense.amount
+          acc[expense.accountType] =
+            (acc[expense.accountType] || 0) + expense.amount
         }
         return acc
       },
       {} as Record<string, number>
     )
 
-    return Object.entries(categoryTotals)
-      .map(([categoryValue, total]) => ({
-        category:
-          (categories || []).find((c) => c.value === categoryValue)?.label ||
-          "Unknown",
+    return Object.entries(accountTypeTotals)
+      .map(([accountTypeValue, total]) => ({
+        accountType:
+          (accountTypes || []).find((a) => a.value === accountTypeValue)
+            ?.label || "Unknown",
         total,
-        fill: "var(--color-primary)", // Default fill, will be overridden by Cell
+        fill: "var(--color-primary)",
       }))
       .sort((a, b) => b.total - a.total)
-  }, [expenses, categories])
+  }, [expenses, accountTypes])
 
   const chartConfig = React.useMemo(() => {
     const config: ChartConfig = {}
     data.forEach((item, index) => {
-      config[item.category] = {
-        label: item.category,
+      config[item.accountType] = {
+        label: item.accountType,
         color: generateColor(index),
       }
     })
     return config
   }, [data])
 
-  if (!categories) {
+  if (!accountTypes) {
     return <Skeleton className="h-full w-full" />
   }
 
@@ -81,19 +81,21 @@ export function CategoryPieChartWidget({
       <PieChart>
         <Tooltip
           cursor={false}
-          content={<ChartTooltipContent hideLabel nameKey="category" />}
+          content={<ChartTooltipContent hideLabel nameKey="accountType" />}
         />
         <Pie
           data={data}
           dataKey="total"
-          nameKey="category"
+          nameKey="accountType"
           innerRadius={60}
           strokeWidth={5}
         >
           {data.map((entry, index) => (
             <Cell
               key={`cell-${index}`}
-              fill={chartConfig[entry.category]?.color || generateColor(index)}
+              fill={
+                chartConfig[entry.accountType]?.color || generateColor(index)
+              }
             />
           ))}
         </Pie>

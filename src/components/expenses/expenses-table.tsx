@@ -1,12 +1,13 @@
+
 "use client"
 
 import { format } from "date-fns"
 import { MoreHorizontal, Trash2 } from "lucide-react"
 
-import { ACCOUNT_TYPES, CATEGORIES } from "@/lib/constants"
-import { cn, formatCurrency } from "@/lib/utils"
+import { useSettings } from "@/contexts/settings-context"
 import type { Expense } from "@/lib/types"
-
+import { cn, formatCurrency, getIcon } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -14,6 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
   TableBody,
@@ -22,7 +24,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
 
 interface ExpensesTableProps {
   expenses: Expense[]
@@ -30,12 +31,18 @@ interface ExpensesTableProps {
 }
 
 export function ExpensesTable({ expenses, deleteExpense }: ExpensesTableProps) {
+  const { categories, accountTypes } = useSettings()
+
   const getCategory = (value: string) => {
-    return CATEGORIES.find((c) => c.value === value)
+    return (categories || []).find((c) => c.value === value)
   }
 
   const getAccountTypeLabel = (value: string) => {
-    return ACCOUNT_TYPES.find((a) => a.value === value)?.label || "N/A"
+    return (accountTypes || []).find((a) => a.value === value)?.label || "N/A"
+  }
+
+  if (!categories || !accountTypes) {
+    return <Skeleton className="h-48 w-full" />
   }
 
   return (
@@ -54,53 +61,66 @@ export function ExpensesTable({ expenses, deleteExpense }: ExpensesTableProps) {
         <TableBody>
           {expenses.length > 0 ? (
             expenses
-            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-            .map((expense) => {
-              const category = getCategory(expense.category)
-              const Icon = category?.icon
-              return (
-                <TableRow key={expense.id}>
-                  <TableCell>{format(new Date(expense.date), "dd MMM, yyyy")}</TableCell>
-                  <TableCell className="font-medium">{expense.description}</TableCell>
-                  <TableCell>
-                    {category && (
-                      <Badge variant="outline" className="flex items-center gap-2 max-w-min">
-                        {Icon && <Icon className="h-4 w-4" />}
-                        {category.label}
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell>{getAccountTypeLabel(expense.accountType)}</TableCell>
-                  <TableCell
-                    className={cn(
-                      "text-right font-mono",
-                      expense.amount < 0 ? "text-emerald-600" : "text-destructive"
-                    )}
-                  >
-                    {formatCurrency(expense.amount)}
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Open menu</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => deleteExpense(expense.id)}
-                          className="text-destructive"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
+              .sort(
+                (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
               )
-            })
+              .map((expense) => {
+                const category = getCategory(expense.category)
+                const Icon = category ? getIcon(category.icon) : null
+                return (
+                  <TableRow key={expense.id}>
+                    <TableCell>
+                      {format(new Date(expense.date), "dd MMM, yyyy")}
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {expense.description}
+                    </TableCell>
+                    <TableCell>
+                      {category && (
+                        <Badge
+                          variant="outline"
+                          className="flex max-w-min items-center gap-2"
+                        >
+                          {Icon && <Icon className="h-4 w-4" />}
+                          {category.label}
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {getAccountTypeLabel(expense.accountType)}
+                    </TableCell>
+                    <TableCell
+                      className={cn(
+                        "font-mono text-right",
+                        expense.amount < 0
+                          ? "text-emerald-600"
+                          : "text-destructive"
+                      )}
+                    >
+                      {formatCurrency(expense.amount)}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Open menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => deleteExpense(expense.id)}
+                            className="text-destructive"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                )
+              })
           ) : (
             <TableRow>
               <TableCell colSpan={6} className="h-24 text-center">

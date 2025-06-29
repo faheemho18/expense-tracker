@@ -1,21 +1,22 @@
+
 "use client"
 
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Wallet } from "lucide-react"
+import { LayoutDashboard, Settings, Wallet } from "lucide-react"
 
 import {
-  SidebarProvider,
   Sidebar,
-  SidebarHeader,
   SidebarContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
   SidebarFooter,
-  SidebarTrigger,
+  SidebarHeader,
   SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { Logo } from "@/components/logo"
 
@@ -34,6 +35,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     () => ({ children: "Dashboard" }),
     []
   )
+  const settingsTooltip = React.useMemo(() => ({ children: "Settings" }), [])
 
   return (
     <SidebarProvider>
@@ -64,6 +66,18 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 <Link href="/dashboard">
                   <LayoutDashboard />
                   <span>Dashboard</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={isActive("/settings")}
+                tooltip={settingsTooltip}
+              >
+                <Link href="/settings">
+                  <Settings />
+                  <span>Settings</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

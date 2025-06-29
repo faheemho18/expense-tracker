@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -7,7 +8,6 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 
 import type { WidgetConfig, WidgetType } from "@/lib/types"
-
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -37,9 +37,12 @@ import { toast } from "@/hooks/use-toast"
 
 const widgetSchema = z.object({
   title: z.string().min(1, "Title is required"),
-  type: z.enum(["stats", "category-pie", "over-time-bar"], {
-    required_error: "Widget type is required",
-  }),
+  type: z.enum(
+    ["stats", "category-pie", "over-time-bar", "account-type-pie"],
+    {
+      required_error: "Widget type is required",
+    }
+  ),
 })
 
 type WidgetFormValues = z.infer<typeof widgetSchema>
@@ -54,6 +57,7 @@ const WIDGET_TYPE_OPTIONS: { value: WidgetType; label: string }[] = [
   { value: "stats", label: "Statistics Cards" },
   { value: "category-pie", label: "Spending by Category (Pie Chart)" },
   { value: "over-time-bar", label: "Spending Over Time (Bar Chart)" },
+  { value: "account-type-pie", label: "Spending by Account Type (Pie Chart)" },
 ]
 
 export function AddWidgetDialog({
@@ -96,7 +100,8 @@ export function AddWidgetDialog({
         <DialogHeader>
           <DialogTitle>Add a New Widget</DialogTitle>
           <DialogDescription>
-            Choose a widget type and give it a title to add it to your dashboard.
+            Choose a widget type and give it a title to add it to your
+            dashboard.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>

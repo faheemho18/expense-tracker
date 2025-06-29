@@ -1,18 +1,20 @@
+
 "use client"
 
 import * as React from "react"
 import {
   DragDropContext,
-  Droppable,
   Draggable,
+  Droppable,
   type DropResult,
 } from "@hello-pangea/dnd"
-
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { cn } from "@/lib/utils"
 import { BarChart } from "lucide-react"
-import type { Expense, WidgetConfig } from "@/lib/types"
 
+import type { Expense, WidgetConfig } from "@/lib/types"
+import { cn } from "@/lib/utils"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+
+import { AccountTypePieChartWidget } from "./account-type-pie-chart-widget"
 import { CategoryPieChartWidget } from "./category-pie-chart-widget"
 import { OverTimeBarChartWidget } from "./over-time-bar-chart-widget"
 import { StatsWidget } from "./stats-widget"
@@ -33,6 +35,8 @@ const renderWidget = (widget: WidgetConfig, expenses: Expense[]) => {
       return <CategoryPieChartWidget expenses={expenses} />
     case "over-time-bar":
       return <OverTimeBarChartWidget expenses={expenses} />
+    case "account-type-pie":
+      return <AccountTypePieChartWidget expenses={expenses} />
     default:
       return null
   }
@@ -64,7 +68,7 @@ export function DashboardGrid({
           <div
             {...provided.droppableProps}
             ref={provided.innerRef}
-            className="flex flex-wrap -m-2"
+            className="-m-2 flex flex-wrap"
           >
             {widgets.map((widget, index) => (
               <Draggable key={widget.id} draggableId={widget.id} index={index}>
