@@ -34,7 +34,7 @@ const renderCustomizedLabel = ({
   payload,
 }: any) => {
   const RADIAN = Math.PI / 180
-  const radius = outerRadius + 25
+  const radius = outerRadius + 20
   const x = cx + radius * Math.cos(-midAngle * RADIAN)
   const y = cy + radius * Math.sin(-midAngle * RADIAN)
   const value = payload.total
@@ -121,9 +121,9 @@ export function AccountTypePieChartWidget({
   return (
     <ChartContainer
       config={chartConfig}
-      className="mx-auto aspect-square h-full"
+      className="mx-auto h-full"
     >
-      <PieChart margin={{ top: 40, right: 40, bottom: 40, left: 40 }}>
+      <PieChart>
         <Tooltip
           cursor={false}
           content={<ChartTooltipContent hideLabel nameKey="accountType" />}
@@ -132,8 +132,8 @@ export function AccountTypePieChartWidget({
           data={data}
           dataKey="total"
           nameKey="accountType"
-          innerRadius={50}
-          outerRadius={70}
+          innerRadius="60%"
+          outerRadius="80%"
           strokeWidth={5}
           label={renderCustomizedLabel}
           labelLine
