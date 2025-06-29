@@ -6,8 +6,7 @@ import {
   Droppable,
   Draggable,
   type DropResult,
-  type DroppableProps,
-} from "react-beautiful-dnd"
+} from "@hello-pangea/dnd"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { cn } from "@/lib/utils"
@@ -18,26 +17,6 @@ import { CategoryPieChartWidget } from "./category-pie-chart-widget"
 import { OverTimeBarChartWidget } from "./over-time-bar-chart-widget"
 import { StatsWidget } from "./stats-widget"
 import { WidgetWrapper } from "./widget-wrapper"
-
-// Wrapper to make react-beautiful-dnd work with React 18 Strict Mode
-const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
-  const [enabled, setEnabled] = React.useState(false)
-
-  React.useEffect(() => {
-    const animation = requestAnimationFrame(() => setEnabled(true))
-
-    return () => {
-      cancelAnimationFrame(animation)
-      setEnabled(false)
-    }
-  }, [])
-
-  if (!enabled) {
-    return null
-  }
-
-  return <Droppable {...props}>{children}</Droppable>
-}
 
 interface DashboardGridProps {
   expenses: Expense[]
@@ -80,7 +59,7 @@ export function DashboardGrid({
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <StrictModeDroppable droppableId="dashboard">
+      <Droppable droppableId="dashboard">
         {(provided) => (
           <div
             {...provided.droppableProps}
@@ -112,7 +91,7 @@ export function DashboardGrid({
             {provided.placeholder}
           </div>
         )}
-      </StrictModeDroppable>
+      </Droppable>
     </DragDropContext>
   )
 }

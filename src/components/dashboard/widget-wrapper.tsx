@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { GripVertical, MoreVertical, Trash } from "lucide-react"
-import type { DraggableProvided } from "react-beautiful-dnd"
+import type { DraggableProvided } from "@hello-pangea/dnd"
 
 import type { WidgetConfig } from "@/lib/types"
 

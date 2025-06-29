@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { Plus } from "lucide-react"
-import type { DropResult } from "react-beautiful-dnd"
+import type { DropResult } from "@hello-pangea/dnd"
 
 import { useLocalStorage } from "@/hooks/use-local-storage"
 import type { Expense, WidgetConfig } from "@/lib/types"
