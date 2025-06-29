@@ -47,16 +47,16 @@ export function ExpensesFilters({
     filters.accountType !== "all"
 
   if (!categories || !accountTypes) {
-    return <Skeleton className="h-10 w-full sm:w-[400px]" />
+    return <Skeleton className="h-40 w-full" />
   }
 
   return (
-    <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center">
+    <div className="flex flex-col gap-4">
       <Select
         value={filters.month}
         onValueChange={(value) => onFilterChange("month", value)}
       >
-        <SelectTrigger className="w-full sm:w-[180px]">
+        <SelectTrigger className="w-full">
           <SelectValue placeholder="Filter by month" />
         </SelectTrigger>
         <SelectContent>
@@ -73,7 +73,7 @@ export function ExpensesFilters({
         value={filters.category}
         onValueChange={(value) => onFilterChange("category", value)}
       >
-        <SelectTrigger className="w-full sm:w-[180px]">
+        <SelectTrigger className="w-full">
           <SelectValue placeholder="Filter by category" />
         </SelectTrigger>
         <SelectContent>
@@ -90,7 +90,7 @@ export function ExpensesFilters({
         value={filters.accountType}
         onValueChange={(value) => onFilterChange("accountType", value)}
       >
-        <SelectTrigger className="w-full sm:w-[180px]">
+        <SelectTrigger className="w-full">
           <SelectValue placeholder="Filter by account" />
         </SelectTrigger>
         <SelectContent>
@@ -103,9 +103,13 @@ export function ExpensesFilters({
         </SelectContent>
       </Select>
       {showClearButton && (
-        <Button variant="ghost" size="sm" onClick={handleClearFilters}>
+        <Button
+          variant="ghost"
+          onClick={handleClearFilters}
+          className="w-full justify-center"
+        >
           <X className="mr-2 h-4 w-4" />
-          Clear
+          Clear Filters
         </Button>
       )}
     </div>

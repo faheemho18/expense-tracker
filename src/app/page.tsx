@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Plus } from "lucide-react"
+import { Filter, Plus } from "lucide-react"
 import { format, startOfMonth } from "date-fns"
 
 import { useLocalStorage } from "@/hooks/use-local-storage"
@@ -9,6 +9,14 @@ import type { Expense } from "@/lib/types"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet"
+import { Separator } from "@/components/ui/separator"
 import { AppLayout } from "@/components/app-layout"
 import { AddExpenseSheet } from "@/components/expenses/add-expense-sheet"
 import { ExpensesFilters } from "@/components/expenses/expenses-filters"
@@ -17,7 +25,8 @@ import { ExportExpensesButton } from "@/components/expenses/export-expenses-butt
 
 export default function HomePage() {
   const [expenses, setExpenses] = useLocalStorage<Expense[]>("expenses", [])
-  const [isSheetOpen, setIsSheetOpen] = React.useState(false)
+  const [isAddSheetOpen, setIsAddSheetOpen] = React.useState(false)
+  const [isFilterSheetOpen, setIsFilterSheetOpen] = React.useState(false)
   const [filters, setFilters] = React.useState<{
     month: string
     category: string
@@ -92,17 +101,16 @@ export default function HomePage() {
       <div className="flex-1 space-y-4 p-4 sm:p-8">
         <Card>
           <CardHeader>
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center justify-between gap-4">
               <CardTitle>Your Expenses</CardTitle>
-              <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center">
-                <ExpensesFilters
-                  filters={filters}
-                  onFilterChange={handleFilterChange}
-                  onClearFilters={clearFilters}
-                  months={availableMonths}
-                />
-                <ExportExpensesButton expenses={filteredExpenses} />
-              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsFilterSheetOpen(true)}
+              >
+                <Filter className="mr-2 h-4 w-4" />
+                Filters
+              </Button>
             </div>
           </CardHeader>
           <CardContent>
@@ -114,7 +122,7 @@ export default function HomePage() {
         </Card>
       </div>
       <Button
-        onClick={() => setIsSheetOpen(true)}
+        onClick={() => setIsAddSheetOpen(true)}
         className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg"
         size="icon"
       >
@@ -122,10 +130,33 @@ export default function HomePage() {
         <Plus className="h-6 w-6" />
       </Button>
       <AddExpenseSheet
-        isOpen={isSheetOpen}
-        setIsOpen={setIsSheetOpen}
+        isOpen={isAddSheetOpen}
+        setIsOpen={setIsAddSheetOpen}
         addExpense={addExpense}
       />
+      <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Filters & Export</SheetTitle>
+            <SheetDescription>
+              Refine your view and export your expense data.
+            </SheetDescription>
+          </SheetHeader>
+          <div className="space-y-4 py-4">
+            <h4 className="text-sm font-medium">Filter by</h4>
+            <ExpensesFilters
+              filters={filters}
+              onFilterChange={handleFilterChange}
+              onClearFilters={clearFilters}
+              months={availableMonths}
+            />
+          </div>
+          <Separator />
+          <div className="py-4">
+            <ExportExpensesButton expenses={filteredExpenses} />
+          </div>
+        </SheetContent>
+      </Sheet>
     </AppLayout>
   )
 }
