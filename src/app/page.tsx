@@ -68,7 +68,7 @@ export default function HomePage() {
   const [sortConfig, setSortConfig] = React.useState<{
     key: SortableKey
     direction: SortDirection
-  }>({ key: "date", direction: "descending" })
+  } | null>(null)
   const [currentPage, setCurrentPage] = React.useState(1)
   const { categories, accountTypes } = useSettings()
 
@@ -200,15 +200,18 @@ export default function HomePage() {
   }, [expenses, gaugesMonth])
 
   const requestSort = (key: SortableKey) => {
-    let direction: SortDirection = "ascending"
-    if (
-      sortConfig &&
-      sortConfig.key === key &&
-      sortConfig.direction === "ascending"
-    ) {
-      direction = "descending"
+    // If no sort is active, or sorting by a new column, sort ascending.
+    if (!sortConfig || sortConfig.key !== key) {
+      setSortConfig({ key, direction: "ascending" })
     }
-    setSortConfig({ key, direction })
+    // If sorting ascending, switch to descending.
+    else if (sortConfig.direction === "ascending") {
+      setSortConfig({ key, direction: "descending" })
+    }
+    // If sorting descending, clear the sort (back to default).
+    else {
+      setSortConfig(null)
+    }
     setCurrentPage(1)
   }
 
@@ -224,10 +227,12 @@ export default function HomePage() {
     }
 
     const sortableItems = [...filteredExpenses]
-    if (sortConfig) {
+    const currentSort = sortConfig || { key: "date", direction: "descending" }
+
+    if (currentSort) {
       sortableItems.sort((a, b) => {
         let comparison = 0
-        switch (sortConfig.key) {
+        switch (currentSort.key) {
           case "date":
             comparison = new Date(a.date).getTime() - new Date(b.date).getTime()
             break
@@ -248,7 +253,7 @@ export default function HomePage() {
             comparison = a.description.localeCompare(b.description)
             break
         }
-        return sortConfig.direction === "ascending" ? comparison : -comparison
+        return currentSort.direction === "ascending" ? comparison : -comparison
       })
     }
     return sortableItems

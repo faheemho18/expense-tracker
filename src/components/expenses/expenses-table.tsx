@@ -56,7 +56,7 @@ interface ExpensesTableProps {
   sortConfig: {
     key: SortableKey
     direction: SortDirection
-  }
+  } | null
   requestSort: (key: SortableKey) => void
 }
 
@@ -84,7 +84,14 @@ export function ExpensesTable({
   )
 
   const getSortIcon = (key: SortableKey) => {
-    if (!sortConfig || sortConfig.key !== key) {
+    if (!sortConfig) {
+      // Default sort (date descending)
+      if (key === "date") {
+        return <ArrowDown className="ml-2 h-4 w-4" />
+      }
+      return <ArrowUpDown className="ml-2 h-4 w-4" />
+    }
+    if (sortConfig.key !== key) {
       return <ArrowUpDown className="ml-2 h-4 w-4" />
     }
     if (sortConfig.direction === "ascending") {
