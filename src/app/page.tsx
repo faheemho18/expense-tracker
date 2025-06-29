@@ -2,7 +2,15 @@
 "use client"
 
 import * as React from "react"
-import { ChevronLeft, ChevronRight, Filter, Plus } from "lucide-react"
+import {
+  ChevronLeft,
+  ChevronRight,
+  Filter,
+  Plus,
+  ArrowUpDown,
+  ArrowDown,
+  ArrowUp,
+} from "lucide-react"
 import {
   addMonths,
   format,
@@ -13,6 +21,7 @@ import {
 
 import { useLocalStorage } from "@/hooks/use-local-storage"
 import type { Expense } from "@/lib/types"
+import { useSettings } from "@/contexts/settings-context"
 
 import { AppLayout } from "@/components/app-layout"
 import { CategoryGaugesWidget } from "@/components/dashboard/category-gauges-widget"
@@ -29,6 +38,14 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
+
+type SortableKey =
+  | "date"
+  | "description"
+  | "category"
+  | "accountType"
+  | "amount"
+type SortDirection = "ascending" | "descending"
 
 export default function HomePage() {
   const [expenses, setExpenses] = useLocalStorage<Expense[]>("expenses", [])
@@ -47,6 +64,15 @@ export default function HomePage() {
     accountType: [],
   })
   const [gaugesMonth, setGaugesMonth] = React.useState(new Date())
+
+  const [sortConfig, setSortConfig] = React.useState<{
+    key: SortableKey
+    direction: SortDirection
+  }>({ key: "date", direction: "descending" })
+  const [currentPage, setCurrentPage] = React.useState(1)
+  const { categories, accountTypes } = useSettings()
+
+  const ITEMS_PER_PAGE = 8
 
   const handlePreviousMonth = () => {
     setGaugesMonth((prev) => subMonths(prev, 1))
@@ -73,6 +99,7 @@ export default function HomePage() {
     setExpenses((prevExpenses) =>
       (prevExpenses || []).filter((expense) => expense.id !== id)
     )
+    setCurrentPage(1)
   }
 
   const handleEdit = (expense: Expense) => {
@@ -98,10 +125,12 @@ export default function HomePage() {
         : [...currentValues, value]
       return { ...prev, [filterType]: newValues }
     })
+    setCurrentPage(1)
   }
 
   const clearFilters = () => {
     setFilters({ year: [], month: [], category: [], accountType: [] })
+    setCurrentPage(1)
   }
 
   const availableMonths = React.useMemo(() => {
@@ -170,6 +199,75 @@ export default function HomePage() {
     })
   }, [expenses, gaugesMonth])
 
+  const requestSort = (key: SortableKey) => {
+    let direction: SortDirection = "ascending"
+    if (
+      sortConfig &&
+      sortConfig.key === key &&
+      sortConfig.direction === "ascending"
+    ) {
+      direction = "descending"
+    }
+    setSortConfig({ key, direction })
+    setCurrentPage(1)
+  }
+
+  const sortedExpenses = React.useMemo(() => {
+    if (!filteredExpenses || !categories || !accountTypes) return []
+
+    const getCategory = (value: string) => {
+      return (categories || []).find((c) => c.value === value)
+    }
+
+    const getAccountType = (value: string) => {
+      return (accountTypes || []).find((a) => a.value === value)
+    }
+
+    const sortableItems = [...filteredExpenses]
+    if (sortConfig) {
+      sortableItems.sort((a, b) => {
+        let comparison = 0
+        switch (sortConfig.key) {
+          case "date":
+            comparison = new Date(a.date).getTime() - new Date(b.date).getTime()
+            break
+          case "amount":
+            comparison = a.amount - b.amount
+            break
+          case "category":
+            const categoryA = getCategory(a.category)?.label || ""
+            const categoryB = getCategory(b.category)?.label || ""
+            comparison = categoryA.localeCompare(categoryB)
+            break
+          case "accountType":
+            const accountTypeA = getAccountType(a.accountType)?.label || ""
+            const accountTypeB = getAccountType(b.accountType)?.label || ""
+            comparison = accountTypeA.localeCompare(accountTypeB)
+            break
+          case "description":
+            comparison = a.description.localeCompare(b.description)
+            break
+        }
+        return sortConfig.direction === "ascending" ? comparison : -comparison
+      })
+    }
+    return sortableItems
+  }, [filteredExpenses, sortConfig, categories, accountTypes])
+
+  const paginatedExpenses = React.useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+    const endIndex = startIndex + ITEMS_PER_PAGE
+    return sortedExpenses.slice(startIndex, endIndex)
+  }, [sortedExpenses, currentPage])
+
+  const totalPages = Math.ceil(sortedExpenses.length / ITEMS_PER_PAGE)
+
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page)
+    }
+  }
+
   return (
     <AppLayout>
       <div className="flex-1 space-y-4 p-4 sm:p-8">
@@ -229,11 +327,36 @@ export default function HomePage() {
             </CardHeader>
             <CardContent>
               <ExpensesTable
-                expenses={filteredExpenses}
+                expenses={paginatedExpenses}
                 deleteExpense={deleteExpense}
                 editExpense={handleEdit}
+                sortConfig={sortConfig}
+                requestSort={requestSort}
               />
             </CardContent>
+            {totalPages > 1 && (
+              <div className="flex items-center justify-end space-x-2 border-t p-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </Button>
+              </div>
+            )}
           </Card>
         </div>
       </div>

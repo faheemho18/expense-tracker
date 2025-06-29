@@ -41,12 +41,6 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
-interface ExpensesTableProps {
-  expenses: Expense[]
-  deleteExpense: (id: string) => void
-  editExpense: (expense: Expense) => void
-}
-
 type SortableKey =
   | "date"
   | "description"
@@ -55,16 +49,25 @@ type SortableKey =
   | "amount"
 type SortDirection = "ascending" | "descending"
 
+interface ExpensesTableProps {
+  expenses: Expense[]
+  deleteExpense: (id: string) => void
+  editExpense: (expense: Expense) => void
+  sortConfig: {
+    key: SortableKey
+    direction: SortDirection
+  }
+  requestSort: (key: SortableKey) => void
+}
+
 export function ExpensesTable({
   expenses,
   deleteExpense,
   editExpense,
+  sortConfig,
+  requestSort,
 }: ExpensesTableProps) {
   const { categories, accountTypes } = useSettings()
-  const [sortConfig, setSortConfig] = React.useState<{
-    key: SortableKey
-    direction: SortDirection
-  }>({ key: "date", direction: "descending" })
 
   const getCategory = React.useCallback(
     (value: string) => {
@@ -79,50 +82,6 @@ export function ExpensesTable({
     },
     [accountTypes]
   )
-
-  const sortedExpenses = React.useMemo(() => {
-    const sortableItems = [...expenses]
-    if (sortConfig) {
-      sortableItems.sort((a, b) => {
-        let comparison = 0
-        switch (sortConfig.key) {
-          case "date":
-            comparison = new Date(a.date).getTime() - new Date(b.date).getTime()
-            break
-          case "amount":
-            comparison = a.amount - b.amount
-            break
-          case "category":
-            const categoryA = getCategory(a.category)?.label || ""
-            const categoryB = getCategory(b.category)?.label || ""
-            comparison = categoryA.localeCompare(categoryB)
-            break
-          case "accountType":
-            const accountTypeA = getAccountType(a.accountType)?.label || ""
-            const accountTypeB = getAccountType(b.accountType)?.label || ""
-            comparison = accountTypeA.localeCompare(accountTypeB)
-            break
-          case "description":
-            comparison = a.description.localeCompare(b.description)
-            break
-        }
-        return sortConfig.direction === "ascending" ? comparison : -comparison
-      })
-    }
-    return sortableItems
-  }, [expenses, sortConfig, getCategory, getAccountType])
-
-  const requestSort = (key: SortableKey) => {
-    let direction: SortDirection = "ascending"
-    if (
-      sortConfig &&
-      sortConfig.key === key &&
-      sortConfig.direction === "ascending"
-    ) {
-      direction = "descending"
-    }
-    setSortConfig({ key, direction })
-  }
 
   const getSortIcon = (key: SortableKey) => {
     if (!sortConfig || sortConfig.key !== key) {
@@ -204,8 +163,8 @@ export function ExpensesTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {sortedExpenses.length > 0 ? (
-            sortedExpenses.map((expense) => {
+          {expenses.length > 0 ? (
+            expenses.map((expense) => {
               const category = getCategory(expense.category)
               const CategoryIcon = category ? getIcon(category.icon) : null
 
@@ -316,7 +275,7 @@ export function ExpensesTable({
           ) : (
             <TableRow>
               <TableCell colSpan={6} className="h-24 text-center">
-                No expenses recorded yet.
+                No expenses found.
               </TableCell>
             </TableRow>
           )}
