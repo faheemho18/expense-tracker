@@ -55,7 +55,7 @@ export function ProjectedSavingsWidget({
   if (!categories) {
     return (
       <div className="flex justify-center">
-        <Skeleton className="h-12 w-12 rounded-full" />
+        <Skeleton className="h-24 w-24 rounded-full" />
       </div>
     )
   }
@@ -63,9 +63,9 @@ export function ProjectedSavingsWidget({
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <div className="relative flex h-12 w-12 items-center justify-center">
-          <PiggyBank className="absolute h-12 w-12 text-muted-foreground/20" />
-          <div className="relative text-sm font-bold text-emerald-500">
+        <div className="relative flex h-24 w-24 items-center justify-center">
+          <PiggyBank className="absolute h-24 w-24 text-muted-foreground/20" />
+          <div className="relative text-2xl font-bold text-emerald-500">
             +{formatCurrency(projectedSavings, "compact")}
           </div>
         </div>

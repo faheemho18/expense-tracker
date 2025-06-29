@@ -175,7 +175,7 @@ export default function HomePage() {
       <div className="flex-1 space-y-4 p-4 sm:p-8">
         <div className="space-y-6">
           <Card>
-            <CardHeader className="grid grid-cols-3 items-center">
+            <CardHeader className="grid grid-cols-3 items-end">
               <CardTitle>Monthly Report</CardTitle>
               <div className="flex items-center justify-center gap-2">
                 <Button
@@ -202,7 +202,7 @@ export default function HomePage() {
                   <span className="sr-only">Next month</span>
                 </Button>
               </div>
-              <div className="flex justify-end">
+              <div className="flex justify-center">
                 <ProjectedSavingsWidget expenses={gaugesMonthExpenses} />
               </div>
             </CardHeader>
