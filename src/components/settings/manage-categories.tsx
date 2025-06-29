@@ -105,11 +105,21 @@ export function ManageCategories() {
   }
 
   const handleBudgetChange = (categoryValue: string, budgetStr: string) => {
-    const budgetAmount = budgetStr ? parseFloat(budgetStr) : undefined
+    const budgetAmount = parseFloat(budgetStr)
     setCategories((cats) =>
-      (cats || []).map((c) =>
-        c.value === categoryValue ? { ...c, budget: budgetAmount } : c
-      )
+      (cats || []).map((c) => {
+        if (c.value === categoryValue) {
+          // if empty, budget is undefined. if not a number or negative, keep existing budget. otherwise update.
+          const newBudget =
+            budgetStr === ""
+              ? undefined
+              : !isNaN(budgetAmount) && budgetAmount >= 0
+                ? budgetAmount
+                : c.budget
+          return { ...c, budget: newBudget }
+        }
+        return c
+      })
     )
   }
 
@@ -157,6 +167,7 @@ export function ManageCategories() {
                   <Input
                     id={`budget-${category.value}`}
                     type="number"
+                    min="0"
                     value={(category.budget ?? "").toString()}
                     onChange={(e) =>
                       handleBudgetChange(category.value, e.target.value)
