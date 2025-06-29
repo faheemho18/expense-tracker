@@ -31,6 +31,7 @@ interface DashboardGridProps {
   onDragEnd: (result: DropResult) => void
   updateWidgetFilters: (id: string, filters: WidgetFilters) => void
   availableMonths: { value: string; label: string }[]
+  areGlobalFiltersActive: boolean
 }
 
 const renderWidget = (widget: WidgetConfig, expenses: Expense[]) => {
@@ -67,39 +68,6 @@ const getWidgetWidthClass = (widgetType: WidgetConfig["type"]) => {
   }
 }
 
-// Helper function to filter expenses based on widget's specific filters
-const filterExpensesForWidget = (
-  allExpenses: Expense[],
-  widgetFilters?: WidgetFilters
-): Expense[] => {
-  if (!widgetFilters) {
-    return allExpenses
-  }
-
-  const {
-    month = [],
-    category = [],
-    accountType = [],
-  } = widgetFilters
-
-  if (month.length === 0 && category.length === 0 && accountType.length === 0) {
-    return allExpenses
-  }
-
-  return allExpenses.filter((expense) => {
-    const expenseDate = new Date(expense.date)
-    const expenseMonth = format(startOfMonth(expenseDate), "yyyy-MM")
-
-    const monthMatch = month.length === 0 || month.includes(expenseMonth)
-    const categoryMatch =
-      category.length === 0 || category.includes(expense.category)
-    const accountTypeMatch =
-      accountType.length === 0 || accountType.includes(expense.accountType)
-
-    return monthMatch && categoryMatch && accountTypeMatch
-  })
-}
-
 export function DashboardGrid({
   expenses,
   widgets,
@@ -108,6 +76,7 @@ export function DashboardGrid({
   onDragEnd,
   updateWidgetFilters,
   availableMonths,
+  areGlobalFiltersActive,
 }: DashboardGridProps) {
   if (widgets.length === 0) {
     return (
@@ -132,10 +101,54 @@ export function DashboardGrid({
             className="-m-2 flex flex-wrap"
           >
             {widgets.map((widget, index) => {
-              const widgetExpenses = filterExpensesForWidget(
-                expenses,
-                widget.filters
-              )
+              const widgetFilters = widget.filters
+              const hasWidgetFilters =
+                widgetFilters &&
+                ((widgetFilters.month?.length ?? 0) > 0 ||
+                  (widgetFilters.category?.length ?? 0) > 0 ||
+                  (widgetFilters.accountType?.length ?? 0) > 0)
+
+              let widgetExpenses = expenses
+
+              // Default behavior for stats widget: current year if no filters active
+              if (
+                widget.type === "stats" &&
+                !areGlobalFiltersActive &&
+                !hasWidgetFilters
+              ) {
+                const currentYear = new Date().getFullYear()
+                widgetExpenses = expenses.filter(
+                  (e) => new Date(e.date).getFullYear() === currentYear
+                )
+              }
+              // Apply widget-specific filters
+              else if (hasWidgetFilters) {
+                const {
+                  month = [],
+                  category = [],
+                  accountType = [],
+                } = widgetFilters!
+
+                widgetExpenses = expenses.filter((expense) => {
+                  const expenseDate = new Date(expense.date)
+                  const expenseMonth = format(
+                    startOfMonth(expenseDate),
+                    "yyyy-MM"
+                  )
+
+                  const monthMatch =
+                    month.length === 0 || month.includes(expenseMonth)
+                  const categoryMatch =
+                    category.length === 0 ||
+                    category.includes(expense.category)
+                  const accountTypeMatch =
+                    accountType.length === 0 ||
+                    accountType.includes(expense.accountType)
+
+                  return monthMatch && categoryMatch && accountTypeMatch
+                })
+              }
+
               return (
                 <Draggable
                   key={widget.id}

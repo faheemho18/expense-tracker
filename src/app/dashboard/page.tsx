@@ -117,6 +117,14 @@ export default function DashboardPage() {
     setFilters({ month: [], category: [], accountType: [] })
   }
 
+  const areGlobalFiltersActive = React.useMemo(() => {
+    return (
+      (filters.month?.length ?? 0) > 0 ||
+      (filters.category?.length ?? 0) > 0 ||
+      (filters.accountType?.length ?? 0) > 0
+    )
+  }, [filters])
+
   const filteredExpenses = React.useMemo(() => {
     if (!expenses) return []
     return expenses.filter((expense) => {
@@ -163,6 +171,7 @@ export default function DashboardPage() {
           onDragEnd={onDragEnd}
           updateWidgetFilters={updateWidgetFilters}
           availableMonths={availableMonths}
+          areGlobalFiltersActive={areGlobalFiltersActive}
         />
       </div>
       <Button
