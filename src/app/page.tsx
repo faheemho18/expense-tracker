@@ -19,32 +19,33 @@ export default function HomePage() {
 
   const addExpense = (expense: Omit<Expense, "id">) => {
     const newExpense = { ...expense, id: crypto.randomUUID() }
-    setExpenses([...(expenses || []), newExpense])
+    setExpenses((prevExpenses) => [...(prevExpenses || []), newExpense])
   }
 
   const deleteExpense = (id: string) => {
-    setExpenses((expenses || []).filter((expense) => expense.id !== id))
+    setExpenses((prevExpenses) =>
+      (prevExpenses || []).filter((expense) => expense.id !== id)
+    )
   }
-  
+
   // Initialize with some expenses for demo purposes if none exist
   React.useEffect(() => {
     if (expenses === null) {
-      setExpenses([]);
+      setExpenses([])
     }
-  }, [expenses, setExpenses]);
-  
+  }, [expenses, setExpenses])
+
   // Initialize with some widgets for demo purposes if none exist
   const [widgets, setWidgets] = useLocalStorage<WidgetConfig[]>("widgets", [])
   React.useEffect(() => {
     if (widgets === null || widgets.length === 0) {
-       setWidgets([
+      setWidgets([
         { id: "1", type: "stats", title: "Overview" },
         { id: "2", type: "category-pie", title: "Spending by Category" },
         { id: "3", type: "over-time-bar", title: "Monthly Spending" },
-      ]);
+      ])
     }
-  }, [widgets, setWidgets]);
-
+  }, [widgets, setWidgets])
 
   return (
     <AppLayout>
@@ -57,7 +58,10 @@ export default function HomePage() {
             </div>
           </CardHeader>
           <CardContent>
-            <ExpensesTable expenses={expenses || []} deleteExpense={deleteExpense} />
+            <ExpensesTable
+              expenses={expenses || []}
+              deleteExpense={deleteExpense}
+            />
           </CardContent>
         </Card>
       </div>

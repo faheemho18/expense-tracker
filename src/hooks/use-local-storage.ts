@@ -15,18 +15,24 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key])
-  
-  const setValue = useCallback((value: T | ((val: T) => T)) => {
-    try {
-      const valueToStore = value instanceof Function ? value(storedValue as T) : value
-      setStoredValue(valueToStore)
-      if (typeof window !== "undefined") {
-        window.localStorage.setItem(key, JSON.stringify(valueToStore))
+
+  const setValue = useCallback(
+    (value: T | ((val: T | null) => T)) => {
+      try {
+        setStoredValue((currentValue) => {
+          const valueToStore =
+            value instanceof Function ? value(currentValue) : value
+          if (typeof window !== "undefined") {
+            window.localStorage.setItem(key, JSON.stringify(valueToStore))
+          }
+          return valueToStore
+        })
+      } catch (error) {
+        console.error(error)
       }
-    } catch (error) {
-      console.error(error)
-    }
-  }, [key, storedValue])
+    },
+    [key]
+  )
 
   return [storedValue, setValue] as const
 }
