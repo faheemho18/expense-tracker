@@ -22,9 +22,18 @@ import { Logo } from "@/components/logo"
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
 
-  const isActive = (path: string) => {
-    return pathname === path
-  }
+  const isActive = React.useCallback(
+    (path: string) => {
+      return pathname === path
+    },
+    [pathname]
+  )
+
+  const expensesTooltip = React.useMemo(() => ({ children: "Expenses" }), [])
+  const dashboardTooltip = React.useMemo(
+    () => ({ children: "Dashboard" }),
+    []
+  )
 
   return (
     <SidebarProvider>
@@ -38,7 +47,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               <SidebarMenuButton
                 asChild
                 isActive={isActive("/")}
-                tooltip={{ children: "Expenses" }}
+                tooltip={expensesTooltip}
               >
                 <Link href="/">
                   <Wallet />
@@ -50,7 +59,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               <SidebarMenuButton
                 asChild
                 isActive={isActive("/dashboard")}
-                tooltip={{ children: "Dashboard" }}
+                tooltip={dashboardTooltip}
               >
                 <Link href="/dashboard">
                   <LayoutDashboard />
