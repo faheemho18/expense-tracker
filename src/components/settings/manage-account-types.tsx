@@ -6,6 +6,16 @@ import { Edit, PlusCircle, Trash2 } from "lucide-react"
 
 import { useSettings } from "@/contexts/settings-context"
 import type { AccountType } from "@/lib/types"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -21,27 +31,36 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 export function ManageAccountTypes() {
   const { accountTypes, setAccountTypes } = useSettings()
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false)
+  const [isFormDialogOpen, setIsFormDialogOpen] = React.useState(false)
   const [editingAccountType, setEditingAccountType] =
+    React.useState<AccountType | null>(null)
+  const [accountTypeToDelete, setAccountTypeToDelete] =
     React.useState<AccountType | null>(null)
   const [newAccountTypeLabel, setNewAccountTypeLabel] = React.useState("")
 
   const handleAddClick = () => {
     setEditingAccountType(null)
     setNewAccountTypeLabel("")
-    setIsDialogOpen(true)
+    setIsFormDialogOpen(true)
   }
 
   const handleEditClick = (accountType: AccountType) => {
     setEditingAccountType(accountType)
     setNewAccountTypeLabel(accountType.label)
-    setIsDialogOpen(true)
+    setIsFormDialogOpen(true)
   }
 
-  const handleDelete = (value: string) => {
-    setAccountTypes((types) =>
-      (types || []).filter((t) => t.value !== value)
-    )
+  const handleDeleteClick = (accountType: AccountType) => {
+    setAccountTypeToDelete(accountType)
+  }
+
+  const handleDeleteConfirm = () => {
+    if (accountTypeToDelete) {
+      setAccountTypes((types) =>
+        (types || []).filter((t) => t.value !== accountTypeToDelete.value)
+      )
+      setAccountTypeToDelete(null)
+    }
   }
 
   const handleSave = () => {
@@ -62,7 +81,7 @@ export function ManageAccountTypes() {
       }
       setAccountTypes((types) => [...(types || []), newAccountType])
     }
-    setIsDialogOpen(false)
+    setIsFormDialogOpen(false)
   }
 
   if (!accountTypes) {
@@ -92,7 +111,7 @@ export function ManageAccountTypes() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => handleDelete(accountType.value)}
+                  onClick={() => handleDeleteClick(accountType)}
                 >
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
@@ -102,7 +121,7 @@ export function ManageAccountTypes() {
         </ul>
       </div>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog open={isFormDialogOpen} onOpenChange={setIsFormDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
@@ -128,7 +147,7 @@ export function ManageAccountTypes() {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setIsDialogOpen(false)}
+              onClick={() => setIsFormDialogOpen(false)}
             >
               Cancel
             </Button>
@@ -136,6 +155,29 @@ export function ManageAccountTypes() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={!!accountTypeToDelete}
+        onOpenChange={(open) => !open && setAccountTypeToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the
+              account type "{accountTypeToDelete?.label}".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setAccountTypeToDelete(null)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm}>
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

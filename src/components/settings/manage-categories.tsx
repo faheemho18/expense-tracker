@@ -8,6 +8,16 @@ import { useSettings } from "@/contexts/settings-context"
 import { ICONS, type IconName } from "@/lib/constants"
 import type { Category } from "@/lib/types"
 import { getIcon } from "@/lib/utils"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -30,10 +40,12 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 export function ManageCategories() {
   const { categories, setCategories } = useSettings()
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false)
+  const [isFormDialogOpen, setIsFormDialogOpen] = React.useState(false)
   const [editingCategory, setEditingCategory] = React.useState<Category | null>(
     null
   )
+  const [categoryToDelete, setCategoryToDelete] =
+    React.useState<Category | null>(null)
   const [newCategoryLabel, setNewCategoryLabel] = React.useState("")
   const [newCategoryIcon, setNewCategoryIcon] = React.useState<IconName | "">(
     ""
@@ -43,18 +55,27 @@ export function ManageCategories() {
     setEditingCategory(null)
     setNewCategoryLabel("")
     setNewCategoryIcon("")
-    setIsDialogOpen(true)
+    setIsFormDialogOpen(true)
   }
 
   const handleEditClick = (category: Category) => {
     setEditingCategory(category)
     setNewCategoryLabel(category.label)
     setNewCategoryIcon(category.icon as IconName)
-    setIsDialogOpen(true)
+    setIsFormDialogOpen(true)
   }
 
-  const handleDelete = (value: string) => {
-    setCategories((cats) => (cats || []).filter((c) => c.value !== value))
+  const handleDeleteClick = (category: Category) => {
+    setCategoryToDelete(category)
+  }
+
+  const handleDeleteConfirm = () => {
+    if (categoryToDelete) {
+      setCategories((cats) =>
+        (cats || []).filter((c) => c.value !== categoryToDelete.value)
+      )
+      setCategoryToDelete(null)
+    }
   }
 
   const handleSave = () => {
@@ -76,7 +97,7 @@ export function ManageCategories() {
       }
       setCategories((cats) => [...(cats || []), newCategory])
     }
-    setIsDialogOpen(false)
+    setIsFormDialogOpen(false)
   }
 
   if (!categories) {
@@ -109,7 +130,7 @@ export function ManageCategories() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => handleDelete(category.value)}
+                    onClick={() => handleDeleteClick(category)}
                   >
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
@@ -120,7 +141,7 @@ export function ManageCategories() {
         </ul>
       </div>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog open={isFormDialogOpen} onOpenChange={setIsFormDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
@@ -170,7 +191,7 @@ export function ManageCategories() {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setIsDialogOpen(false)}
+              onClick={() => setIsFormDialogOpen(false)}
             >
               Cancel
             </Button>
@@ -178,6 +199,29 @@ export function ManageCategories() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={!!categoryToDelete}
+        onOpenChange={(open) => !open && setCategoryToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the
+              category "{categoryToDelete?.label}".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setCategoryToDelete(null)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm}>
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

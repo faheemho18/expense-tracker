@@ -1,3 +1,4 @@
+
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import type { LucideProps } from "lucide-react"
@@ -12,9 +13,9 @@ export function formatCurrency(
   amount: number,
   notation: "standard" | "compact" = "standard"
 ) {
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat("en-PH", {
     style: "currency",
-    currency: "USD",
+    currency: "PHP",
     notation,
     maximumFractionDigits: notation === "compact" ? 1 : 2,
   }).format(amount)
