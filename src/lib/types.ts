@@ -26,6 +26,9 @@ export type WidgetType =
   | "category-pie"
   | "over-time-bar"
   | "account-type-pie"
+  | "stacked-area"
+  | "heatmap-calendar"
+  | "category-gauges"
 
 export type WidgetFilters = {
   month?: string[]
@@ -38,4 +41,9 @@ export type WidgetConfig = {
   type: WidgetType
   title: string
   filters?: WidgetFilters
+}
+
+export type CategoryThreshold = {
+  categoryValue: string
+  threshold: number
 }

@@ -38,7 +38,15 @@ import { toast } from "@/hooks/use-toast"
 const widgetSchema = z.object({
   title: z.string().min(1, "Title is required"),
   type: z.enum(
-    ["stats", "category-pie", "over-time-bar", "account-type-pie"],
+    [
+      "stats",
+      "category-pie",
+      "over-time-bar",
+      "account-type-pie",
+      "stacked-area",
+      "heatmap-calendar",
+      "category-gauges",
+    ],
     {
       required_error: "Widget type is required",
     }
@@ -58,6 +66,9 @@ const WIDGET_TYPE_OPTIONS: { value: WidgetType; label: string }[] = [
   { value: "category-pie", label: "Spending by Category (Pie Chart)" },
   { value: "over-time-bar", label: "Spending Over Time (Bar Chart)" },
   { value: "account-type-pie", label: "Spending by Account Type (Pie Chart)" },
+  { value: "stacked-area", label: "Monthly Spending Breakdown (Area Chart)" },
+  { value: "heatmap-calendar", label: "Yearly Spending Heatmap" },
+  { value: "category-gauges", label: "Category Budget Gauges" },
 ]
 
 export function AddWidgetDialog({

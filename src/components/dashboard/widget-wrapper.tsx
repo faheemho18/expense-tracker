@@ -104,7 +104,9 @@ export const WidgetWrapper = React.forwardRef<
               </DropdownMenuContent>
             </DropdownMenu>
           </CardHeader>
-          <CardContent className="h-[350px] flex-1 p-4">{children}</CardContent>
+          <CardContent className="flex-1 p-4 min-h-[350px]">
+            {children}
+          </CardContent>
         </Card>
         <EditWidgetDialog
           isOpen={isEditDialogOpen}

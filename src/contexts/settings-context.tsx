@@ -8,7 +8,7 @@ import {
   DEFAULT_ACCOUNT_TYPES,
   DEFAULT_CATEGORIES,
 } from "@/lib/constants"
-import type { AccountType, Category } from "@/lib/types"
+import type { AccountType, Category, CategoryThreshold } from "@/lib/types"
 
 interface SettingsContextType {
   categories: Category[] | null
@@ -18,6 +18,12 @@ interface SettingsContextType {
   accountTypes: AccountType[] | null
   setAccountTypes: (
     value: AccountType[] | ((val: AccountType[] | null) => AccountType[])
+  ) => void
+  categoryThresholds: CategoryThreshold[] | null
+  setCategoryThresholds: (
+    value:
+      | CategoryThreshold[]
+      | ((val: CategoryThreshold[] | null) => CategoryThreshold[])
   ) => void
 }
 
@@ -34,12 +40,17 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     "accountTypes",
     DEFAULT_ACCOUNT_TYPES
   )
+  const [categoryThresholds, setCategoryThresholds] = useLocalStorage<
+    CategoryThreshold[]
+  >("categoryThresholds", [])
 
   const value = {
     categories,
     setCategories,
     accountTypes,
     setAccountTypes,
+    categoryThresholds,
+    setCategoryThresholds,
   }
 
   return (

@@ -1,0 +1,107 @@
+
+"use client"
+
+import * as React from "react"
+import { format, getYear, getMonth, max, startOfYear } from "date-fns"
+
+import type { Expense } from "@/lib/types"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { cn, formatCurrency } from "@/lib/utils"
+
+interface HeatmapCalendarWidgetProps {
+  expenses: Expense[]
+}
+
+const MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+]
+
+export function HeatmapCalendarWidget({
+  expenses,
+}: HeatmapCalendarWidgetProps) {
+  const data = React.useMemo(() => {
+    const year = getYear(new Date()) // Assume current year for simplicity
+    const monthlyTotals = Array(12).fill(0)
+
+    expenses.forEach((expense) => {
+      const expenseDate = new Date(expense.date)
+      if (getYear(expenseDate) === year && expense.amount > 0) {
+        const month = getMonth(expenseDate)
+        monthlyTotals[month] += expense.amount
+      }
+    })
+
+    const maxSpending = Math.max(...monthlyTotals)
+
+    return monthlyTotals.map((total, index) => ({
+      month: MONTHS[index],
+      total,
+      intensity: maxSpending > 0 ? Math.ceil((total / maxSpending) * 4) : 0, // 0-4 scale
+    }))
+  }, [expenses])
+
+  const hasData = expenses.some(
+    (e) => getYear(new Date(e.date)) === getYear(new Date())
+  )
+
+  if (!hasData) {
+    return (
+      <div className="flex h-full items-center justify-center text-muted-foreground">
+        No expense data for the current year.
+      </div>
+    )
+  }
+
+  const intensityClasses = [
+    "bg-muted/50",
+    "bg-primary/20",
+    "bg-primary/40",
+    "bg-primary/60",
+    "bg-primary/80",
+  ]
+
+  return (
+    <TooltipProvider>
+      <div className="flex h-full flex-col items-center justify-center gap-4">
+        <h3 className="text-lg font-medium">
+          {getYear(new Date())} Spending Heatmap
+        </h3>
+        <div className="grid grid-cols-4 gap-3 sm:grid-cols-6 lg:grid-cols-4">
+          {data.map((monthData) => (
+            <Tooltip key={monthData.month}>
+              <TooltipTrigger asChild>
+                <div
+                  className={cn(
+                    "flex h-16 w-16 items-center justify-center rounded-md font-medium text-foreground transition-colors",
+                    intensityClasses[monthData.intensity]
+                  )}
+                >
+                  {monthData.month}
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{formatCurrency(monthData.total)}</p>
+              </TooltipContent>
+            </Tooltip>
+          ))}
+        </div>
+      </div>
+    </TooltipProvider>
+  )
+}
