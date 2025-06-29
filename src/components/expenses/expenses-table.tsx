@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -71,8 +72,8 @@ export function ExpensesTable({
           <TableRow>
             <TableHead>Date</TableHead>
             <TableHead>Description</TableHead>
-            <TableHead>Category</TableHead>
-            <TableHead>Account</TableHead>
+            <TableHead className="text-center">Category</TableHead>
+            <TableHead className="text-center">Account</TableHead>
             <TableHead className="text-right">Amount</TableHead>
             <TableHead className="w-[50px]"></TableHead>
           </TableRow>
@@ -127,7 +128,7 @@ export function ExpensesTable({
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-center">
                       {category && (
                         <Badge
                           variant="outline"
@@ -143,9 +144,9 @@ export function ExpensesTable({
                         </Badge>
                       )}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-center">
                       {accountType ? (
-                        <div className="flex items-center gap-2">
+                        <div className="inline-flex items-center gap-2">
                           {AccountIcon && (
                             <AccountIcon className="h-4 w-4 text-muted-foreground" />
                           )}
