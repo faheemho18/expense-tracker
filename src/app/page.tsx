@@ -342,7 +342,7 @@ export default function HomePage() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="mb-4 flex items-center justify-between">
+              <div className="mb-4 flex items-center">
                 <h3 className="text-lg font-semibold tracking-tight">
                   Monthly Threshold Progress
                 </h3>
@@ -352,7 +352,7 @@ export default function HomePage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8"
+                        className="ml-5 h-8 w-8"
                         onClick={handleGaugeSort}
                       >
                         {getGaugeSortIcon()}
