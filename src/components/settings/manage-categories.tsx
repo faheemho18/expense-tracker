@@ -2,7 +2,13 @@
 "use client"
 
 import * as React from "react"
-import { Edit, PlusCircle, Save, Trash2 } from "lucide-react"
+import {
+  DragDropContext,
+  Draggable,
+  Droppable,
+  type DropResult,
+} from "@hello-pangea/dnd"
+import { Edit, GripVertical, PlusCircle, Save, Trash2 } from "lucide-react"
 
 import { useSettings } from "@/contexts/settings-context"
 import { ICONS, type IconName } from "@/lib/constants"
@@ -119,7 +125,10 @@ export function ManageCategories() {
     setIsFormDialogOpen(false)
   }
 
-  const handleThresholdChange = (categoryValue: string, thresholdStr: string) => {
+  const handleThresholdChange = (
+    categoryValue: string,
+    thresholdStr: string
+  ) => {
     const thresholdAmount = parseFloat(thresholdStr)
     setLocalCategories((cats) =>
       (cats || []).map((c) => {
@@ -151,10 +160,23 @@ export function ManageCategories() {
       setCategories(JSON.parse(JSON.stringify(localCategories)))
       toast({
         title: "Settings Updated",
-        description: "Your category thresholds and colors have been saved.",
+        description:
+          "Your category order, thresholds, and colors have been saved.",
       })
     }
     setIsConfirmSaveOpen(false)
+  }
+
+  const onDragEnd = (result: DropResult) => {
+    if (!result.destination || !localCategories) {
+      return
+    }
+
+    const items = Array.from(localCategories)
+    const [reorderedItem] = items.splice(result.source.index, 1)
+    items.splice(result.destination.index, 0, reorderedItem)
+
+    setLocalCategories(items)
   }
 
   if (!localCategories || !categories) {
@@ -175,83 +197,119 @@ export function ManageCategories() {
         </Button>
       </div>
       <div className="rounded-md border">
-        <ul className="divide-y divide-border">
-          {localCategories.map((category) => {
-            const Icon = getIcon(category.icon)
-            const originalCategory = categories.find(
-              (c) => c.value === category.value
-            )
-            return (
-              <li
-                key={category.value}
-                className="flex items-center gap-4 p-4"
+        <DragDropContext onDragEnd={onDragEnd}>
+          <Droppable droppableId="categories">
+            {(provided) => (
+              <ul
+                className="divide-y divide-border"
+                {...provided.droppableProps}
+                ref={provided.innerRef}
               >
-                <Icon
-                  className="h-5 w-5 flex-shrink-0"
-                  color={originalCategory?.color || category.color}
-                />
-                <div className="flex-1 font-medium">{category.label}</div>
+                {localCategories.map((category, index) => {
+                  const Icon = getIcon(category.icon)
+                  const originalCategory = categories.find(
+                    (c) => c.value === category.value
+                  )
+                  return (
+                    <Draggable
+                      key={category.value}
+                      draggableId={category.value}
+                      index={index}
+                    >
+                      {(provided) => (
+                        <li
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          className="flex items-center gap-4 bg-card p-4"
+                        >
+                          <div
+                            {...provided.dragHandleProps}
+                            className="cursor-grab"
+                          >
+                            <GripVertical className="h-5 w-5 text-muted-foreground" />
+                          </div>
+                          <Icon
+                            className="h-5 w-5 flex-shrink-0"
+                            color={originalCategory?.color || category.color}
+                          />
+                          <div className="flex-1 font-medium">
+                            {category.label}
+                          </div>
 
-                <div className="flex items-center gap-2">
-                  <Label
-                    htmlFor={`threshold-${category.value}`}
-                    className="sr-only"
-                  >
-                    Threshold
-                  </Label>
-                  <Input
-                    id={`threshold-${category.value}`}
-                    type="number"
-                    min="0"
-                    value={(category.threshold ?? "").toString()}
-                    onChange={(e) =>
-                      handleThresholdChange(category.value, e.target.value)
-                    }
-                    placeholder="Threshold"
-                    className="w-32 text-sm"
-                  />
-                </div>
+                          <div className="flex items-center gap-2">
+                            <Label
+                              htmlFor={`threshold-${category.value}`}
+                              className="sr-only"
+                            >
+                              Threshold
+                            </Label>
+                            <Input
+                              id={`threshold-${category.value}`}
+                              type="number"
+                              min="0"
+                              value={(category.threshold ?? "").toString()}
+                              onChange={(e) =>
+                                handleThresholdChange(
+                                  category.value,
+                                  e.target.value
+                                )
+                              }
+                              placeholder="Threshold"
+                              className="w-32 text-sm"
+                            />
+                          </div>
 
-                <div className="flex items-center gap-2">
-                  <Label
-                    htmlFor={`color-${category.value}`}
-                    className="sr-only"
-                  >
-                    Color
-                  </Label>
-                  <Input
-                    id={`color-${category.value}`}
-                    type="color"
-                    value={category.color}
-                    onChange={(e) =>
-                      handleColorChange(category.value, e.target.value)
-                    }
-                    className="h-10 w-10 cursor-pointer p-1"
-                  />
-                </div>
+                          <div className="flex items-center gap-2">
+                            <Label
+                              htmlFor={`color-${category.value}`}
+                              className="sr-only"
+                            >
+                              Color
+                            </Label>
+                            <Input
+                              id={`color-${category.value}`}
+                              type="color"
+                              value={category.color}
+                              onChange={(e) =>
+                                handleColorChange(
+                                  category.value,
+                                  e.target.value
+                                )
+                              }
+                              className="h-10 w-10 cursor-pointer p-1"
+                            />
+                          </div>
 
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleEditClick(category)}
-                  >
-                    <Edit className="h-4 w-4" />
-                    <span className="sr-only">Edit name and icon</span>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDeleteClick(category)}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                    <span className="sr-only">Delete category</span>
-                  </Button>
-                </div>
-              </li>
-            )
-          })}
-        </ul>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEditClick(category)}
+                            >
+                              <Edit className="h-4 w-4" />
+                              <span className="sr-only">
+                                Edit name and icon
+                              </span>
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteClick(category)}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                              <span className="sr-only">Delete category</span>
+                            </Button>
+                          </div>
+                        </li>
+                      )}
+                    </Draggable>
+                  )
+                })}
+                {provided.placeholder}
+              </ul>
+            )}
+          </Droppable>
+        </DragDropContext>
       </div>
 
       <AlertDialog
@@ -262,7 +320,8 @@ export function ManageCategories() {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Changes</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to save the changes to thresholds and colors?
+              Are you sure you want to save the changes to category order,
+              thresholds and colors?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
