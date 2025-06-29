@@ -91,8 +91,26 @@ export default function HomePage() {
     setGaugesMonth((prev) => addMonths(prev, 1))
   }
 
-  const handleToggleGaugeSort = (direction: "ascending" | "descending") => {
-    setGaugeSortOrder((prev) => (prev === direction ? null : direction))
+  const handleGaugeSort = () => {
+    setGaugeSortOrder((prev) => {
+      if (prev === "ascending") {
+        return "descending"
+      }
+      if (prev === "descending") {
+        return null
+      }
+      return "ascending"
+    })
+  }
+
+  const getGaugeSortIcon = () => {
+    if (gaugeSortOrder === "ascending") {
+      return <ArrowUp className="h-4 w-4" />
+    }
+    if (gaugeSortOrder === "descending") {
+      return <ArrowDown className="h-4 w-4" />
+    }
+    return <ArrowUpDown className="h-4 w-4" />
   }
 
   const addExpense = (expense: Omit<Expense, "id">) => {
@@ -328,48 +346,24 @@ export default function HomePage() {
                 <h3 className="text-lg font-semibold tracking-tight">
                   Monthly Threshold Progress
                 </h3>
-                <div className="flex items-center gap-1">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 data-[active=true]:bg-accent"
-                          onClick={() => handleToggleGaugeSort("ascending")}
-                          data-active={gaugeSortOrder === "ascending"}
-                        >
-                          <ArrowUp className="h-4 w-4" />
-                          <span className="sr-only">
-                            Sort ascending by percentage
-                          </span>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Sort Ascending</p>
-                      </TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 data-[active=true]:bg-accent"
-                          onClick={() => handleToggleGaugeSort("descending")}
-                          data-active={gaugeSortOrder === "descending"}
-                        >
-                          <ArrowDown className="h-4 w-4" />
-                          <span className="sr-only">
-                            Sort descending by percentage
-                          </span>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Sort Descending</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={handleGaugeSort}
+                      >
+                        {getGaugeSortIcon()}
+                        <span className="sr-only">Sort by percentage</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Sort by Percentage</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
               <CategoryGaugesWidget
                 expenses={gaugesMonthExpenses}
