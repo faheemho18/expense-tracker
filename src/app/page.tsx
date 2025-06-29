@@ -316,14 +316,39 @@ export default function HomePage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Transactions</CardTitle>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsFilterSheetOpen(true)}
-              >
-                <Filter className="mr-2 h-4 w-4" />
-                Filters
-              </Button>
+              <div className="flex items-center gap-4">
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-end space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                    >
+                      Previous
+                    </Button>
+                    <span className="text-sm text-muted-foreground">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsFilterSheetOpen(true)}
+                >
+                  <Filter className="mr-2 h-4 w-4" />
+                  Filters
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <ExpensesTable
@@ -334,29 +359,6 @@ export default function HomePage() {
                 requestSort={requestSort}
               />
             </CardContent>
-            {totalPages > 1 && (
-              <div className="flex items-center justify-end space-x-2 border-t p-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                >
-                  Previous
-                </Button>
-                <span className="text-sm text-muted-foreground">
-                  Page {currentPage} of {totalPages}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                >
-                  Next
-                </Button>
-              </div>
-            )}
           </Card>
         </div>
       </div>
