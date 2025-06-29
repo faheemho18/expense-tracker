@@ -7,7 +7,7 @@ import { Edit, PlusCircle, Trash2 } from "lucide-react"
 import { useSettings } from "@/contexts/settings-context"
 import { ICONS, type IconName } from "@/lib/constants"
 import type { Category } from "@/lib/types"
-import { getIcon } from "@/lib/utils"
+import { formatCurrency, getIcon } from "@/lib/utils"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -46,22 +46,32 @@ export function ManageCategories() {
   )
   const [categoryToDelete, setCategoryToDelete] =
     React.useState<Category | null>(null)
-  const [newCategoryLabel, setNewCategoryLabel] = React.useState("")
-  const [newCategoryIcon, setNewCategoryIcon] = React.useState<IconName | "">(
-    ""
-  )
+
+  // Form state
+  const [label, setLabel] = React.useState("")
+  const [icon, setIcon] = React.useState<IconName | "">("")
+  const [color, setColor] = React.useState("#888888")
+  const [budget, setBudget] = React.useState<string>("")
+
+  const resetForm = () => {
+    setLabel("")
+    setIcon("")
+    setColor("#888888")
+    setBudget("")
+  }
 
   const handleAddClick = () => {
     setEditingCategory(null)
-    setNewCategoryLabel("")
-    setNewCategoryIcon("")
+    resetForm()
     setIsFormDialogOpen(true)
   }
 
   const handleEditClick = (category: Category) => {
     setEditingCategory(category)
-    setNewCategoryLabel(category.label)
-    setNewCategoryIcon(category.icon as IconName)
+    setLabel(category.label)
+    setIcon(category.icon as IconName)
+    setColor(category.color)
+    setBudget(category.budget?.toString() || "")
     setIsFormDialogOpen(true)
   }
 
@@ -79,21 +89,25 @@ export function ManageCategories() {
   }
 
   const handleSave = () => {
-    if (!newCategoryLabel || !newCategoryIcon) return
+    if (!label || !icon) return
+
+    const budgetAmount = budget ? parseFloat(budget) : undefined
 
     if (editingCategory) {
       setCategories((cats) =>
         (cats || []).map((c) =>
           c.value === editingCategory.value
-            ? { ...c, label: newCategoryLabel, icon: newCategoryIcon }
+            ? { ...c, label, icon, color, budget: budgetAmount }
             : c
         )
       )
     } else {
       const newCategory: Category = {
-        value: newCategoryLabel.toLowerCase().replace(/\s+/g, "-"),
-        label: newCategoryLabel,
-        icon: newCategoryIcon,
+        value: label.toLowerCase().replace(/\s+/g, "-"),
+        label,
+        icon,
+        color,
+        budget: budgetAmount,
       }
       setCategories((cats) => [...(cats || []), newCategory])
     }
@@ -117,8 +131,19 @@ export function ManageCategories() {
             const Icon = getIcon(category.icon)
             return (
               <li key={category.value} className="flex items-center p-4">
-                <Icon className="mr-4 h-5 w-5" />
-                <span className="flex-1 font-medium">{category.label}</span>
+                <Icon
+                  className="mr-4 h-5 w-5"
+                  style={{ color: category.color }}
+                />
+                <div className="flex-1">
+                  <span className="font-medium">{category.label}</span>
+                  <p className="text-sm text-muted-foreground">
+                    Budget:{" "}
+                    {category.budget
+                      ? formatCurrency(category.budget)
+                      : "Not set"}
+                  </p>
+                </div>
                 <div className="flex items-center gap-2">
                   <Button
                     variant="ghost"
@@ -158,16 +183,38 @@ export function ManageCategories() {
               <Label htmlFor="category-label">Label</Label>
               <Input
                 id="category-label"
-                value={newCategoryLabel}
-                onChange={(e) => setNewCategoryLabel(e.target.value)}
+                value={label}
+                onChange={(e) => setLabel(e.target.value)}
                 placeholder="e.g., Groceries"
               />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="category-budget">Budget (Monthly)</Label>
+                <Input
+                  id="category-budget"
+                  type="number"
+                  value={budget}
+                  onChange={(e) => setBudget(e.target.value)}
+                  placeholder="e.g., 5000"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="category-color">Color</Label>
+                <Input
+                  id="category-color"
+                  type="color"
+                  value={color}
+                  onChange={(e) => setColor(e.target.value)}
+                  className="h-10 w-full p-1"
+                />
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="category-icon">Icon</Label>
               <Select
-                onValueChange={(value) => setNewCategoryIcon(value as IconName)}
-                value={newCategoryIcon}
+                onValueChange={(value) => setIcon(value as IconName)}
+                value={icon}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select an icon" />

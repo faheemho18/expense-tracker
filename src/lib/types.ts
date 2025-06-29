@@ -5,6 +5,8 @@ export type Category = {
   value: string
   label: string
   icon: string // Corresponds to a key in the ICONS map
+  color: string // Hex color string
+  budget?: number
 }
 
 export type AccountType = {
@@ -41,9 +43,4 @@ export type WidgetConfig = {
   type: WidgetType
   title: string
   filters?: WidgetFilters
-}
-
-export type CategoryThreshold = {
-  categoryValue: string
-  threshold: number
 }

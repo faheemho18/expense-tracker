@@ -88,7 +88,12 @@ export function ExpensesTable({ expenses, deleteExpense }: ExpensesTableProps) {
                           variant="outline"
                           className="flex max-w-min items-center gap-2 whitespace-nowrap"
                         >
-                          {Icon && <Icon className="h-4 w-4" />}
+                          {Icon && (
+                            <Icon
+                              className="h-4 w-4"
+                              style={{ color: category.color }}
+                            />
+                          )}
                           {category.label}
                         </Badge>
                       )}

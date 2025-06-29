@@ -20,7 +20,7 @@ interface CategoryGaugesWidgetProps {
 }
 
 export function CategoryGaugesWidget({ expenses }: CategoryGaugesWidgetProps) {
-  const { categories, categoryThresholds } = useSettings()
+  const { categories } = useSettings()
 
   const gaugeData = React.useMemo(() => {
     if (!categories) return []
@@ -35,27 +35,19 @@ export function CategoryGaugesWidget({ expenses }: CategoryGaugesWidgetProps) {
       {} as Record<string, number>
     )
 
-    const thresholdMap = (categoryThresholds || []).reduce(
-      (acc, t) => {
-        acc[t.categoryValue] = t.threshold
-        return acc
-      },
-      {} as Record<string, number>
-    )
-
     return categories.map((category) => {
       const spent = categoryTotals[category.value] || 0
-      const budget = thresholdMap[category.value] || 0
+      const budget = category.budget || 0
       const percentage = budget > 0 ? Math.round((spent / budget) * 100) : 0
 
       const pieData =
         budget > 0
           ? [
-              { name: "spent", value: spent, fill: "var(--color-spent)" },
+              { name: "spent", value: spent, fill: category.color },
               {
                 name: "remaining",
                 value: Math.max(0, budget - spent),
-                fill: "var(--color-remaining)",
+                fill: "hsl(var(--muted))",
               },
             ]
           : [{ name: "unset", value: 1, fill: "hsl(var(--muted)/0.5)" }]
@@ -67,14 +59,8 @@ export function CategoryGaugesWidget({ expenses }: CategoryGaugesWidgetProps) {
         percentage,
         data: pieData,
       }
-    }) as {
-      category: { value: string; label: string; icon: string }
-      spent: number
-      budget: number
-      percentage: number
-      data: { name: string; value: number; fill: string }[]
-    }[]
-  }, [expenses, categories, categoryThresholds])
+    })
+  }, [expenses, categories])
 
   if (!categories) {
     return <Skeleton className="h-full w-full" />
@@ -94,7 +80,7 @@ export function CategoryGaugesWidget({ expenses }: CategoryGaugesWidgetProps) {
         {gaugeData.map((item) => {
           const Icon = getIcon(item.category.icon)
           const chartConfig = {
-            spent: { label: "Spent", color: "hsl(var(--primary))" },
+            spent: { label: "Spent", color: item.category.color },
             remaining: { label: "Remaining", color: "hsl(var(--muted))" },
             unset: { label: "Unset", color: "hsl(var(--muted))" },
           }
@@ -104,7 +90,10 @@ export function CategoryGaugesWidget({ expenses }: CategoryGaugesWidgetProps) {
               className="flex flex-col items-center gap-2"
             >
               <div className="flex items-center gap-2 text-center">
-                <Icon className="h-4 w-4" />
+                <Icon
+                  className="h-4 w-4"
+                  style={{ color: item.category.color }}
+                />
                 <span className="font-medium">{item.category.label}</span>
               </div>
               <ChartContainer

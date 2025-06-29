@@ -22,11 +22,6 @@ interface StackedAreaChartWidgetProps {
   expenses: Expense[]
 }
 
-const generateColor = (index: number) => {
-  const hue = (index * 137.508) % 360
-  return `hsl(${hue}, 70%, 50%)`
-}
-
 export function StackedAreaChartWidget({
   expenses,
 }: StackedAreaChartWidgetProps) {
@@ -35,10 +30,10 @@ export function StackedAreaChartWidget({
   const { data, chartConfig } = React.useMemo(() => {
     if (!categories) return { data: [], chartConfig: {} }
 
-    const config: ChartConfig = categories.reduce((acc, category, index) => {
+    const config: ChartConfig = categories.reduce((acc, category) => {
       acc[category.value] = {
         label: category.label,
-        color: generateColor(index),
+        color: category.color,
       }
       return acc
     }, {} as ChartConfig)

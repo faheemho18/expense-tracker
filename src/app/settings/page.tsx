@@ -4,7 +4,6 @@
 import { AppLayout } from "@/components/app-layout"
 import { ManageAccountTypes } from "@/components/settings/manage-account-types"
 import { ManageCategories } from "@/components/settings/manage-categories"
-import { ManageCategoryThresholds } from "@/components/settings/manage-category-thresholds"
 import {
   Card,
   CardContent,
@@ -28,12 +27,15 @@ export default function SettingsPage() {
           <TabsList>
             <TabsTrigger value="categories">Categories</TabsTrigger>
             <TabsTrigger value="account-types">Account Types</TabsTrigger>
-            <TabsTrigger value="thresholds">Category Budgets</TabsTrigger>
           </TabsList>
           <TabsContent value="categories">
             <Card>
               <CardHeader>
                 <CardTitle>Manage Categories</CardTitle>
+                <CardDescription>
+                  Define your expense categories, set icons and colors, and
+                  assign monthly budgets.
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <ManageCategories />
@@ -47,20 +49,6 @@ export default function SettingsPage() {
               </CardHeader>
               <CardContent>
                 <ManageAccountTypes />
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="thresholds">
-            <Card>
-              <CardHeader>
-                <CardTitle>Manage Category Budgets</CardTitle>
-                <CardDescription>
-                  Set monthly spending limits for your expense categories to
-                  track your budget progress.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ManageCategoryThresholds />
               </CardContent>
             </Card>
           </TabsContent>

@@ -13,21 +13,14 @@ import {
 } from "@/components/ui/chart"
 import { Skeleton } from "@/components/ui/skeleton"
 
-interface CategoryPieChartWidgetProps {
-  expenses: Expense[]
-}
-
-const generateColor = (index: number) => {
-  const hue = (index * 137.508) % 360 // Use golden angle approximation
-  return `hsl(${hue}, 50%, 60%)`
-}
-
 export function CategoryPieChartWidget({
   expenses,
 }: CategoryPieChartWidgetProps) {
   const { categories } = useSettings()
 
-  const data = React.useMemo(() => {
+  const { data, chartConfig } = React.useMemo(() => {
+    if (!categories) return { data: [], chartConfig: {} }
+
     const categoryTotals = expenses.reduce(
       (acc, expense) => {
         // Only include actual expenses, not refunds/rebates
@@ -39,27 +32,27 @@ export function CategoryPieChartWidget({
       {} as Record<string, number>
     )
 
-    return Object.entries(categoryTotals)
-      .map(([categoryValue, total]) => ({
-        category:
-          (categories || []).find((c) => c.value === categoryValue)?.label ||
-          "Unknown",
-        total,
-        fill: "var(--color-primary)", // Default fill, will be overridden by Cell
-      }))
+    const chartData = Object.entries(categoryTotals)
+      .map(([categoryValue, total]) => {
+        const category = categories.find((c) => c.value === categoryValue)
+        return {
+          category: category?.label || "Unknown",
+          total,
+          fill: category?.color || "#8884d8", // Fallback color
+        }
+      })
       .sort((a, b) => b.total - a.total)
-  }, [expenses, categories])
 
-  const chartConfig = React.useMemo(() => {
-    const config: ChartConfig = {}
-    data.forEach((item, index) => {
-      config[item.category] = {
+    const config = chartData.reduce((acc, item) => {
+      acc[item.category] = {
         label: item.category,
-        color: generateColor(index),
+        color: item.fill,
       }
-    })
-    return config
-  }, [data])
+      return acc
+    }, {} as ChartConfig)
+
+    return { data: chartData, chartConfig: config }
+  }, [expenses, categories])
 
   if (!categories) {
     return <Skeleton className="h-full w-full" />
@@ -91,10 +84,7 @@ export function CategoryPieChartWidget({
           strokeWidth={5}
         >
           {data.map((entry, index) => (
-            <Cell
-              key={`cell-${index}`}
-              fill={chartConfig[entry.category]?.color || generateColor(index)}
-            />
+            <Cell key={`cell-${index}`} fill={entry.fill} />
           ))}
         </Pie>
       </PieChart>
