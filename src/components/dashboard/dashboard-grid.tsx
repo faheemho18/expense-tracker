@@ -85,7 +85,7 @@ export function DashboardGrid({
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <Droppable droppableId="dashboard" type="widgets">
+      <Droppable droppableId="dashboard">
         {(provided) => (
           <div
             {...provided.droppableProps}
