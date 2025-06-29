@@ -1,7 +1,8 @@
+
 "use client"
 
 import * as React from "react"
-import { GripVertical, MoreVertical, Trash } from "lucide-react"
+import { Grip, MoreVertical, Trash } from "lucide-react"
 import type { DraggableProvided } from "@hello-pangea/dnd"
 
 import type { WidgetConfig } from "@/lib/types"
@@ -51,23 +52,23 @@ export const WidgetWrapper = React.forwardRef<
       <div ref={ref} {...draggableProps} {...props} className={className}>
         <Card
           className={cn(
-            "flex flex-col transition-shadow h-full",
+            "flex h-full flex-col transition-shadow",
             isDragging && "shadow-2xl ring-2 ring-primary"
           )}
         >
-          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <CardHeader className="flex flex-row items-center border-b p-4">
             <div
               {...dragHandleProps}
-              className="flex items-center gap-2 cursor-grab"
+              className="flex flex-1 items-center gap-2 cursor-grab"
             >
-              <GripVertical className="h-5 w-5 text-muted-foreground" />
+              <Grip className="h-5 w-5 text-muted-foreground" />
               <CardTitle className="text-base font-medium">
                 {widget.title}
               </CardTitle>
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-6 w-6">
+                <Button variant="ghost" size="icon" className="h-8 w-8">
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -82,7 +83,7 @@ export const WidgetWrapper = React.forwardRef<
               </DropdownMenuContent>
             </DropdownMenu>
           </CardHeader>
-          <CardContent className="flex-1 h-[350px]">{children}</CardContent>
+          <CardContent className="h-[350px] flex-1 p-4">{children}</CardContent>
         </Card>
       </div>
     )

@@ -42,11 +42,18 @@ export function ExpensesTable({ expenses, deleteExpense }: ExpensesTableProps) {
   }
 
   if (!categories || !accountTypes) {
-    return <Skeleton className="h-48 w-full" />
+    return (
+      <div className="space-y-2">
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-12 w-full" />
+      </div>
+    )
   }
 
   return (
-    <div className="rounded-md border">
+    <div className="w-full overflow-hidden rounded-md border">
       <Table>
         <TableHeader>
           <TableRow>
@@ -79,7 +86,7 @@ export function ExpensesTable({ expenses, deleteExpense }: ExpensesTableProps) {
                       {category && (
                         <Badge
                           variant="outline"
-                          className="flex max-w-min items-center gap-2"
+                          className="flex max-w-min items-center gap-2 whitespace-nowrap"
                         >
                           {Icon && <Icon className="h-4 w-4" />}
                           {category.label}
@@ -93,8 +100,8 @@ export function ExpensesTable({ expenses, deleteExpense }: ExpensesTableProps) {
                       className={cn(
                         "font-mono text-right",
                         expense.amount < 0
-                          ? "text-emerald-600"
-                          : "text-destructive"
+                          ? "text-emerald-500"
+                          : "text-foreground"
                       )}
                     >
                       {formatCurrency(expense.amount)}

@@ -19,9 +19,11 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { Logo } from "@/components/logo"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const isMobile = useIsMobile()
 
   const isActive = React.useCallback(
     (path: string) => {
@@ -39,7 +41,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <SidebarProvider>
-      <Sidebar>
+      <Sidebar collapsible={isMobile ? "offcanvas" : "icon"}>
         <SidebarHeader>
           <Logo />
         </SidebarHeader>
@@ -88,7 +90,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
-        <header className="flex h-14 items-center gap-4 border-b bg-card px-4 sm:px-6">
+        <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-md sm:px-6">
           <SidebarTrigger className="md:hidden" />
           <div className="flex-1">
             {/* You can add a page title or breadcrumbs here */}

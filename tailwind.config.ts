@@ -10,8 +10,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['Roboto', 'sans-serif'],
-        headline: ['Roboto', 'sans-serif'],
+        sans: ['Inter', 'sans-serif'],
         code: ['monospace'],
       },
       colors: {
