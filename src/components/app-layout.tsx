@@ -3,9 +3,8 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BarChart2, Eye, LayoutDashboard, Wallet } from "lucide-react"
+import { LayoutDashboard, Wallet } from "lucide-react"
 
-import { cn } from "@/lib/utils"
 import {
   SidebarProvider,
   Sidebar,
@@ -18,7 +17,6 @@ import {
   SidebarTrigger,
   SidebarInset,
 } from "@/components/ui/sidebar"
-import { Button } from "@/components/ui/button"
 import { Logo } from "@/components/logo"
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
@@ -37,26 +35,28 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <SidebarContent>
           <SidebarMenu>
             <SidebarMenuItem>
-              <Link href="/" legacyBehavior passHref>
-                <SidebarMenuButton
-                  isActive={isActive("/")}
-                  tooltip={{ children: "Expenses" }}
-                >
+              <SidebarMenuButton
+                asChild
+                isActive={isActive("/")}
+                tooltip={{ children: "Expenses" }}
+              >
+                <Link href="/">
                   <Wallet />
                   <span>Expenses</span>
-                </SidebarMenuButton>
-              </Link>
+                </Link>
+              </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <Link href="/dashboard" legacyBehavior passHref>
-                <SidebarMenuButton
-                  isActive={isActive("/dashboard")}
-                  tooltip={{ children: "Dashboard" }}
-                >
+              <SidebarMenuButton
+                asChild
+                isActive={isActive("/dashboard")}
+                tooltip={{ children: "Dashboard" }}
+              >
+                <Link href="/dashboard">
                   <LayoutDashboard />
                   <span>Dashboard</span>
-                </SidebarMenuButton>
-              </Link>
+                </Link>
+              </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
