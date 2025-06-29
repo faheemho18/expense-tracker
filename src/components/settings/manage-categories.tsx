@@ -157,7 +157,7 @@ export function ManageCategories() {
                   <Input
                     id={`budget-${category.value}`}
                     type="number"
-                    value={category.budget ?? ""}
+                    value={(category.budget ?? "").toString()}
                     onChange={(e) =>
                       handleBudgetChange(category.value, e.target.value)
                     }
