@@ -61,6 +61,14 @@ export default function DashboardPage() {
     )
   }
 
+  const updateWidgetTitle = (id: string, title: string) => {
+    setWidgets((prevWidgets) =>
+      (prevWidgets || []).map((widget) =>
+        widget.id === id ? { ...widget, title } : widget
+      )
+    )
+  }
+
   const onDragEnd = (result: DropResult) => {
     if (!result.destination || !widgets) {
       return
@@ -147,6 +155,7 @@ export default function DashboardPage() {
           expenses={filteredExpenses}
           widgets={widgets || []}
           removeWidget={removeWidget}
+          updateWidgetTitle={updateWidgetTitle}
           onDragEnd={onDragEnd}
         />
       </div>

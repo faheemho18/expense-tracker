@@ -24,6 +24,7 @@ interface DashboardGridProps {
   expenses: Expense[]
   widgets: WidgetConfig[]
   removeWidget: (id: string) => void
+  updateWidgetTitle: (id: string, title: string) => void
   onDragEnd: (result: DropResult) => void
 }
 
@@ -46,6 +47,7 @@ export function DashboardGrid({
   expenses,
   widgets,
   removeWidget,
+  updateWidgetTitle,
   onDragEnd,
 }: DashboardGridProps) {
   if (widgets.length === 0) {
@@ -77,6 +79,7 @@ export function DashboardGrid({
                     ref={provided.innerRef}
                     widget={widget}
                     removeWidget={removeWidget}
+                    updateWidgetTitle={updateWidgetTitle}
                     className={cn(
                       "p-2",
                       widget.type === "stats"

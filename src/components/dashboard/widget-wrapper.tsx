@@ -2,7 +2,7 @@
 "use client"
 
 import * as React from "react"
-import { Grip, MoreVertical, Trash } from "lucide-react"
+import { Edit, Grip, MoreVertical, Trash } from "lucide-react"
 import type { DraggableProvided } from "@hello-pangea/dnd"
 
 import type { WidgetConfig } from "@/lib/types"
@@ -21,10 +21,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
+import { EditWidgetDialog } from "./edit-widget-dialog"
 
 interface WidgetWrapperProps extends React.HTMLAttributes<HTMLDivElement> {
   widget: WidgetConfig
   removeWidget: (id: string) => void
+  updateWidgetTitle: (id: string, title: string) => void
   children: React.ReactNode
   isDragging?: boolean
   draggableProps: DraggableProvided["draggableProps"]
@@ -39,6 +41,7 @@ export const WidgetWrapper = React.forwardRef<
     {
       widget,
       removeWidget,
+      updateWidgetTitle,
       children,
       className,
       isDragging,
@@ -48,6 +51,8 @@ export const WidgetWrapper = React.forwardRef<
     },
     ref
   ) => {
+    const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false)
+
     return (
       <div ref={ref} {...draggableProps} {...props} className={className}>
         <Card
@@ -73,6 +78,10 @@ export const WidgetWrapper = React.forwardRef<
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setIsEditDialogOpen(true)}>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit title
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => removeWidget(widget.id)}
                   className="text-destructive"
@@ -85,6 +94,12 @@ export const WidgetWrapper = React.forwardRef<
           </CardHeader>
           <CardContent className="h-[350px] flex-1 p-4">{children}</CardContent>
         </Card>
+        <EditWidgetDialog
+          isOpen={isEditDialogOpen}
+          setIsOpen={setIsEditDialogOpen}
+          widget={widget}
+          updateWidgetTitle={updateWidgetTitle}
+        />
       </div>
     )
   }
