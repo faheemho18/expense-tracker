@@ -115,16 +115,15 @@ export function ExpensesFilters({
           onSelectionChange={(value) => onFilterChange("accountType", value)}
         />
       </Accordion>
-      {hasActiveFilters && (
-        <Button
-          variant="ghost"
-          onClick={handleClearFilters}
-          className="w-full justify-center"
-        >
-          <X className="mr-2 h-4 w-4" />
-          Clear Filters
-        </Button>
-      )}
+      <Button
+        variant="ghost"
+        onClick={handleClearFilters}
+        className="w-full justify-center"
+        disabled={!hasActiveFilters}
+      >
+        <X className="mr-2 h-4 w-4" />
+        Clear Filters
+      </Button>
     </div>
   )
 }
