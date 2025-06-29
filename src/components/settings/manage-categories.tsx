@@ -112,25 +112,25 @@ export function ManageCategories() {
         label,
         icon,
         color: "#888888", // Default color
-        budget: undefined,
+        threshold: undefined,
       }
       setCategories((cats) => [...(cats || []), newCategory])
     }
     setIsFormDialogOpen(false)
   }
 
-  const handleBudgetChange = (categoryValue: string, budgetStr: string) => {
-    const budgetAmount = parseFloat(budgetStr)
+  const handleThresholdChange = (categoryValue: string, thresholdStr: string) => {
+    const thresholdAmount = parseFloat(thresholdStr)
     setLocalCategories((cats) =>
       (cats || []).map((c) => {
         if (c.value === categoryValue) {
-          const newBudget =
-            budgetStr === ""
+          const newThreshold =
+            thresholdStr === ""
               ? undefined
-              : !isNaN(budgetAmount) && budgetAmount >= 0
-                ? budgetAmount
-                : c.budget
-          return { ...c, budget: newBudget }
+              : !isNaN(thresholdAmount) && thresholdAmount >= 0
+                ? thresholdAmount
+                : c.threshold
+          return { ...c, threshold: newThreshold }
         }
         return c
       })
@@ -151,7 +151,7 @@ export function ManageCategories() {
       setCategories(JSON.parse(JSON.stringify(localCategories)))
       toast({
         title: "Settings Updated",
-        description: "Your category budgets and colors have been saved.",
+        description: "Your category thresholds and colors have been saved.",
       })
     }
     setIsConfirmSaveOpen(false)
@@ -194,20 +194,20 @@ export function ManageCategories() {
 
                 <div className="flex items-center gap-2">
                   <Label
-                    htmlFor={`budget-${category.value}`}
+                    htmlFor={`threshold-${category.value}`}
                     className="sr-only"
                   >
-                    Budget
+                    Threshold
                   </Label>
                   <Input
-                    id={`budget-${category.value}`}
+                    id={`threshold-${category.value}`}
                     type="number"
                     min="0"
-                    value={(category.budget ?? "").toString()}
+                    value={(category.threshold ?? "").toString()}
                     onChange={(e) =>
-                      handleBudgetChange(category.value, e.target.value)
+                      handleThresholdChange(category.value, e.target.value)
                     }
-                    placeholder="Budget"
+                    placeholder="Threshold"
                     className="w-28"
                   />
                 </div>
@@ -262,7 +262,7 @@ export function ManageCategories() {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Changes</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to save the changes to budgets and colors?
+              Are you sure you want to save the changes to thresholds and colors?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -283,7 +283,7 @@ export function ManageCategories() {
             <DialogDescription>
               {editingCategory
                 ? "Edit the name and icon for your category."
-                : "Add a new category to your list. Budget and color can be set inline."}
+                : "Add a new category to your list. Threshold and color can be set inline."}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">

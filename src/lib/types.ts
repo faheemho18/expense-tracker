@@ -6,7 +6,7 @@ export type Category = {
   label: string
   icon: string // Corresponds to a key in the ICONS map
   color: string // Hex color string
-  budget?: number
+  threshold?: number
 }
 
 export type AccountType = {

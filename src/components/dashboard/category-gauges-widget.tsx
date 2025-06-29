@@ -37,16 +37,16 @@ export function CategoryGaugesWidget({ expenses }: CategoryGaugesWidgetProps) {
 
     return categories.map((category) => {
       const spent = categoryTotals[category.value] || 0
-      const budget = category.budget || 0
-      const percentage = budget > 0 ? Math.round((spent / budget) * 100) : 0
+      const threshold = category.threshold || 0
+      const percentage = threshold > 0 ? Math.round((spent / threshold) * 100) : 0
 
       const pieData =
-        budget > 0
+        threshold > 0
           ? [
               { name: "spent", value: spent, fill: category.color },
               {
                 name: "remaining",
-                value: Math.max(0, budget - spent),
+                value: Math.max(0, threshold - spent),
                 fill: "hsl(var(--muted))",
               },
             ]
@@ -55,7 +55,7 @@ export function CategoryGaugesWidget({ expenses }: CategoryGaugesWidgetProps) {
       return {
         category,
         spent,
-        budget,
+        threshold,
         percentage,
         data: pieData,
       }
@@ -111,11 +111,11 @@ export function CategoryGaugesWidget({ expenses }: CategoryGaugesWidgetProps) {
                     nameKey="name"
                     innerRadius={35}
                     outerRadius={45}
-                    cornerRadius={item.budget > 0 ? 99 : 0}
-                    startAngle={item.budget > 0 ? 220 : undefined}
-                    endAngle={item.budget > 0 ? -40 : undefined}
+                    cornerRadius={item.threshold > 0 ? 99 : 0}
+                    startAngle={item.threshold > 0 ? 220 : undefined}
+                    endAngle={item.threshold > 0 ? -40 : undefined}
                   >
-                    {item.budget > 0 && (
+                    {item.threshold > 0 && (
                       <Label
                         content={({ viewBox }) => {
                           if (viewBox && "cx" in viewBox && "cy" in viewBox) {
@@ -143,11 +143,11 @@ export function CategoryGaugesWidget({ expenses }: CategoryGaugesWidgetProps) {
                 </PieChart>
               </ChartContainer>
               <div className="text-xs text-muted-foreground">
-                {item.budget > 0
+                {item.threshold > 0
                   ? `${formatCurrency(item.spent)} of ${formatCurrency(
-                      item.budget
+                      item.threshold
                     )}`
-                  : "Budget not set"}
+                  : "Threshold not set"}
               </div>
             </div>
           )

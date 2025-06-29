@@ -34,7 +34,7 @@ export default function SettingsPage() {
                 <CardTitle>Manage Categories</CardTitle>
                 <CardDescription>
                   Define your expense categories, set icons and colors, and
-                  assign monthly budgets.
+                  assign monthly thresholds.
                 </CardDescription>
               </CardHeader>
               <CardContent>
