@@ -182,7 +182,7 @@ export default function HomePage() {
               <div>
                 <div className="mb-4 flex items-center justify-between">
                   <h3 className="text-lg font-semibold tracking-tight">
-                    Monthly Budget Progress
+                    Monthly Threshold Progress
                   </h3>
                   <div className="flex items-center gap-2">
                     <Button
