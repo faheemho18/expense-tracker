@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -95,7 +94,7 @@ export function ExpensesTable({
                 return (
                   <TableRow key={expense.id}>
                     <TableCell>
-                      {format(new Date(expense.date), "dd MMM, yyyy")}
+                      {format(new Date(expense.date), "MMM dd, yyyy")}
                     </TableCell>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-1.5">
