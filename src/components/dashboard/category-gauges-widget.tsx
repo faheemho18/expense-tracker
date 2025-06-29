@@ -92,7 +92,7 @@ export function CategoryGaugesWidget({ expenses }: CategoryGaugesWidgetProps) {
               <div className="flex items-center gap-2 text-center">
                 <Icon
                   className="h-4 w-4"
-                  style={{ color: item.category.color }}
+                  color={item.category.color}
                 />
                 <span className="font-medium">{item.category.label}</span>
               </div>

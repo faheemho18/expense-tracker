@@ -177,7 +177,7 @@ export function ManageCategories() {
               >
                 <Icon
                   className="h-5 w-5 flex-shrink-0"
-                  style={{ color: category.color }}
+                  color={category.color}
                 />
                 <div className="flex-1 font-medium">{category.label}</div>
 
