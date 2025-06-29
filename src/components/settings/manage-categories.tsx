@@ -143,7 +143,8 @@ export function ManageCategories() {
 
   const handleSaveChanges = () => {
     if (localCategories) {
-      setCategories(localCategories)
+      // Force a deep copy to ensure all components recognize the change
+      setCategories(JSON.parse(JSON.stringify(localCategories)))
       toast({
         title: "Settings Updated",
         description: "Your category budgets and colors have been saved.",
