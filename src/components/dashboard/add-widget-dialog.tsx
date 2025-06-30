@@ -57,7 +57,7 @@ type WidgetFormValues = z.infer<typeof widgetSchema>
 interface AddWidgetDialogProps {
   isOpen: boolean
   setIsOpen: (isOpen: boolean) => void
-  addWidget: (widget: Omit<WidgetConfig, "id">) => void
+  addWidget: (widget: Pick<WidgetConfig, "title" | "type">) => void
 }
 
 const WIDGET_TYPE_OPTIONS: { value: WidgetType; label: string }[] = [

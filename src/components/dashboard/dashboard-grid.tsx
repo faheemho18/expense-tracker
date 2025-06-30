@@ -2,14 +2,9 @@
 "use client"
 
 import * as React from "react"
-import {
-  DragDropContext,
-  Draggable,
-  Droppable,
-  type DropResult,
-} from "@hello-pangea/dnd"
 import { format, getYear, startOfMonth } from "date-fns"
 import { BarChart } from "lucide-react"
+import { Responsive, WidthProvider, type Layout } from "react-grid-layout"
 
 import type { Expense, WidgetConfig, WidgetFilters } from "@/lib/types"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -22,14 +17,15 @@ import { StackedAreaChartWidget } from "./stacked-area-chart-widget"
 import { StatsWidget } from "./stats-widget"
 import { WidgetWrapper } from "./widget-wrapper"
 
+const ResponsiveGridLayout = WidthProvider(Responsive)
+
 interface DashboardGridProps {
   expenses: Expense[]
   widgets: WidgetConfig[]
   removeWidget: (id: string) => void
   updateWidgetTitle: (id: string, title: string) => void
-  onDragEnd: (result: DropResult) => void
+  onLayoutChange: (layout: Layout[]) => void
   updateWidgetFilters: (id: string, filters: WidgetFilters) => void
-  updateWidgetSize: (id: string, width: string, height: string) => void
   availableMonths: { value: string; label: string }[]
   availableYears: { value: string; label: string }[]
   areGlobalFiltersActive: boolean
@@ -59,9 +55,8 @@ export function DashboardGrid({
   widgets,
   removeWidget,
   updateWidgetTitle,
-  onDragEnd,
+  onLayoutChange,
   updateWidgetFilters,
-  updateWidgetSize,
   availableMonths,
   availableYears,
   areGlobalFiltersActive,
@@ -79,102 +74,92 @@ export function DashboardGrid({
     )
   }
 
+  const layout = widgets.map((w) => ({
+    i: w.id,
+    x: w.x,
+    y: w.y,
+    w: w.w,
+    h: w.h,
+  }))
+
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
-      <Droppable droppableId="dashboard">
-        {(provided) => (
-          <div
-            {...provided.droppableProps}
-            ref={provided.innerRef}
-            className="-m-2 flex flex-wrap items-start"
-          >
-            {widgets.map((widget, index) => {
-              const widgetFilters = widget.filters
-              const hasWidgetFilters =
-                widgetFilters &&
-                ((widgetFilters.year?.length ?? 0) > 0 ||
-                  (widgetFilters.month?.length ?? 0) > 0 ||
-                  (widgetFilters.category?.length ?? 0) > 0 ||
-                  (widgetFilters.accountType?.length ?? 0) > 0)
+    <ResponsiveGridLayout
+      className="layout"
+      layouts={{ lg: layout }}
+      breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
+      cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
+      rowHeight={30}
+      margin={[16, 16]}
+      onLayoutChange={(newLayout) => onLayoutChange(newLayout)}
+      isDraggable
+      isResizable
+      draggableHandle=".drag-handle"
+    >
+      {widgets.map((widget) => {
+        const widgetFilters = widget.filters
+        const hasWidgetFilters =
+          widgetFilters &&
+          ((widgetFilters.year?.length ?? 0) > 0 ||
+            (widgetFilters.month?.length ?? 0) > 0 ||
+            (widgetFilters.category?.length ?? 0) > 0 ||
+            (widgetFilters.accountType?.length ?? 0) > 0)
 
-              let widgetExpenses = expenses
+        let widgetExpenses = expenses
 
-              // Default behavior for stats widget: current year if no filters active
-              if (
-                widget.type === "stats" &&
-                !areGlobalFiltersActive &&
-                !hasWidgetFilters
-              ) {
-                const currentYear = new Date().getFullYear()
-                widgetExpenses = expenses.filter(
-                  (e) => new Date(e.date).getFullYear() === currentYear
-                )
-              }
-              // Apply widget-specific filters
-              else if (hasWidgetFilters) {
-                const {
-                  year = [],
-                  month = [],
-                  category = [],
-                  accountType = [],
-                } = widgetFilters!
+        // Default behavior for stats widget: current year if no filters active
+        if (
+          widget.type === "stats" &&
+          !areGlobalFiltersActive &&
+          !hasWidgetFilters
+        ) {
+          const currentYear = new Date().getFullYear()
+          widgetExpenses = expenses.filter(
+            (e) => new Date(e.date).getFullYear() === currentYear
+          )
+        }
+        // Apply widget-specific filters
+        else if (hasWidgetFilters) {
+          const {
+            year = [],
+            month = [],
+            category = [],
+            accountType = [],
+          } = widgetFilters!
 
-                widgetExpenses = expenses.filter((expense) => {
-                  const expenseDate = new Date(expense.date)
-                  const expenseYear = getYear(expenseDate).toString()
-                  const expenseMonth = format(
-                    startOfMonth(expenseDate),
-                    "yyyy-MM"
-                  )
+          widgetExpenses = expenses.filter((expense) => {
+            const expenseDate = new Date(expense.date)
+            const expenseYear = getYear(expenseDate).toString()
+            const expenseMonth = format(startOfMonth(expenseDate), "yyyy-MM")
 
-                  const yearMatch =
-                    year.length === 0 || year.includes(expenseYear)
-                  const monthMatch =
-                    month.length === 0 || month.includes(expenseMonth)
-                  const categoryMatch =
-                    category.length === 0 ||
-                    category.includes(expense.category)
-                  const accountTypeMatch =
-                    accountType.length === 0 ||
-                    accountType.includes(expense.accountType)
+            const yearMatch =
+              year.length === 0 || year.includes(expenseYear)
+            const monthMatch =
+              month.length === 0 || month.includes(expenseMonth)
+            const categoryMatch =
+              category.length === 0 || category.includes(expense.category)
+            const accountTypeMatch =
+              accountType.length === 0 ||
+              accountType.includes(expense.accountType)
 
-                  return (
-                    yearMatch && monthMatch && categoryMatch && accountTypeMatch
-                  )
-                })
-              }
+            return yearMatch && monthMatch && categoryMatch && accountTypeMatch
+          })
+        }
 
-              return (
-                <Draggable
-                  key={widget.id}
-                  draggableId={widget.id}
-                  index={index}
-                >
-                  {(provided, snapshot) => (
-                    <WidgetWrapper
-                      ref={provided.innerRef}
-                      widget={widget}
-                      removeWidget={removeWidget}
-                      updateWidgetTitle={updateWidgetTitle}
-                      className="p-2"
-                      isDragging={snapshot.isDragging}
-                      draggableProps={provided.draggableProps}
-                      dragHandleProps={provided.dragHandleProps}
-                      updateWidgetFilters={updateWidgetFilters}
-                      updateWidgetSize={updateWidgetSize}
-                      availableMonths={availableMonths}
-                      availableYears={availableYears}
-                    >
-                      {renderWidget(widget, widgetExpenses)}
-                    </WidgetWrapper>
-                  )}
-                </Draggable>
-              )
-            })}
-            {provided.placeholder}
+        return (
+          <div key={widget.id}>
+            <WidgetWrapper
+              widget={widget}
+              removeWidget={removeWidget}
+              updateWidgetTitle={updateWidgetTitle}
+              updateWidgetFilters={updateWidgetFilters}
+              availableMonths={availableMonths}
+              availableYears={availableYears}
+            >
+              {renderWidget(widget, widgetExpenses)}
+            </WidgetWrapper>
           </div>
-        )}
-      </Droppable>
-    </DragDropContext>
+        )
+      })}
+    </ResponsiveGridLayout>
   )
 }

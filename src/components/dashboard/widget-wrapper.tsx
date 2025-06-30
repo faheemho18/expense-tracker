@@ -2,9 +2,7 @@
 "use client"
 
 import * as React from "react"
-import type { DraggableProvided } from "@hello-pangea/dnd"
 import { Edit, Filter, Grip, MoreVertical, Trash } from "lucide-react"
-import { Resizable, type ResizeCallback } from "re-resizable"
 
 import type { WidgetConfig, WidgetFilters } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -31,11 +29,7 @@ interface WidgetWrapperProps extends React.HTMLAttributes<HTMLDivElement> {
   removeWidget: (id: string) => void
   updateWidgetTitle: (id: string, title: string) => void
   children: React.ReactNode
-  isDragging?: boolean
-  draggableProps: DraggableProvided["draggableProps"]
-  dragHandleProps: DraggableProvided["dragHandleProps"] | null | undefined
   updateWidgetFilters: (id: string, filters: WidgetFilters) => void
-  updateWidgetSize: (id: string, width: string, height: string) => void
   availableMonths: { value: string; label: string }[]
   availableYears: { value: string; label: string }[]
 }
@@ -51,11 +45,7 @@ export const WidgetWrapper = React.forwardRef<
       updateWidgetTitle,
       children,
       className,
-      isDragging,
-      draggableProps,
-      dragHandleProps,
       updateWidgetFilters,
-      updateWidgetSize,
       availableMonths,
       availableYears,
       ...props
@@ -65,84 +55,44 @@ export const WidgetWrapper = React.forwardRef<
     const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false)
     const [isFilterSheetOpen, setIsFilterSheetOpen] = React.useState(false)
 
-    const handleResizeStop: ResizeCallback = (e, direction, ref, d) => {
-      updateWidgetSize(widget.id, ref.style.width, ref.style.height)
-    }
-
     return (
-      <div ref={ref} {...draggableProps} {...props} className={className}>
-        <Resizable
-          size={{
-            width: widget.width || "100%",
-            height: widget.height || 400,
-          }}
-          minWidth={300}
-          minHeight={200}
-          onResizeStop={handleResizeStop}
-          className="flex flex-col"
-          enable={{
-            top: false,
-            right: true,
-            bottom: true,
-            left: false,
-            topRight: false,
-            bottomRight: true,
-            bottomLeft: false,
-            topLeft: false,
-          }}
-          handleComponent={{
-            bottomRight: (
-              <div className="absolute bottom-1 right-1 h-4 w-4 cursor-se-resize rounded-full border-2 border-border bg-background hover:bg-accent" />
-            ),
-          }}
-        >
-          <Card
-            className={cn(
-              "flex h-full w-full flex-col transition-shadow",
-              isDragging && "shadow-2xl ring-2 ring-primary"
-            )}
-          >
-            <CardHeader className="flex flex-row items-center border-b p-4">
-              <div
-                {...dragHandleProps}
-                className="flex flex-1 cursor-grab items-center gap-2"
-              >
-                <Grip className="h-5 w-5 text-muted-foreground" />
-                <CardTitle className="text-base font-medium">
-                  {widget.title}
-                </CardTitle>
-              </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setIsEditDialogOpen(true)}>
-                    <Edit className="mr-2 h-4 w-4" />
-                    Edit title
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setIsFilterSheetOpen(true)}>
-                    <Filter className="mr-2 h-4 w-4" />
-                    Filters
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => removeWidget(widget.id)}
-                    className="text-destructive"
-                  >
-                    <Trash className="mr-2 h-4 w-4" />
-                    Remove widget
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </CardHeader>
-            <CardContent className="min-h-0 flex-1 p-4">
-              {children}
-            </CardContent>
-          </Card>
-        </Resizable>
+      <div ref={ref} {...props} className={className}>
+        <Card className="flex h-full w-full flex-col transition-shadow">
+          <CardHeader className="flex flex-row items-center border-b p-4">
+            <div className="drag-handle flex flex-1 cursor-grab items-center gap-2">
+              <Grip className="h-5 w-5 text-muted-foreground" />
+              <CardTitle className="text-base font-medium">
+                {widget.title}
+              </CardTitle>
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setIsEditDialogOpen(true)}>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit title
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setIsFilterSheetOpen(true)}>
+                  <Filter className="mr-2 h-4 w-4" />
+                  Filters
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => removeWidget(widget.id)}
+                  className="text-destructive"
+                >
+                  <Trash className="mr-2 h-4 w-4" />
+                  Remove widget
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </CardHeader>
+          <CardContent className="min-h-0 flex-1 p-4">{children}</CardContent>
+        </Card>
         <EditWidgetDialog
           isOpen={isEditDialogOpen}
           setIsOpen={setIsEditDialogOpen}

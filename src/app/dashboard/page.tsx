@@ -3,8 +3,8 @@
 
 import * as React from "react"
 import { Filter, Plus } from "lucide-react"
-import type { DropResult } from "@hello-pangea/dnd"
 import { format, getYear, startOfMonth } from "date-fns"
+import type { Layout } from "react-grid-layout"
 
 import { useLocalStorage } from "@/hooks/use-local-storage"
 import type { Expense, WidgetConfig, WidgetFilters } from "@/lib/types"
@@ -23,20 +23,24 @@ import {
 } from "@/components/ui/sheet"
 
 const DEFAULT_WIDGETS: WidgetConfig[] = [
-  { id: "1", type: "stats", title: "Overview", width: "100%", height: 180 },
+  { id: "1", type: "stats", title: "Overview", x: 0, y: 0, w: 12, h: 5 },
   {
     id: "2",
     type: "category-pie",
     title: "Spending by Category",
-    width: "33.33%",
-    height: 400,
+    x: 0,
+    y: 5,
+    w: 4,
+    h: 11,
   },
   {
     id: "3",
     type: "over-time-bar",
     title: "Monthly Spending",
-    width: "66.67%",
-    height: 400,
+    x: 4,
+    y: 5,
+    w: 8,
+    h: 11,
   },
 ]
 
@@ -55,14 +59,19 @@ export default function DashboardPage() {
     accountType: [],
   })
 
-  const addWidget = (widget: Omit<WidgetConfig, "id">) => {
-    const newWidget: WidgetConfig = {
-      ...widget,
-      id: crypto.randomUUID(),
-      width: "50%",
-      height: 400,
-    }
-    setWidgets((prev) => [...(prev || []), newWidget])
+  const addWidget = (widget: Pick<WidgetConfig, "title" | "type">) => {
+    setWidgets((prev = []) => {
+      const y = Math.max(0, ...prev.map((w) => w.y + w.h))
+      const newWidget: WidgetConfig = {
+        ...widget,
+        id: crypto.randomUUID(),
+        x: 0,
+        y: y,
+        w: 6,
+        h: 11,
+      }
+      return [...prev, newWidget]
+    })
   }
 
   const removeWidget = (id: string) => {
@@ -79,12 +88,32 @@ export default function DashboardPage() {
     )
   }
 
-  const updateWidgetSize = (id: string, width: string, height: string) => {
-    setWidgets((prevWidgets) =>
-      (prevWidgets || []).map((widget) =>
-        widget.id === id ? { ...widget, width, height } : widget
+  const onLayoutChange = (layout: Layout[]) => {
+    const changed = widgets?.some((w) => {
+      const item = layout.find((l) => l.i === w.id)
+      return (
+        item && (item.x !== w.x || item.y !== w.y || item.w !== w.w || item.h !== w.h)
       )
-    )
+    })
+
+    if (changed) {
+      setWidgets((prevWidgets) => {
+        if (!prevWidgets) return []
+        return prevWidgets.map((widget) => {
+          const layoutItem = layout.find((l) => l.i === widget.id)
+          if (layoutItem) {
+            return {
+              ...widget,
+              x: layoutItem.x,
+              y: layoutItem.y,
+              w: layoutItem.w,
+              h: layoutItem.h,
+            }
+          }
+          return widget
+        })
+      })
+    }
   }
 
   const updateWidgetFilters = (id: string, filters: WidgetFilters) => {
@@ -93,18 +122,6 @@ export default function DashboardPage() {
         widget.id === id ? { ...widget, filters } : widget
       )
     )
-  }
-
-  const onDragEnd = (result: DropResult) => {
-    if (!result.destination || !widgets) {
-      return
-    }
-
-    const items = Array.from(widgets)
-    const [reorderedItem] = items.splice(result.source.index, 1)
-    items.splice(result.destination.index, 0, reorderedItem)
-
-    setWidgets(items)
   }
 
   const availableMonths = React.useMemo(() => {
@@ -215,9 +232,8 @@ export default function DashboardPage() {
           widgets={widgets || []}
           removeWidget={removeWidget}
           updateWidgetTitle={updateWidgetTitle}
-          onDragEnd={onDragEnd}
+          onLayoutChange={onLayoutChange}
           updateWidgetFilters={updateWidgetFilters}
-          updateWidgetSize={updateWidgetSize}
           availableMonths={availableMonths}
           availableYears={availableYears}
           areGlobalFiltersActive={areGlobalFiltersActive}
