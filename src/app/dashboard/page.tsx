@@ -5,7 +5,6 @@ import * as React from "react"
 import { Filter, Plus } from "lucide-react"
 import { format, getYear, startOfMonth } from "date-fns"
 import type { Layout } from "react-grid-layout"
-import dynamic from "next/dynamic"
 
 import { useLocalStorage } from "@/hooks/use-local-storage"
 import type { Expense, WidgetConfig, WidgetFilters } from "@/lib/types"
@@ -13,6 +12,7 @@ import type { Expense, WidgetConfig, WidgetFilters } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { AppLayout } from "@/components/app-layout"
 import { AddWidgetDialog } from "@/components/dashboard/add-widget-dialog"
+import { DashboardGrid } from "@/components/dashboard/dashboard-grid"
 import { ExpensesFilters } from "@/components/expenses/expenses-filters"
 import {
   Sheet,
@@ -45,29 +45,13 @@ const DEFAULT_WIDGETS: WidgetConfig[] = [
   },
 ]
 
-const DashboardGrid = dynamic(
-  () =>
-    import("@/components/dashboard/dashboard-grid").then(
-      (mod) => mod.DashboardGrid
-    ),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="grid grid-cols-12 gap-4">
-        <Skeleton className="col-span-12 h-[190px]" />
-        <Skeleton className="col-span-4 h-[370px]" />
-        <Skeleton className="col-span-8 h-[370px]" />
-      </div>
-    ),
-  }
-)
-
 export default function DashboardPage() {
   const [expenses, setExpenses] = useLocalStorage<Expense[]>("expenses", [])
   const [widgets, setWidgets] = useLocalStorage<WidgetConfig[]>(
     "widgets",
     DEFAULT_WIDGETS
   )
+  const [isMounted, setIsMounted] = React.useState(false)
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
   const [isFilterSheetOpen, setIsFilterSheetOpen] = React.useState(false)
   const [filters, setFilters] = React.useState<WidgetFilters>({
@@ -76,6 +60,10 @@ export default function DashboardPage() {
     category: [],
     accountType: [],
   })
+
+  React.useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   const addWidget = (widget: Pick<WidgetConfig, "title" | "type">) => {
     setWidgets((prev = []) => {
@@ -230,6 +218,14 @@ export default function DashboardPage() {
     })
   }, [expenses, filters])
 
+  const loadingSkeleton = (
+    <div className="grid grid-cols-12 gap-4">
+      <Skeleton className="col-span-12 h-[190px]" />
+      <Skeleton className="col-span-4 h-[370px]" />
+      <Skeleton className="col-span-8 h-[370px]" />
+    </div>
+  )
+
   return (
     <AppLayout>
       <div className="flex-1 space-y-4 p-4 sm:p-8">
@@ -245,17 +241,21 @@ export default function DashboardPage() {
           </Button>
         </div>
 
-        <DashboardGrid
-          expenses={filteredExpenses || []}
-          widgets={widgets || []}
-          removeWidget={removeWidget}
-          updateWidgetTitle={updateWidgetTitle}
-          onLayoutChange={onLayoutChange}
-          updateWidgetFilters={updateWidgetFilters}
-          availableMonths={availableMonths}
-          availableYears={availableYears}
-          areGlobalFiltersActive={areGlobalFiltersActive}
-        />
+        {isMounted && widgets ? (
+          <DashboardGrid
+            expenses={filteredExpenses || []}
+            widgets={widgets}
+            removeWidget={removeWidget}
+            updateWidgetTitle={updateWidgetTitle}
+            onLayoutChange={onLayoutChange}
+            updateWidgetFilters={updateWidgetFilters}
+            availableMonths={availableMonths}
+            availableYears={availableYears}
+            areGlobalFiltersActive={areGlobalFiltersActive}
+          />
+        ) : (
+          loadingSkeleton
+        )}
       </div>
       <Button
         onClick={() => setIsDialogOpen(true)}
