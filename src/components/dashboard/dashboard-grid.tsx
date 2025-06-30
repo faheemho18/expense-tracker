@@ -12,7 +12,6 @@ import { format, getYear, startOfMonth } from "date-fns"
 import { BarChart } from "lucide-react"
 
 import type { Expense, WidgetConfig, WidgetFilters } from "@/lib/types"
-import { cn } from "@/lib/utils"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 import { AccountTypePieChartWidget } from "./account-type-pie-chart-widget"
@@ -30,6 +29,7 @@ interface DashboardGridProps {
   updateWidgetTitle: (id: string, title: string) => void
   onDragEnd: (result: DropResult) => void
   updateWidgetFilters: (id: string, filters: WidgetFilters) => void
+  updateWidgetSize: (id: string, width: string, height: string) => void
   availableMonths: { value: string; label: string }[]
   availableYears: { value: string; label: string }[]
   areGlobalFiltersActive: boolean
@@ -54,21 +54,6 @@ const renderWidget = (widget: WidgetConfig, expenses: Expense[]) => {
   }
 }
 
-const getWidgetWidthClass = (widgetType: WidgetConfig["type"]) => {
-  switch (widgetType) {
-    case "stats":
-    case "stacked-area":
-      return "w-full"
-    case "heatmap-calendar":
-      return "w-full md:w-1/2"
-    case "category-pie":
-    case "over-time-bar":
-    case "account-type-pie":
-    default:
-      return "w-full md:w-1/2 lg:w-1/3"
-  }
-}
-
 export function DashboardGrid({
   expenses,
   widgets,
@@ -76,6 +61,7 @@ export function DashboardGrid({
   updateWidgetTitle,
   onDragEnd,
   updateWidgetFilters,
+  updateWidgetSize,
   availableMonths,
   availableYears,
   areGlobalFiltersActive,
@@ -100,7 +86,7 @@ export function DashboardGrid({
           <div
             {...provided.droppableProps}
             ref={provided.innerRef}
-            className="-m-2 flex flex-wrap"
+            className="-m-2 flex flex-wrap items-start"
           >
             {widgets.map((widget, index) => {
               const widgetFilters = widget.filters
@@ -170,11 +156,12 @@ export function DashboardGrid({
                       widget={widget}
                       removeWidget={removeWidget}
                       updateWidgetTitle={updateWidgetTitle}
-                      className={cn("p-2", getWidgetWidthClass(widget.type))}
+                      className="p-2"
                       isDragging={snapshot.isDragging}
                       draggableProps={provided.draggableProps}
                       dragHandleProps={provided.dragHandleProps}
                       updateWidgetFilters={updateWidgetFilters}
+                      updateWidgetSize={updateWidgetSize}
                       availableMonths={availableMonths}
                       availableYears={availableYears}
                     >

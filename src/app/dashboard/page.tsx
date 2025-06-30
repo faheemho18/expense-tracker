@@ -23,9 +23,21 @@ import {
 } from "@/components/ui/sheet"
 
 const DEFAULT_WIDGETS: WidgetConfig[] = [
-  { id: "1", type: "stats", title: "Overview" },
-  { id: "2", type: "category-pie", title: "Spending by Category" },
-  { id: "3", type: "over-time-bar", title: "Monthly Spending" },
+  { id: "1", type: "stats", title: "Overview", width: "100%", height: 180 },
+  {
+    id: "2",
+    type: "category-pie",
+    title: "Spending by Category",
+    width: "33.33%",
+    height: 400,
+  },
+  {
+    id: "3",
+    type: "over-time-bar",
+    title: "Monthly Spending",
+    width: "66.67%",
+    height: 400,
+  },
 ]
 
 export default function DashboardPage() {
@@ -44,7 +56,12 @@ export default function DashboardPage() {
   })
 
   const addWidget = (widget: Omit<WidgetConfig, "id">) => {
-    const newWidget = { ...widget, id: crypto.randomUUID() }
+    const newWidget: WidgetConfig = {
+      ...widget,
+      id: crypto.randomUUID(),
+      width: "50%",
+      height: 400,
+    }
     setWidgets((prev) => [...(prev || []), newWidget])
   }
 
@@ -58,6 +75,14 @@ export default function DashboardPage() {
     setWidgets((prevWidgets) =>
       (prevWidgets || []).map((widget) =>
         widget.id === id ? { ...widget, title } : widget
+      )
+    )
+  }
+
+  const updateWidgetSize = (id: string, width: string, height: string) => {
+    setWidgets((prevWidgets) =>
+      (prevWidgets || []).map((widget) =>
+        widget.id === id ? { ...widget, width, height } : widget
       )
     )
   }
@@ -192,6 +217,7 @@ export default function DashboardPage() {
           updateWidgetTitle={updateWidgetTitle}
           onDragEnd={onDragEnd}
           updateWidgetFilters={updateWidgetFilters}
+          updateWidgetSize={updateWidgetSize}
           availableMonths={availableMonths}
           availableYears={availableYears}
           areGlobalFiltersActive={areGlobalFiltersActive}
