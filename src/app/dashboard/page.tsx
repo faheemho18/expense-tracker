@@ -5,6 +5,7 @@ import * as React from "react"
 import { Filter, Plus } from "lucide-react"
 import { format, getYear, startOfMonth } from "date-fns"
 import type { Layout } from "react-grid-layout"
+import dynamic from "next/dynamic"
 
 import { useLocalStorage } from "@/hooks/use-local-storage"
 import type { Expense, WidgetConfig, WidgetFilters } from "@/lib/types"
@@ -12,7 +13,6 @@ import type { Expense, WidgetConfig, WidgetFilters } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { AppLayout } from "@/components/app-layout"
 import { AddWidgetDialog } from "@/components/dashboard/add-widget-dialog"
-import { DashboardGrid } from "@/components/dashboard/dashboard-grid"
 import { ExpensesFilters } from "@/components/expenses/expenses-filters"
 import {
   Sheet,
@@ -21,6 +21,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
+import { Skeleton } from "@/components/ui/skeleton"
 
 const DEFAULT_WIDGETS: WidgetConfig[] = [
   { id: "1", type: "stats", title: "Overview", x: 0, y: 0, w: 12, h: 5 },
@@ -43,6 +44,23 @@ const DEFAULT_WIDGETS: WidgetConfig[] = [
     h: 11,
   },
 ]
+
+const DashboardGrid = dynamic(
+  () =>
+    import("@/components/dashboard/dashboard-grid").then(
+      (mod) => mod.DashboardGrid
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="grid grid-cols-12 gap-4">
+        <Skeleton className="col-span-12 h-[190px]" />
+        <Skeleton className="col-span-4 h-[370px]" />
+        <Skeleton className="col-span-8 h-[370px]" />
+      </div>
+    ),
+  }
+)
 
 export default function DashboardPage() {
   const [expenses, setExpenses] = useLocalStorage<Expense[]>("expenses", [])
