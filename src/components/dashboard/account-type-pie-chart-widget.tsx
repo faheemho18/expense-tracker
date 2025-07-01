@@ -25,36 +25,6 @@ const generateColor = (index: number) => {
   return `hsl(${hue}, 50%, 60%)`
 }
 
-const renderCustomizedLabel = ({
-  cx,
-  cy,
-  midAngle,
-  outerRadius,
-  percent,
-  payload,
-}: any) => {
-  const RADIAN = Math.PI / 180
-  const radius = outerRadius + 20
-  const x = cx + radius * Math.cos(-midAngle * RADIAN)
-  const y = cy + radius * Math.sin(-midAngle * RADIAN)
-  const value = payload.total
-
-  return (
-    <text
-      x={x}
-      y={y}
-      className="fill-foreground text-xs"
-      textAnchor={x > cx ? "start" : "end"}
-      dominantBaseline="central"
-    >
-      {`${(percent * 100).toFixed(0)}%`}
-      <tspan x={x} dy="1.2em">
-        {formatCurrency(value, "compact")}
-      </tspan>
-    </text>
-  )
-}
-
 export function AccountTypePieChartWidget({
   expenses,
 }: AccountTypePieChartWidgetProps) {
@@ -135,8 +105,6 @@ export function AccountTypePieChartWidget({
           innerRadius="60%"
           outerRadius="80%"
           strokeWidth={5}
-          label={renderCustomizedLabel}
-          labelLine
         >
           {data.map((entry, index) => (
             <Cell
