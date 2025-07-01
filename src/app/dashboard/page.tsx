@@ -8,7 +8,9 @@ import type { Layout } from "react-grid-layout"
 import dynamic from "next/dynamic"
 
 import { useLocalStorage } from "@/hooks/use-local-storage"
+import { useSettings } from "@/contexts/settings-context"
 import type {
+  Account,
   Expense,
   WidgetConfig,
   WidgetFilters,
@@ -77,6 +79,7 @@ const DynamicDashboardGrid = dynamic(
 
 export default function DashboardPage() {
   const [expenses] = useLocalStorage<Expense[]>("expenses", [])
+  const { accounts } = useSettings()
   const [widgets, setWidgets] = useLocalStorage<WidgetConfig[]>(
     "widgets",
     DEFAULT_WIDGETS
@@ -260,6 +263,7 @@ export default function DashboardPage() {
         <DynamicDashboardGrid
           expenses={filteredExpenses || []}
           widgets={widgets || []}
+          accounts={accounts || []}
           removeWidget={removeWidget}
           updateWidgetTitle={updateWidgetTitle}
           updateWidgetFilters={updateWidgetFilters}

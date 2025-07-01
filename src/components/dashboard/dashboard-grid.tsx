@@ -6,7 +6,7 @@ import { format, getYear, startOfMonth } from "date-fns"
 import { BarChart } from "lucide-react"
 import { Responsive, WidthProvider, type Layout } from "react-grid-layout"
 
-import type { Expense, WidgetConfig, WidgetFilters } from "@/lib/types"
+import type { Account, Expense, WidgetConfig, WidgetFilters } from "@/lib/types"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 import { AccountPieChartWidget } from "./account-pie-chart-widget"
@@ -22,6 +22,7 @@ const ResponsiveGridLayout = WidthProvider(Responsive)
 interface DashboardGridProps {
   expenses: Expense[]
   widgets: WidgetConfig[]
+  accounts: Account[]
   removeWidget: (id: string) => void
   updateWidgetTitle: (id: string, title: string) => void
   updateWidgetFilters: (id: string, filters: WidgetFilters) => void
@@ -31,7 +32,12 @@ interface DashboardGridProps {
   onLayoutChange: (layout: Layout[]) => void
 }
 
-const renderWidget = (widget: WidgetConfig, expenses: Expense[]) => {
+const renderWidget = (
+  widget: WidgetConfig,
+  expenses: Expense[],
+  accounts: Account[],
+  filters?: WidgetFilters
+) => {
   switch (widget.type) {
     case "stats":
       return <StatsWidget expenses={expenses} />
@@ -40,7 +46,13 @@ const renderWidget = (widget: WidgetConfig, expenses: Expense[]) => {
     case "over-time-bar":
       return <OverTimeBarChartWidget expenses={expenses} />
     case "account-pie":
-      return <AccountPieChartWidget expenses={expenses} />
+      return (
+        <AccountPieChartWidget
+          expenses={expenses}
+          accounts={accounts}
+          filters={filters}
+        />
+      )
     case "stacked-area":
       return <StackedAreaChartWidget expenses={expenses} />
     case "heatmap-calendar":
@@ -53,6 +65,7 @@ const renderWidget = (widget: WidgetConfig, expenses: Expense[]) => {
 export function DashboardGrid({
   expenses,
   widgets,
+  accounts,
   removeWidget,
   updateWidgetTitle,
   updateWidgetFilters,
@@ -66,8 +79,8 @@ export function DashboardGrid({
     return {
       lg: widgets.map((widget) => {
         const isStats = widget.type === "stats"
-        const defaultW = isStats ? 12 : 6
-        const defaultH = isStats ? 4 : 6
+        const defaultW = 6
+        const defaultH = 6
 
         return {
           i: widget.id,
@@ -173,9 +186,25 @@ export function DashboardGrid({
             const monthMatch = month.length === 0 || month.includes(expenseMonth)
             const categoryMatch =
               category.length === 0 || category.includes(expense.category)
-            const accountMatch =
+
+            let accountMatch =
               accountId.length === 0 ||
               accountId.includes(expense.accountTypeId)
+
+            // For the owner pie chart, if a user filters by an account belonging
+            // to a specific owner, we must also include 'Conjugal' expenses
+            // so they can be correctly split in the chart.
+            if (widget.type === "account-pie" && accountId.length > 0) {
+              const isOwnerSelected = accounts.some(
+                (acc) =>
+                  accountId.includes(acc.value) &&
+                  (acc.owner === "Fayim" || acc.owner === "Nining")
+              )
+
+              if (isOwnerSelected && expense.accountOwner === "Conjugal") {
+                accountMatch = true
+              }
+            }
 
             return yearMatch && monthMatch && categoryMatch && accountMatch
           })
@@ -191,7 +220,7 @@ export function DashboardGrid({
               availableMonths={availableMonths}
               availableYears={availableYears}
             >
-              {renderWidget(widget, widgetExpenses)}
+              {renderWidget(widget, widgetExpenses, accounts, widget.filters)}
             </WidgetWrapper>
           </div>
         )

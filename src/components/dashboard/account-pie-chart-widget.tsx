@@ -6,8 +6,7 @@ import type { LegendPayload } from "recharts"
 import * as RechartsPrimitive from "recharts"
 import { Cell, Pie, PieChart, Tooltip } from "recharts"
 
-import { useSettings } from "@/contexts/settings-context"
-import type { Expense } from "@/lib/types"
+import type { Account, Expense, WidgetFilters } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import {
   ChartContainer,
@@ -19,27 +18,50 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 interface AccountPieChartWidgetProps {
   expenses: Expense[]
+  accounts: Account[]
+  filters?: WidgetFilters
 }
 
 export function AccountPieChartWidget({
   expenses,
+  accounts,
+  filters,
 }: AccountPieChartWidgetProps) {
-  const { accounts } = useSettings()
   const [inactiveOwners, setInactiveOwners] = React.useState<string[]>([])
 
   const data = React.useMemo(() => {
     const ownerTotals: Record<string, number> = { Fayim: 0, Nining: 0 }
+    const accountIdFilter = filters?.accountId ?? []
+
+    let displayFayim = true
+    let displayNining = true
+
+    // If accounts are filtered, determine which owner's totals to display.
+    if (accountIdFilter.length > 0 && accounts) {
+      const selectedOwners = new Set(
+        accounts
+          .filter((a) => accountIdFilter.includes(a.value))
+          .map((a) => a.owner)
+      )
+
+      // Only restrict display if a personal account (Fayim/Nining) is selected.
+      // If only 'Conjugal' is selected, we show both.
+      if (selectedOwners.has("Fayim") || selectedOwners.has("Nining")) {
+        displayFayim = selectedOwners.has("Fayim")
+        displayNining = selectedOwners.has("Nining")
+      }
+    }
 
     expenses.forEach((expense) => {
       if (expense.amount > 0) {
         const owner = expense.accountOwner
-        if (owner === "Fayim") {
+        if (owner === "Fayim" && displayFayim) {
           ownerTotals["Fayim"] += expense.amount
-        } else if (owner === "Nining") {
+        } else if (owner === "Nining" && displayNining) {
           ownerTotals["Nining"] += expense.amount
         } else if (owner === "Conjugal") {
-          ownerTotals["Fayim"] += expense.amount / 2
-          ownerTotals["Nining"] += expense.amount / 2
+          if (displayFayim) ownerTotals["Fayim"] += expense.amount / 2
+          if (displayNining) ownerTotals["Nining"] += expense.amount / 2
         }
       }
     })
@@ -49,8 +71,9 @@ export function AccountPieChartWidget({
         owner,
         total,
       }))
+      .filter((item) => item.total > 0)
       .sort((a, b) => b.total - a.total)
-  }, [expenses])
+  }, [expenses, accounts, filters])
 
   const chartConfig = React.useMemo(() => {
     return {
