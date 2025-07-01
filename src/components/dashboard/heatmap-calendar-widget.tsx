@@ -78,17 +78,17 @@ export function HeatmapCalendarWidget({
 
   return (
     <TooltipProvider>
-      <div className="flex flex-col gap-2 p-3">
-        <h3 className="text-center font-medium">
+      <div className="flex h-full flex-col gap-2 p-3">
+        <h3 className="shrink-0 text-center font-medium">
           {getYear(new Date())} Spending Heatmap
         </h3>
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid flex-1 grid-cols-4 grid-rows-3 gap-2">
           {data.map((monthData) => (
             <Tooltip key={monthData.month}>
               <TooltipTrigger asChild>
                 <div
                   className={cn(
-                    "flex aspect-square items-center justify-center rounded-md p-1 text-xs font-medium text-foreground transition-colors sm:text-sm",
+                    "flex items-center justify-center rounded-md p-1 text-xs font-medium text-foreground transition-colors sm:text-sm",
                     intensityClasses[monthData.intensity]
                   )}
                 >
