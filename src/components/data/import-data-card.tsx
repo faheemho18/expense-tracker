@@ -31,14 +31,14 @@ import {
 
 // Zod schema to validate each row of the imported CSV
 const expenseImportSchema = z.object({
-  description: z.string().min(1, "Description is required"),
-  amount: z.coerce.number().refine((val) => val !== 0, "Amount cannot be zero"),
   date: z
     .string()
     .refine((val) => !isNaN(Date.parse(val)), { message: "Invalid date format" }),
   category: z.string().min(1, "Category is required"),
-  accountType: z.string().min(1, "Account Type is required"),
+  amount: z.coerce.number().refine((val) => val !== 0, "Amount cannot be zero"),
   accountOwner: z.string().min(1, "Account Owner is required"),
+  accountType: z.string().min(1, "Account Type is required"),
+  description: z.string().min(1, "Description is required"),
 })
 
 type ImportedExpense = z.infer<typeof expenseImportSchema>
@@ -178,7 +178,7 @@ export function ImportDataCard() {
           <CardTitle>Import Data from CSV</CardTitle>
           <CardDescription>
             Upload a CSV file to add expenses. Ensure your file has headers:
-            `description`, `amount`, `date`, `category`, `accountType`, `accountOwner`.
+            `date`, `category`, `amount`, `accountOwner`, `accountType`, `description`.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

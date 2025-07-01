@@ -79,12 +79,12 @@ export default function DataPage() {
     return filteredExpenses.map((expense) => {
       const accountInfo = getAccountInfo(expense.accountTypeId)
       return {
-        description: expense.description,
-        amount: expense.amount,
         date: format(new Date(expense.date), "yyyy-MM-dd"),
         category: getCategoryLabel(expense.category),
-        accountType: accountInfo.type,
+        amount: expense.amount,
         accountOwner: accountInfo.owner,
+        accountType: accountInfo.type,
+        description: expense.description,
       }
     })
   }, [expenses, selectedMonth, categories, accounts])
