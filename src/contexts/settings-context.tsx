@@ -10,6 +10,7 @@ import {
   DEFAULT_THEME,
 } from "@/lib/constants"
 import type { Account, Category, Theme } from "@/lib/types"
+import { getThemeCssProperties } from "@/lib/theme-utils"
 
 interface SettingsContextType {
   categories: Category[] | null
@@ -40,19 +41,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     if (theme) {
       const root = document.documentElement
-      root.style.setProperty(
-        "--primary",
-        `${theme.primary.h} ${theme.primary.s}% ${theme.primary.l}%`
-      )
-      root.style.setProperty(
-        "--background",
-        `${theme.background.h} ${theme.background.s}% ${theme.background.l}%`
-      )
-      root.style.setProperty(
-        "--accent",
-        `${theme.accent.h} ${theme.accent.s}% ${theme.accent.l}%`
-      )
-      root.style.setProperty("--radius", `${theme.radius}rem`)
+      const properties = getThemeCssProperties(theme)
+      for (const [key, value] of Object.entries(properties)) {
+        root.style.setProperty(key, value as string)
+      }
     }
   }, [theme])
 

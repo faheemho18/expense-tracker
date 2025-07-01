@@ -7,6 +7,7 @@ import { Paintbrush, Save } from "lucide-react"
 import { useLocalStorage } from "@/hooks/use-local-storage"
 import { DEFAULT_THEME, PRESETS } from "@/lib/constants"
 import type { Theme } from "@/lib/types"
+import { getThemeCssProperties } from "@/lib/theme-utils"
 
 import { AppLayout } from "@/components/app-layout"
 import { ThemePreview } from "@/components/themes/theme-preview"
@@ -36,8 +37,16 @@ export default function ThemesPage() {
   const [isConfirmOpen, setIsConfirmOpen] = React.useState(false)
 
   React.useEffect(() => {
-    setDraftTheme(savedTheme)
+    // Initialize draft theme from saved theme
+    if (savedTheme) {
+      setDraftTheme(savedTheme)
+    }
   }, [savedTheme])
+
+  const themeStyle = React.useMemo(() => {
+    if (!draftTheme) return {}
+    return getThemeCssProperties(draftTheme)
+  }, [draftTheme])
 
   const handleColorChange = (
     colorType: "primary" | "background" | "accent",
@@ -137,7 +146,7 @@ export default function ThemesPage() {
             </Button>
           )}
         </div>
-        <div className="grid gap-8 lg:grid-cols-2">
+        <div className="grid gap-8 lg:grid-cols-2" style={themeStyle}>
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -253,7 +262,7 @@ export default function ThemesPage() {
             </CardContent>
           </Card>
 
-          <ThemePreview theme={draftTheme} />
+          <ThemePreview />
         </div>
       </div>
       <AlertDialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
