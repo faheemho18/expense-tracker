@@ -46,4 +46,8 @@ export type WidgetConfig = {
   type: WidgetType
   title: string
   filters?: WidgetFilters
+  x?: number
+  y?: number
+  w?: number
+  h?: number
 }

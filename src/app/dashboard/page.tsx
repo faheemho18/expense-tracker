@@ -6,12 +6,11 @@ import { Filter, Plus } from "lucide-react"
 import { format, getYear, startOfMonth } from "date-fns"
 
 import { useLocalStorage } from "@/hooks/use-local-storage"
-import type { Expense, WidgetConfig, WidgetFilters } from "@/lib/types"
+import type { Expense, WidgetConfig, WidgetFilters, WidgetType } from "@/lib/types"
 
 import { Button } from "@/components/ui/button"
 import { AppLayout } from "@/components/app-layout"
 import { AddWidgetDialog } from "@/components/dashboard/add-widget-dialog"
-import { DashboardGrid } from "@/components/dashboard/dashboard-grid"
 import { ExpensesFilters } from "@/components/expenses/expenses-filters"
 import {
   Sheet,
@@ -20,20 +19,56 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
+import dynamic from "next/dynamic"
+import { Skeleton } from "@/components/ui/skeleton"
+import type { Layout } from "react-grid-layout"
 
 const DEFAULT_WIDGETS: WidgetConfig[] = [
-  { id: "1", type: "stats", title: "Overview" },
+  { id: "1", type: "stats", title: "Overview", x: 0, y: 0, w: 12, h: 2 },
   {
     id: "2",
     type: "category-pie",
     title: "Spending by Category",
+    x: 0,
+    y: 2,
+    w: 4,
+    h: 8,
   },
   {
     id: "3",
     type: "over-time-bar",
     title: "Monthly Spending",
+    x: 4,
+    y: 2,
+    w: 8,
+    h: 8,
   },
 ]
+
+const DashboardGridSkeleton = () => (
+  <div className="grid grid-cols-12 gap-6">
+    <div className="col-span-12">
+      <Skeleton className="h-[96px] w-full" />
+    </div>
+    <div className="col-span-12 md:col-span-4">
+      <Skeleton className="h-[400px] w-full" />
+    </div>
+    <div className="col-span-12 md:col-span-8">
+      <Skeleton className="h-[400px] w-full" />
+    </div>
+  </div>
+)
+
+const DynamicDashboardGrid = dynamic(
+  () =>
+    import("@/components/dashboard/dashboard-grid").then(
+      (mod) => mod.DashboardGrid
+    ),
+  {
+    ssr: false,
+    loading: () => <DashboardGridSkeleton />,
+  }
+)
 
 export default function DashboardPage() {
   const [expenses] = useLocalStorage<Expense[]>("expenses", [])
@@ -50,11 +85,32 @@ export default function DashboardPage() {
     accountType: [],
   })
 
+  const getNewWidgetLayout = (type: WidgetType) => {
+    switch (type) {
+      case "stats":
+        return { w: 12, h: 2 }
+      case "category-pie":
+        return { w: 4, h: 8 }
+      case "over-time-bar":
+        return { w: 8, h: 8 }
+      case "account-type-pie":
+      case "stacked-area":
+      case "heatmap-calendar":
+        return { w: 6, h: 8 }
+      default:
+        return { w: 6, h: 8 }
+    }
+  }
+
   const addWidget = (widget: Pick<WidgetConfig, "title" | "type">) => {
     setWidgets((prev = []) => {
+      const layout = getNewWidgetLayout(widget.type)
       const newWidget: WidgetConfig = {
         ...widget,
         id: crypto.randomUUID(),
+        x: 0,
+        y: Infinity, // react-grid-layout will place it at the bottom
+        ...layout,
       }
       return [...(prev || []), newWidget]
     })
@@ -80,6 +136,25 @@ export default function DashboardPage() {
         widget.id === id ? { ...widget, filters } : widget
       )
     )
+  }
+
+  const handleLayoutChange = (newLayout: Layout[]) => {
+    setWidgets((prevWidgets) => {
+      if (!prevWidgets) return []
+      return prevWidgets.map((widget) => {
+        const layoutItem = newLayout.find((l) => l.i === widget.id)
+        if (layoutItem) {
+          return {
+            ...widget,
+            x: layoutItem.x,
+            y: layoutItem.y,
+            w: layoutItem.w,
+            h: layoutItem.h,
+          }
+        }
+        return widget
+      })
+    })
   }
 
   const availableMonths = React.useMemo(() => {
@@ -185,7 +260,7 @@ export default function DashboardPage() {
           </Button>
         </div>
 
-        <DashboardGrid
+        <DynamicDashboardGrid
           expenses={filteredExpenses || []}
           widgets={widgets || []}
           removeWidget={removeWidget}
@@ -194,6 +269,7 @@ export default function DashboardPage() {
           availableMonths={availableMonths}
           availableYears={availableYears}
           areGlobalFiltersActive={areGlobalFiltersActive}
+          onLayoutChange={handleLayoutChange}
         />
       </div>
       <Button

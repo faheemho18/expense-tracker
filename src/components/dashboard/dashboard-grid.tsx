@@ -15,7 +15,9 @@ import { OverTimeBarChartWidget } from "./over-time-bar-chart-widget"
 import { StackedAreaChartWidget } from "./stacked-area-chart-widget"
 import { StatsWidget } from "./stats-widget"
 import { WidgetWrapper } from "./widget-wrapper"
-import { cn } from "@/lib/utils"
+import { Responsive, WidthProvider, type Layout } from "react-grid-layout"
+
+const ResponsiveGridLayout = WidthProvider(Responsive)
 
 interface DashboardGridProps {
   expenses: Expense[]
@@ -26,6 +28,7 @@ interface DashboardGridProps {
   availableMonths: { value: string; label: string }[]
   availableYears: { value: string; label: string }[]
   areGlobalFiltersActive: boolean
+  onLayoutChange: (layout: Layout[]) => void
 }
 
 const renderWidget = (widget: WidgetConfig, expenses: Expense[]) => {
@@ -47,23 +50,6 @@ const renderWidget = (widget: WidgetConfig, expenses: Expense[]) => {
   }
 }
 
-const getWidgetWrapperClass = (widgetType: WidgetConfig["type"]) => {
-  switch (widgetType) {
-    case "stats":
-      return "col-span-12"
-    case "category-pie":
-      return "col-span-12 md:col-span-6 lg:col-span-4 min-h-[400px]"
-    case "over-time-bar":
-      return "col-span-12 md:col-span-6 lg:col-span-8 min-h-[400px]"
-    case "account-type-pie":
-    case "stacked-area":
-    case "heatmap-calendar":
-      return "col-span-12 md:col-span-6 min-h-[400px]"
-    default:
-      return "col-span-12"
-  }
-}
-
 export function DashboardGrid({
   expenses,
   widgets,
@@ -73,22 +59,51 @@ export function DashboardGrid({
   availableMonths,
   availableYears,
   areGlobalFiltersActive,
+  onLayoutChange,
 }: DashboardGridProps) {
+  const layouts = React.useMemo(() => {
+    if (!widgets) return { lg: [] }
+    return {
+      lg: widgets.map((widget, index) => ({
+        i: widget.id,
+        x: widget.x ?? (index % 2) * 6,
+        y: widget.y ?? Infinity,
+        w: widget.w ?? 6,
+        h: widget.h ?? 8,
+        minH: 2,
+        minW: 3,
+      })),
+    }
+  }, [widgets])
+
   if (widgets.length === 0) {
     return (
       <Alert>
         <BarChart className="h-4 w-4" />
         <AlertTitle>Your Dashboard is Empty</AlertTitle>
         <AlertDescription>
-          Click "Add Widget" to start building your dashboard and gain insights
-          into your spending.
+          Click the add button to start building your dashboard and gain
+          insights into your spending.
         </AlertDescription>
       </Alert>
     )
   }
 
+  const handleLayoutChange = (layout: Layout[]) => {
+    onLayoutChange(layout)
+  }
+
   return (
-    <div className="grid grid-cols-12 gap-6">
+    <ResponsiveGridLayout
+      layouts={layouts}
+      breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
+      cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
+      rowHeight={50}
+      draggableHandle=".drag-handle"
+      onDragStop={handleLayoutChange}
+      onResizeStop={handleLayoutChange}
+      className="min-h-[500px]"
+    >
       {widgets.map((widget) => {
         const widgetFilters = widget.filters
         const hasWidgetFilters =
@@ -100,7 +115,6 @@ export function DashboardGrid({
 
         let widgetExpenses = expenses
 
-        // Default behavior for stats widget: current year if no filters active
         if (
           widget.type === "stats" &&
           !areGlobalFiltersActive &&
@@ -110,9 +124,7 @@ export function DashboardGrid({
           widgetExpenses = expenses.filter(
             (e) => new Date(e.date).getFullYear() === currentYear
           )
-        }
-        // Apply widget-specific filters
-        else if (hasWidgetFilters) {
+        } else if (hasWidgetFilters) {
           const {
             year = [],
             month = [],
@@ -125,10 +137,8 @@ export function DashboardGrid({
             const expenseYear = getYear(expenseDate).toString()
             const expenseMonth = format(startOfMonth(expenseDate), "yyyy-MM")
 
-            const yearMatch =
-              year.length === 0 || year.includes(expenseYear)
-            const monthMatch =
-              month.length === 0 || month.includes(expenseMonth)
+            const yearMatch = year.length === 0 || year.includes(expenseYear)
+            const monthMatch = month.length === 0 || month.includes(expenseMonth)
             const categoryMatch =
               category.length === 0 || category.includes(expense.category)
             const accountTypeMatch =
@@ -140,7 +150,7 @@ export function DashboardGrid({
         }
 
         return (
-          <div key={widget.id} className={cn(getWidgetWrapperClass(widget.type))}>
+          <div key={widget.id}>
             <WidgetWrapper
               widget={widget}
               removeWidget={removeWidget}
@@ -154,6 +164,6 @@ export function DashboardGrid({
           </div>
         )
       })}
-    </div>
+    </ResponsiveGridLayout>
   )
 }
