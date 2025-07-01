@@ -37,7 +37,7 @@ const DEFAULT_WIDGETS: WidgetConfig[] = [
     x: 0,
     y: 2,
     w: 6,
-    h: 8,
+    h: 6,
   },
   {
     id: "3",
@@ -46,7 +46,7 @@ const DEFAULT_WIDGETS: WidgetConfig[] = [
     x: 6,
     y: 2,
     w: 6,
-    h: 8,
+    h: 6,
   },
 ]
 
@@ -55,11 +55,11 @@ const DashboardGridSkeleton = () => (
     <div className="col-span-12">
       <Skeleton className="h-[96px] w-full" />
     </div>
-    <div className="col-span-12 md:col-span-4">
-      <Skeleton className="h-[400px] w-full" />
+    <div className="col-span-12 md:col-span-6">
+      <Skeleton className="h-[300px] w-full" />
     </div>
-    <div className="col-span-12 md:col-span-8">
-      <Skeleton className="h-[400px] w-full" />
+    <div className="col-span-12 md:col-span-6">
+      <Skeleton className="h-[300px] w-full" />
     </div>
   </div>
 )
@@ -95,7 +95,7 @@ export default function DashboardPage() {
       case "stats":
         return { w: 12, h: 2 }
       default: // All other widgets are charts
-        return { w: 6, h: 8 }
+        return { w: 6, h: 6 }
     }
   }
 
