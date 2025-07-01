@@ -2,15 +2,15 @@
 "use client"
 
 import * as React from "react"
+import type { LegendPayload } from "recharts"
 import { Cell, Pie, PieChart, Tooltip } from "recharts"
 
 import { useSettings } from "@/contexts/settings-context"
 import type { Expense } from "@/lib/types"
-import { cn, formatCurrency } from "@/lib/utils"
+import { cn } from "@/lib/utils"
 import {
   ChartContainer,
   type ChartConfig,
-  ChartLegend,
   ChartLegendContent,
   ChartTooltipContent,
 } from "@/components/ui/chart"
@@ -71,6 +71,15 @@ export function CategoryPieChartWidget({
     )
   }
 
+  const legendPayload = React.useMemo<LegendPayload[]>(() => {
+    return data.map((entry) => ({
+      value: entry.category,
+      type: "square",
+      id: entry.category,
+      color: entry.fill,
+    }))
+  }, [data])
+
   if (!categories) {
     return <Skeleton className="h-full w-full" />
   }
@@ -84,47 +93,48 @@ export function CategoryPieChartWidget({
   }
 
   return (
-    <ChartContainer
-      config={chartConfig}
-      className="mx-auto h-full"
-    >
-      <PieChart>
-        <Tooltip
-          cursor={false}
-          content={<ChartTooltipContent hideLabel nameKey="category" />}
-        />
-        <Pie
-          data={data}
-          dataKey="total"
-          nameKey="category"
-          innerRadius="60%"
-          outerRadius="80%"
-          strokeWidth={5}
+    <div className="flex h-full w-full flex-col">
+      <div className="flex-1 min-h-0 p-4 pb-0">
+        <ChartContainer
+          config={chartConfig}
+          className="mx-auto aspect-square h-full"
         >
-          {data.map((entry, index) => (
-            <Cell
-              key={`cell-${index}`}
-              fill={entry.fill}
-              className={cn(
-                "transition-opacity",
-                inactiveCategories.includes(entry.category)
-                  ? "opacity-30"
-                  : "opacity-100"
-              )}
+          <PieChart>
+            <Tooltip
+              cursor={false}
+              content={<ChartTooltipContent hideLabel nameKey="category" />}
             />
-          ))}
-        </Pie>
-        <ChartLegend
-          verticalAlign="bottom"
-          content={
-            <ChartLegendContent
+            <Pie
+              data={data}
+              dataKey="total"
               nameKey="category"
-              onItemClick={handleLegendClick}
-              inactiveKeys={inactiveCategories}
-            />
-          }
+              innerRadius="60%"
+              strokeWidth={5}
+            >
+              {data.map((entry, index) => (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={entry.fill}
+                  className={cn(
+                    "transition-opacity",
+                    inactiveCategories.includes(entry.category)
+                      ? "opacity-30"
+                      : "opacity-100"
+                  )}
+                />
+              ))}
+            </Pie>
+          </PieChart>
+        </ChartContainer>
+      </div>
+      <div className="mt-auto border-t">
+        <ChartLegendContent
+          payload={legendPayload as any}
+          onItemClick={handleLegendClick}
+          inactiveKeys={inactiveCategories}
+          className="max-h-[72px] overflow-y-auto justify-start px-4"
         />
-      </PieChart>
-    </ChartContainer>
+      </div>
+    </div>
   )
 }

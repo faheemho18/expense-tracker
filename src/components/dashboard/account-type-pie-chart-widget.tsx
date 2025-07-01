@@ -2,15 +2,15 @@
 "use client"
 
 import * as React from "react"
+import type { LegendPayload } from "recharts"
 import { Cell, Pie, PieChart, Tooltip } from "recharts"
 
 import { useSettings } from "@/contexts/settings-context"
 import type { Expense } from "@/lib/types"
-import { cn, formatCurrency } from "@/lib/utils"
+import { cn } from "@/lib/utils"
 import {
   ChartContainer,
   type ChartConfig,
-  ChartLegend,
   ChartLegendContent,
   ChartTooltipContent,
 } from "@/components/ui/chart"
@@ -76,6 +76,15 @@ export function AccountTypePieChartWidget({
     )
   }
 
+  const legendPayload = React.useMemo<LegendPayload[]>(() => {
+    return data.map((entry, index) => ({
+      value: entry.accountType,
+      type: "square",
+      id: entry.accountType,
+      color: chartConfig[entry.accountType]?.color || generateColor(index),
+    }))
+  }, [data, chartConfig])
+
   if (!accountTypes) {
     return <Skeleton className="h-full w-full" />
   }
@@ -89,49 +98,50 @@ export function AccountTypePieChartWidget({
   }
 
   return (
-    <ChartContainer
-      config={chartConfig}
-      className="mx-auto h-full"
-    >
-      <PieChart>
-        <Tooltip
-          cursor={false}
-          content={<ChartTooltipContent hideLabel nameKey="accountType" />}
-        />
-        <Pie
-          data={data}
-          dataKey="total"
-          nameKey="accountType"
-          innerRadius="60%"
-          outerRadius="80%"
-          strokeWidth={5}
+    <div className="flex h-full w-full flex-col">
+      <div className="flex-1 min-h-0 p-4 pb-0">
+        <ChartContainer
+          config={chartConfig}
+          className="mx-auto aspect-square h-full"
         >
-          {data.map((entry, index) => (
-            <Cell
-              key={`cell-${index}`}
-              fill={
-                chartConfig[entry.accountType]?.color || generateColor(index)
-              }
-              className={cn(
-                "transition-opacity",
-                inactiveAccountTypes.includes(entry.accountType)
-                  ? "opacity-30"
-                  : "opacity-100"
-              )}
+          <PieChart>
+            <Tooltip
+              cursor={false}
+              content={<ChartTooltipContent hideLabel nameKey="accountType" />}
             />
-          ))}
-        </Pie>
-        <ChartLegend
-          verticalAlign="bottom"
-          content={
-            <ChartLegendContent
+            <Pie
+              data={data}
+              dataKey="total"
               nameKey="accountType"
-              onItemClick={handleLegendClick}
-              inactiveKeys={inactiveAccountTypes}
-            />
-          }
+              innerRadius="60%"
+              strokeWidth={5}
+            >
+              {data.map((entry, index) => (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={
+                    chartConfig[entry.accountType]?.color || generateColor(index)
+                  }
+                  className={cn(
+                    "transition-opacity",
+                    inactiveAccountTypes.includes(entry.accountType)
+                      ? "opacity-30"
+                      : "opacity-100"
+                  )}
+                />
+              ))}
+            </Pie>
+          </PieChart>
+        </ChartContainer>
+      </div>
+      <div className="mt-auto border-t">
+        <ChartLegendContent
+          payload={legendPayload as any}
+          onItemClick={handleLegendClick}
+          inactiveKeys={inactiveAccountTypes}
+          className="max-h-[72px] overflow-y-auto justify-start px-4"
         />
-      </PieChart>
-    </ChartContainer>
+      </div>
+    </div>
   )
 }
