@@ -46,9 +46,4 @@ export type WidgetConfig = {
   type: WidgetType
   title: string
   filters?: WidgetFilters
-  // react-grid-layout properties
-  x: number
-  y: number
-  w: number
-  h: number
 }

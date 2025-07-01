@@ -4,7 +4,6 @@
 import * as React from "react"
 import { Filter, Plus } from "lucide-react"
 import { format, getYear, startOfMonth } from "date-fns"
-import type { Layout } from "react-grid-layout"
 
 import { useLocalStorage } from "@/hooks/use-local-storage"
 import type { Expense, WidgetConfig, WidgetFilters } from "@/lib/types"
@@ -21,37 +20,27 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { Skeleton } from "@/components/ui/skeleton"
 
 const DEFAULT_WIDGETS: WidgetConfig[] = [
-  { id: "1", type: "stats", title: "Overview", x: 0, y: 0, w: 12, h: 5 },
+  { id: "1", type: "stats", title: "Overview" },
   {
     id: "2",
     type: "category-pie",
     title: "Spending by Category",
-    x: 0,
-    y: 5,
-    w: 4,
-    h: 11,
   },
   {
     id: "3",
     type: "over-time-bar",
     title: "Monthly Spending",
-    x: 4,
-    y: 5,
-    w: 8,
-    h: 11,
   },
 ]
 
 export default function DashboardPage() {
-  const [expenses, setExpenses] = useLocalStorage<Expense[]>("expenses", [])
+  const [expenses] = useLocalStorage<Expense[]>("expenses", [])
   const [widgets, setWidgets] = useLocalStorage<WidgetConfig[]>(
     "widgets",
     DEFAULT_WIDGETS
   )
-  const [isMounted, setIsMounted] = React.useState(false)
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
   const [isFilterSheetOpen, setIsFilterSheetOpen] = React.useState(false)
   const [filters, setFilters] = React.useState<WidgetFilters>({
@@ -61,22 +50,13 @@ export default function DashboardPage() {
     accountType: [],
   })
 
-  React.useEffect(() => {
-    setIsMounted(true)
-  }, [])
-
   const addWidget = (widget: Pick<WidgetConfig, "title" | "type">) => {
     setWidgets((prev = []) => {
-      const y = Math.max(0, ...prev.map((w) => w.y + w.h))
       const newWidget: WidgetConfig = {
         ...widget,
         id: crypto.randomUUID(),
-        x: 0,
-        y: y,
-        w: 6,
-        h: 11,
       }
-      return [...prev, newWidget]
+      return [...(prev || []), newWidget]
     })
   }
 
@@ -92,34 +72,6 @@ export default function DashboardPage() {
         widget.id === id ? { ...widget, title } : widget
       )
     )
-  }
-
-  const onLayoutChange = (layout: Layout[]) => {
-    const changed = widgets?.some((w) => {
-      const item = layout.find((l) => l.i === w.id)
-      return (
-        item && (item.x !== w.x || item.y !== w.y || item.w !== w.w || item.h !== w.h)
-      )
-    })
-
-    if (changed) {
-      setWidgets((prevWidgets) => {
-        if (!prevWidgets) return []
-        return prevWidgets.map((widget) => {
-          const layoutItem = layout.find((l) => l.i === widget.id)
-          if (layoutItem) {
-            return {
-              ...widget,
-              x: layoutItem.x,
-              y: layoutItem.y,
-              w: layoutItem.w,
-              h: layoutItem.h,
-            }
-          }
-          return widget
-        })
-      })
-    }
   }
 
   const updateWidgetFilters = (id: string, filters: WidgetFilters) => {
@@ -218,14 +170,6 @@ export default function DashboardPage() {
     })
   }, [expenses, filters])
 
-  const loadingSkeleton = (
-    <div className="grid grid-cols-12 gap-4">
-      <Skeleton className="col-span-12 h-[190px]" />
-      <Skeleton className="col-span-4 h-[370px]" />
-      <Skeleton className="col-span-8 h-[370px]" />
-    </div>
-  )
-
   return (
     <AppLayout>
       <div className="flex-1 space-y-4 p-4 sm:p-8">
@@ -241,21 +185,16 @@ export default function DashboardPage() {
           </Button>
         </div>
 
-        {isMounted && widgets ? (
-          <DashboardGrid
-            expenses={filteredExpenses || []}
-            widgets={widgets}
-            removeWidget={removeWidget}
-            updateWidgetTitle={updateWidgetTitle}
-            onLayoutChange={onLayoutChange}
-            updateWidgetFilters={updateWidgetFilters}
-            availableMonths={availableMonths}
-            availableYears={availableYears}
-            areGlobalFiltersActive={areGlobalFiltersActive}
-          />
-        ) : (
-          loadingSkeleton
-        )}
+        <DashboardGrid
+          expenses={filteredExpenses || []}
+          widgets={widgets || []}
+          removeWidget={removeWidget}
+          updateWidgetTitle={updateWidgetTitle}
+          updateWidgetFilters={updateWidgetFilters}
+          availableMonths={availableMonths}
+          availableYears={availableYears}
+          areGlobalFiltersActive={areGlobalFiltersActive}
+        />
       </div>
       <Button
         onClick={() => setIsDialogOpen(true)}

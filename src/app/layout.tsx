@@ -4,7 +4,6 @@ import { SettingsProvider } from "@/contexts/settings-context"
 import { Toaster } from "@/components/ui/toaster"
 
 import "./globals.css"
-import "./grid-layout.css"
 
 export const metadata: Metadata = {
   title: "Expense Gazer",

@@ -4,7 +4,6 @@
 import * as React from "react"
 import { format, getYear, startOfMonth } from "date-fns"
 import { BarChart } from "lucide-react"
-import { Responsive, WidthProvider, type Layout } from "react-grid-layout"
 
 import type { Expense, WidgetConfig, WidgetFilters } from "@/lib/types"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -16,15 +15,13 @@ import { OverTimeBarChartWidget } from "./over-time-bar-chart-widget"
 import { StackedAreaChartWidget } from "./stacked-area-chart-widget"
 import { StatsWidget } from "./stats-widget"
 import { WidgetWrapper } from "./widget-wrapper"
-
-const ResponsiveGridLayout = WidthProvider(Responsive)
+import { cn } from "@/lib/utils"
 
 interface DashboardGridProps {
   expenses: Expense[]
   widgets: WidgetConfig[]
   removeWidget: (id: string) => void
   updateWidgetTitle: (id: string, title: string) => void
-  onLayoutChange: (layout: Layout[]) => void
   updateWidgetFilters: (id: string, filters: WidgetFilters) => void
   availableMonths: { value: string; label: string }[]
   availableYears: { value: string; label: string }[]
@@ -50,12 +47,28 @@ const renderWidget = (widget: WidgetConfig, expenses: Expense[]) => {
   }
 }
 
+const getWidgetWrapperClass = (widgetType: WidgetConfig["type"]) => {
+  switch (widgetType) {
+    case "stats":
+      return "col-span-12"
+    case "category-pie":
+      return "col-span-12 md:col-span-6 lg:col-span-4 min-h-[400px]"
+    case "over-time-bar":
+      return "col-span-12 md:col-span-6 lg:col-span-8 min-h-[400px]"
+    case "account-type-pie":
+    case "stacked-area":
+    case "heatmap-calendar":
+      return "col-span-12 md:col-span-6 min-h-[400px]"
+    default:
+      return "col-span-12"
+  }
+}
+
 export function DashboardGrid({
   expenses,
   widgets,
   removeWidget,
   updateWidgetTitle,
-  onLayoutChange,
   updateWidgetFilters,
   availableMonths,
   availableYears,
@@ -74,27 +87,8 @@ export function DashboardGrid({
     )
   }
 
-  const layout = widgets.map((w) => ({
-    i: w.id,
-    x: w.x,
-    y: w.y,
-    w: w.w,
-    h: w.h,
-  }))
-
   return (
-    <ResponsiveGridLayout
-      className="layout"
-      layouts={{ lg: layout }}
-      breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-      cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
-      rowHeight={30}
-      margin={[16, 16]}
-      onLayoutChange={(newLayout) => onLayoutChange(newLayout)}
-      isDraggable
-      isResizable
-      draggableHandle=".drag-handle"
-    >
+    <div className="grid grid-cols-12 gap-6">
       {widgets.map((widget) => {
         const widgetFilters = widget.filters
         const hasWidgetFilters =
@@ -146,7 +140,7 @@ export function DashboardGrid({
         }
 
         return (
-          <div key={widget.id}>
+          <div key={widget.id} className={cn(getWidgetWrapperClass(widget.type))}>
             <WidgetWrapper
               widget={widget}
               removeWidget={removeWidget}
@@ -160,6 +154,6 @@ export function DashboardGrid({
           </div>
         )
       })}
-    </ResponsiveGridLayout>
+    </div>
   )
 }
