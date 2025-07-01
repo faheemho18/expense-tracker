@@ -55,9 +55,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 tooltip={expensesTooltip}
               >
                 <Link href="/">
-                  <div className="transition-transform duration-200 ease-in-out group-data-[collapsible=icon]:-translate-x-[10px]">
-                    <Wallet />
-                  </div>
+                  <Wallet />
                   <span className="whitespace-nowrap overflow-hidden transition-[max-width,opacity] duration-200 ease-in-out group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0">
                     Expenses
                   </span>
@@ -71,9 +69,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 tooltip={dashboardTooltip}
               >
                 <Link href="/dashboard">
-                  <div className="transition-transform duration-200 ease-in-out group-data-[collapsible=icon]:-translate-x-[10px]">
-                    <LayoutDashboard />
-                  </div>
+                  <LayoutDashboard />
                   <span className="whitespace-nowrap overflow-hidden transition-[max-width,opacity] duration-200 ease-in-out group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0">
                     Dashboard
                   </span>
@@ -87,9 +83,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 tooltip={dataTooltip}
               >
                 <Link href="/data">
-                  <div className="transition-transform duration-200 ease-in-out group-data-[collapsible=icon]:-translate-x-[10px]">
-                    <Database />
-                  </div>
+                  <Database />
                   <span className="whitespace-nowrap overflow-hidden transition-[max-width,opacity] duration-200 ease-in-out group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0">
                     Data
                   </span>
@@ -103,9 +97,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 tooltip={settingsTooltip}
               >
                 <Link href="/settings">
-                  <div className="transition-transform duration-200 ease-in-out group-data-[collapsible=icon]:-translate-x-[10px]">
-                    <Settings />
-                  </div>
+                  <Settings />
                   <span className="whitespace-nowrap overflow-hidden transition-[max-width,opacity] duration-200 ease-in-out group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0">
                     Settings
                   </span>
