@@ -5,7 +5,7 @@ import * as React from "react"
 import { Edit, PlusCircle, Trash2 } from "lucide-react"
 
 import { useSettings } from "@/contexts/settings-context"
-import { ACCOUNT_OWNERS, ICONS, type IconName } from "@/lib/constants"
+import { ACCOUNT_OWNERS, type IconName } from "@/lib/constants"
 import type { Account, AccountOwner } from "@/lib/types"
 import { getIcon } from "@/lib/utils"
 import {
@@ -121,19 +121,24 @@ export function ManageAccounts() {
         </Button>
       </div>
       <div className="rounded-md border">
+        <div className="flex items-center border-b p-4 text-sm font-medium text-muted-foreground">
+          <div className="flex-1">Account</div>
+          <div className="w-40">Owner</div>
+          <div className="w-[88px] text-right">Actions</div>
+        </div>
         <ul className="divide-y divide-border">
           {accounts.map((account) => {
             const Icon = getIcon(account.icon)
             return (
               <li key={account.value} className="flex items-center p-4">
-                <Icon className="mr-3 h-5 w-5" />
-                <div className="flex-1">
+                <div className="flex flex-1 items-center">
+                  <Icon className="mr-3 h-5 w-5 flex-shrink-0" />
                   <span className="font-medium">{account.label}</span>
-                  <span className="ml-2 text-sm text-muted-foreground">
-                    ({account.owner})
-                  </span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="w-40 text-muted-foreground">
+                  <span>{account.owner}</span>
+                </div>
+                <div className="flex w-[88px] items-center justify-end gap-2">
                   <Button
                     variant="ghost"
                     size="icon"
