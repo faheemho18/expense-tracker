@@ -8,7 +8,14 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
   useEffect(() => {
     try {
       const item = window.localStorage.getItem(key)
-      setStoredValue(item ? JSON.parse(item) : initialValue)
+      if (item) {
+        const parsed = JSON.parse(item)
+        // Use initialValue if the parsed value is null,
+        // which can happen if "null" is stored in localStorage.
+        setStoredValue(parsed ?? initialValue)
+      } else {
+        setStoredValue(initialValue)
+      }
     } catch (error) {
       console.error(error)
       setStoredValue(initialValue)
