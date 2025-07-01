@@ -4,7 +4,13 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Database, LayoutDashboard, Settings, Wallet } from "lucide-react"
+import {
+  Database,
+  LayoutDashboard,
+  Palette,
+  Settings,
+  Wallet,
+} from "lucide-react"
 
 import {
   Sidebar,
@@ -37,8 +43,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     () => ({ children: "Dashboard" }),
     []
   )
-  const settingsTooltip = React.useMemo(() => ({ children: "Settings" }), [])
   const dataTooltip = React.useMemo(() => ({ children: "Import/Export" }), [])
+  const settingsTooltip = React.useMemo(() => ({ children: "Settings" }), [])
+  const themesTooltip = React.useMemo(() => ({ children: "Themes" }), [])
 
   return (
     <SidebarProvider>
@@ -100,6 +107,20 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   <Settings />
                   <span className="whitespace-nowrap overflow-hidden transition-[max-width,opacity] duration-200 ease-in-out group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0">
                     Settings
+                  </span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={isActive("/themes")}
+                tooltip={themesTooltip}
+              >
+                <Link href="/themes">
+                  <Palette />
+                  <span className="whitespace-nowrap overflow-hidden transition-[max-width,opacity] duration-200 ease-in-out group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0">
+                    Themes
                   </span>
                 </Link>
               </SidebarMenuButton>

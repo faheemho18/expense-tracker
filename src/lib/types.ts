@@ -55,3 +55,17 @@ export type WidgetConfig = {
   w?: number
   h?: number
 }
+
+export type HSLColor = {
+  h: number
+  s: number
+  l: number
+}
+
+export type Theme = {
+  name: string
+  primary: HSLColor
+  background: HSLColor
+  accent: HSLColor
+  radius: number
+}
