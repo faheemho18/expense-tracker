@@ -78,6 +78,7 @@ export function DashboardGrid({
           minW: isChart ? 6 : 12,
           minH: isChart ? 6 : 2,
           maxH: isChart ? 6 : 2,
+          isResizable: isChart,
         }
       }),
     }
