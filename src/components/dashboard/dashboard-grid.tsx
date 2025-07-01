@@ -99,6 +99,35 @@ export function DashboardGrid({
     onLayoutChange(layout)
   }
 
+  const handleResizeStop = (
+    layout: Layout[],
+    oldItem: Layout,
+    newItem: Layout
+  ) => {
+    const widget = widgets.find((w) => w.id === newItem.i)
+    if (!widget) {
+      onLayoutChange(layout)
+      return
+    }
+
+    let snappedWidth = newItem.w
+    // For charts, snap width to 6 or 12. Anything <= 9 snaps to 6.
+    if (widget.type !== "stats") {
+      snappedWidth = newItem.w <= 9 ? 6 : 12
+    } else {
+      snappedWidth = 12
+    }
+
+    const newLayout = layout.map((l) => {
+      if (l.i === newItem.i) {
+        return { ...l, w: snappedWidth }
+      }
+      return l
+    })
+
+    onLayoutChange(newLayout)
+  }
+
   return (
     <ResponsiveGridLayout
       layouts={layouts}
@@ -107,7 +136,7 @@ export function DashboardGrid({
       rowHeight={50}
       draggableHandle=".drag-handle"
       onDragStop={handleLayoutChange}
-      onResizeStop={handleLayoutChange}
+      onResizeStop={handleResizeStop}
       className="min-h-[500px]"
     >
       {widgets.map((widget) => {
