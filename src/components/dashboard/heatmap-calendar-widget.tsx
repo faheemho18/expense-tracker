@@ -2,7 +2,7 @@
 "use client"
 
 import * as React from "react"
-import { format, getYear, getMonth, max, startOfYear } from "date-fns"
+import { getYear, getMonth } from "date-fns"
 
 import type { Expense } from "@/lib/types"
 import {
@@ -62,7 +62,7 @@ export function HeatmapCalendarWidget({
 
   if (!hasData) {
     return (
-      <div className="flex h-full items-center justify-center text-muted-foreground">
+      <div className="flex h-full items-center justify-center p-3 text-muted-foreground">
         No expense data for the current year.
       </div>
     )
@@ -78,17 +78,17 @@ export function HeatmapCalendarWidget({
 
   return (
     <TooltipProvider>
-      <div className="flex h-full flex-col items-center justify-center gap-4 p-3">
-        <h3 className="text-lg font-medium">
+      <div className="flex h-full flex-col justify-center gap-2 p-3">
+        <h3 className="text-center font-medium">
           {getYear(new Date())} Spending Heatmap
         </h3>
-        <div className="grid w-4/5 grid-cols-4 gap-3 sm:grid-cols-6 lg:grid-cols-4">
+        <div className="grid grid-cols-4 gap-2">
           {data.map((monthData) => (
             <Tooltip key={monthData.month}>
               <TooltipTrigger asChild>
                 <div
                   className={cn(
-                    "flex aspect-square items-center justify-center rounded-md font-medium text-foreground transition-colors",
+                    "flex aspect-square items-center justify-center rounded-md p-1 text-xs font-medium text-foreground transition-colors sm:text-sm",
                     intensityClasses[monthData.intensity]
                   )}
                 >
