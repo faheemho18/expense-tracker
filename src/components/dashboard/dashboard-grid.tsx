@@ -65,20 +65,20 @@ export function DashboardGrid({
     if (!widgets) return { lg: [] }
     return {
       lg: widgets.map((widget) => {
-        const isChart = widget.type !== "stats"
-        const defaultW = isChart ? 6 : 12
-        const defaultH = isChart ? 6 : 6
+        const isStats = widget.type === "stats"
+        const defaultW = isStats ? 12 : 6
+        const defaultH = 6
 
         return {
           i: widget.id,
           x: widget.x ?? 0,
-          y: widget.y ?? Infinity, // RGL will place it at the bottom
+          y: widget.y ?? Infinity,
           w: widget.w ?? defaultW,
           h: widget.h ?? defaultH,
-          minW: isChart ? 6 : 12,
-          minH: isChart ? 6 : 6,
-          maxH: isChart ? 6 : 6,
-          isResizable: isChart,
+          minW: 6,
+          minH: 6,
+          maxH: 6,
+          isResizable: true,
         }
       }),
     }
@@ -112,13 +112,8 @@ export function DashboardGrid({
       return
     }
 
-    let snappedWidth = newItem.w
-    // For charts, snap width to 6 or 12. Anything <= 9 snaps to 6.
-    if (widget.type !== "stats") {
-      snappedWidth = newItem.w <= 9 ? 6 : 12
-    } else {
-      snappedWidth = 12
-    }
+    // Snap width to 6 or 12. Anything <= 9 snaps to 6.
+    const snappedWidth = newItem.w <= 9 ? 6 : 12
 
     const newLayout = layout.map((l) => {
       if (l.i === newItem.i) {
