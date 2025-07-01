@@ -23,6 +23,11 @@ export function ProjectedSavingsWidget({
   expenses,
 }: ProjectedSavingsWidgetProps) {
   const { categories } = useSettings()
+  const [isClient, setIsClient] = React.useState(false)
+
+  React.useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   const projectedSavings = React.useMemo(() => {
     if (!categories) return 0
@@ -60,18 +65,21 @@ export function ProjectedSavingsWidget({
     )
   }
 
+  const formattedSavings = `+${formatCurrency(projectedSavings, "compact")}`
+  const fullSavings = `Projected Savings: ${formatCurrency(projectedSavings)}`
+
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <div className="relative flex h-32 w-32 items-center justify-center">
           <PiggyBank className="absolute h-32 w-32 text-muted-foreground/20" />
           <div className="relative text-3xl font-bold text-emerald-500">
-            +{formatCurrency(projectedSavings, "compact")}
+            {isClient ? formattedSavings : <Skeleton className="h-8 w-24" />}
           </div>
         </div>
       </TooltipTrigger>
       <TooltipContent>
-        <p>Projected Savings: {formatCurrency(projectedSavings)}</p>
+        <p>{isClient ? fullSavings : "Calculating..."}</p>
       </TooltipContent>
     </Tooltip>
   )
