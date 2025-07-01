@@ -4,6 +4,7 @@
 import * as React from "react"
 import { format, getYear, startOfMonth } from "date-fns"
 import { BarChart } from "lucide-react"
+import { Responsive, WidthProvider, type Layout } from "react-grid-layout"
 
 import type { Expense, WidgetConfig, WidgetFilters } from "@/lib/types"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -15,7 +16,6 @@ import { OverTimeBarChartWidget } from "./over-time-bar-chart-widget"
 import { StackedAreaChartWidget } from "./stacked-area-chart-widget"
 import { StatsWidget } from "./stats-widget"
 import { WidgetWrapper } from "./widget-wrapper"
-import { Responsive, WidthProvider, type Layout } from "react-grid-layout"
 
 const ResponsiveGridLayout = WidthProvider(Responsive)
 
@@ -64,15 +64,21 @@ export function DashboardGrid({
   const layouts = React.useMemo(() => {
     if (!widgets) return { lg: [] }
     return {
-      lg: widgets.map((widget, index) => ({
-        i: widget.id,
-        x: widget.x ?? (index % 2) * 6,
-        y: widget.y ?? Infinity,
-        w: widget.w ?? 6,
-        h: widget.h ?? 8,
-        minH: 2,
-        minW: 3,
-      })),
+      lg: widgets.map((widget) => {
+        const isChart = widget.type !== "stats"
+        const defaultW = isChart ? 6 : 12
+        const defaultH = isChart ? 8 : 2
+
+        return {
+          i: widget.id,
+          x: widget.x ?? 0,
+          y: widget.y ?? Infinity, // RGL will place it at the bottom
+          w: widget.w ?? defaultW,
+          h: widget.h ?? defaultH,
+          minW: isChart ? 6 : 12,
+          minH: isChart ? 6 : 2,
+        }
+      }),
     }
   }, [widgets])
 
