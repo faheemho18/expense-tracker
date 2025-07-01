@@ -56,7 +56,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               >
                 <Link href="/">
                   <Wallet />
-                  <span>Expenses</span>
+                  <span className="group-data-[collapsible=icon]:hidden">
+                    Expenses
+                  </span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -68,7 +70,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               >
                 <Link href="/dashboard">
                   <LayoutDashboard />
-                  <span>Dashboard</span>
+                  <span className="group-data-[collapsible=icon]:hidden">
+                    Dashboard
+                  </span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -80,7 +84,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               >
                 <Link href="/data">
                   <Database />
-                  <span>Data</span>
+                  <span className="group-data-[collapsible=icon]:hidden">
+                    Data
+                  </span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -92,7 +98,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               >
                 <Link href="/settings">
                   <Settings />
-                  <span>Settings</span>
+                  <span className="group-data-[collapsible=icon]:hidden">
+                    Settings
+                  </span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
