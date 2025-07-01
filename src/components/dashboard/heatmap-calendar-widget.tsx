@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -79,9 +78,6 @@ export function HeatmapCalendarWidget({
   return (
     <TooltipProvider>
       <div className="flex h-full flex-col gap-2 p-3">
-        <h3 className="shrink-0 text-center font-medium">
-          {getYear(new Date())} Spending Heatmap
-        </h3>
         <div className="grid flex-1 grid-cols-4 grid-rows-3 gap-2">
           {data.map((monthData) => (
             <Tooltip key={monthData.month}>
