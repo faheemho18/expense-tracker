@@ -12,7 +12,6 @@ import { ThemePreview } from "@/components/themes/theme-preview"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { Skeleton } from "@/components/ui/skeleton"
 import { Slider } from "@/components/ui/slider"
 
 const PRESETS: Theme[] = [
@@ -45,55 +44,6 @@ const PRESETS: Theme[] = [
     radius: 0.3,
   },
 ]
-
-const ThemesPageSkeleton = () => (
-  <AppLayout>
-    <div className="flex-1 space-y-4 p-4 sm:p-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Themes</h1>
-      </div>
-      <div className="grid gap-8 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Paintbrush /> Customize
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-4">
-              <h3 className="mb-4 text-lg font-medium">Presets</h3>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-              </div>
-            </div>
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Colors</h3>
-              <div className="space-y-4 rounded-md border p-4">
-                <Skeleton className="h-[120px] w-full" />
-              </div>
-              <div className="space-y-4 rounded-md border p-4">
-                <Skeleton className="h-[120px] w-full" />
-              </div>
-              <div className="space-y-4 rounded-md border p-4">
-                <Skeleton className="h-[120px] w-full" />
-              </div>
-            </div>
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Border Radius</h3>
-              <div className="space-y-2 rounded-md border p-4">
-                <Skeleton className="h-12 w-full" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <ThemePreview />
-      </div>
-    </div>
-  </AppLayout>
-)
 
 export default function ThemesPage() {
   const [theme, setTheme] = useLocalStorage<Theme>("app-theme", PRESETS[0])
@@ -140,10 +90,6 @@ export default function ThemesPage() {
       name: "Custom",
       radius: value[0],
     })
-  }
-
-  if (!theme) {
-    return <ThemesPageSkeleton />
   }
 
   const ColorSlider = ({

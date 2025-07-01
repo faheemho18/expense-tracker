@@ -3,42 +3,34 @@
 import { useState, useEffect, useCallback } from "react"
 
 export function useLocalStorage<T>(key: string, initialValue: T) {
-  const [storedValue, setStoredValue] = useState<T | null>(null)
-
-  useEffect(() => {
+  const [storedValue, setStoredValue] = useState<T>(() => {
+    if (typeof window === "undefined") {
+      return initialValue
+    }
     try {
       const item = window.localStorage.getItem(key)
-      if (item) {
-        const parsed = JSON.parse(item)
-        // Use initialValue if the parsed value is null,
-        // which can happen if "null" is stored in localStorage.
-        setStoredValue(parsed ?? initialValue)
-      } else {
-        setStoredValue(initialValue)
-      }
+      // If an item is found, parse it. If not, use the initial value.
+      return item ? JSON.parse(item) : initialValue
     } catch (error) {
-      console.error(error)
-      setStoredValue(initialValue)
+      console.warn(`Error reading localStorage key "${key}":`, error)
+      return initialValue
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key])
+  })
 
   const setValue = useCallback(
-    (value: T | ((val: T | null) => T)) => {
+    (value: T | ((val: T) => T)) => {
       try {
-        setStoredValue((currentValue) => {
-          const valueToStore =
-            value instanceof Function ? value(currentValue) : value
-          if (typeof window !== "undefined") {
-            window.localStorage.setItem(key, JSON.stringify(valueToStore))
-          }
-          return valueToStore
-        })
+        const valueToStore =
+          value instanceof Function ? value(storedValue) : value
+        setStoredValue(valueToStore)
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem(key, JSON.stringify(valueToStore))
+        }
       } catch (error) {
-        console.error(error)
+        console.warn(`Error setting localStorage key "${key}":`, error)
       }
     },
-    [key]
+    [key, storedValue]
   )
 
   return [storedValue, setValue] as const
