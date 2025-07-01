@@ -4,9 +4,16 @@
 import * as React from "react"
 import { Filter, Plus } from "lucide-react"
 import { format, getYear, startOfMonth } from "date-fns"
+import type { Layout } from "react-grid-layout"
+import dynamic from "next/dynamic"
 
 import { useLocalStorage } from "@/hooks/use-local-storage"
-import type { Expense, WidgetConfig, WidgetFilters, WidgetType } from "@/lib/types"
+import type {
+  Expense,
+  WidgetConfig,
+  WidgetFilters,
+  WidgetType,
+} from "@/lib/types"
 
 import { Button } from "@/components/ui/button"
 import { AppLayout } from "@/components/app-layout"
@@ -19,9 +26,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import dynamic from "next/dynamic"
 import { Skeleton } from "@/components/ui/skeleton"
-import type { Layout } from "react-grid-layout"
 
 const DEFAULT_WIDGETS: WidgetConfig[] = [
   { id: "1", type: "stats", title: "Overview", x: 0, y: 0, w: 12, h: 2 },
@@ -31,16 +36,16 @@ const DEFAULT_WIDGETS: WidgetConfig[] = [
     title: "Spending by Category",
     x: 0,
     y: 2,
-    w: 4,
+    w: 6,
     h: 8,
   },
   {
     id: "3",
     type: "over-time-bar",
     title: "Monthly Spending",
-    x: 4,
+    x: 6,
     y: 2,
-    w: 8,
+    w: 6,
     h: 8,
   },
 ]
@@ -89,15 +94,7 @@ export default function DashboardPage() {
     switch (type) {
       case "stats":
         return { w: 12, h: 2 }
-      case "category-pie":
-        return { w: 4, h: 8 }
-      case "over-time-bar":
-        return { w: 8, h: 8 }
-      case "account-type-pie":
-      case "stacked-area":
-      case "heatmap-calendar":
-        return { w: 6, h: 8 }
-      default:
+      default: // All other widgets are charts
         return { w: 6, h: 8 }
     }
   }
