@@ -33,7 +33,7 @@ export function WidgetFiltersSheet({
   years,
 }: WidgetFiltersSheetProps) {
   const [filters, setFilters] = React.useState<WidgetFilters>(
-    widget.filters || { year: [], month: [], category: [], accountType: [] }
+    widget.filters || { year: [], month: [], category: [], accountId: [] }
   )
 
   const handleFilterChange = (
@@ -50,7 +50,7 @@ export function WidgetFiltersSheet({
   }
 
   const clearFilters = () => {
-    setFilters({ year: [], month: [], category: [], accountType: [] })
+    setFilters({ year: [], month: [], category: [], accountId: [] })
   }
 
   const handleApply = () => {
@@ -61,7 +61,7 @@ export function WidgetFiltersSheet({
   React.useEffect(() => {
     if (isOpen) {
       setFilters(
-        widget.filters || { year: [], month: [], category: [], accountType: [] }
+        widget.filters || { year: [], month: [], category: [], accountId: [] }
       )
     }
   }, [isOpen, widget.filters])

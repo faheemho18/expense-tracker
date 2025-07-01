@@ -9,10 +9,11 @@ export type Category = {
   threshold?: number
 }
 
-export type AccountType = {
+export type Account = {
   value: string
   label: string
   icon: string // Corresponds to a key in the ICONS map
+  owner: string
 }
 
 export type Expense = {
@@ -21,7 +22,8 @@ export type Expense = {
   amount: number
   date: string // ISO string
   category: string // category value
-  accountType: string // account type value
+  accountTypeId: string
+  accountOwner: string
   receiptImage?: string // Optional data URI of the receipt image
 }
 
@@ -29,7 +31,7 @@ export type WidgetType =
   | "stats"
   | "category-pie"
   | "over-time-bar"
-  | "account-type-pie"
+  | "account-pie"
   | "stacked-area"
   | "heatmap-calendar"
   | "category-gauges"
@@ -38,7 +40,7 @@ export type WidgetFilters = {
   year?: string[]
   month?: string[]
   category?: string[]
-  accountType?: string[]
+  accountId?: string[]
 }
 
 export type WidgetConfig = {

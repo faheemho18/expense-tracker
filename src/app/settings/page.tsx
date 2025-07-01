@@ -2,7 +2,7 @@
 "use client"
 
 import { AppLayout } from "@/components/app-layout"
-import { ManageAccountTypes } from "@/components/settings/manage-account-types"
+import { ManageAccounts } from "@/components/settings/manage-accounts"
 import { ManageCategories } from "@/components/settings/manage-categories"
 import {
   Card,
@@ -26,7 +26,7 @@ export default function SettingsPage() {
         <Tabs defaultValue="categories" className="space-y-4">
           <TabsList>
             <TabsTrigger value="categories">Categories</TabsTrigger>
-            <TabsTrigger value="account-types">Account Types</TabsTrigger>
+            <TabsTrigger value="accounts">Accounts</TabsTrigger>
           </TabsList>
           <TabsContent value="categories">
             <Card>
@@ -42,13 +42,16 @@ export default function SettingsPage() {
               </CardContent>
             </Card>
           </TabsContent>
-          <TabsContent value="account-types">
+          <TabsContent value="accounts">
             <Card>
               <CardHeader>
-                <CardTitle>Manage Account Types</CardTitle>
+                <CardTitle>Manage Accounts</CardTitle>
+                <CardDescription>
+                  Define your payment accounts and their owners.
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <ManageAccountTypes />
+                <ManageAccounts />
               </CardContent>
             </Card>
           </TabsContent>

@@ -49,7 +49,7 @@ type SortableKey =
   | "date"
   | "description"
   | "category"
-  | "accountType"
+  | "account"
   | "amount"
 type SortDirection = "ascending" | "descending"
 
@@ -62,12 +62,12 @@ export default function HomePage() {
     year: string[]
     month: string[]
     category: string[]
-    accountType: string[]
+    accountId: string[]
   }>({
     year: [],
     month: [format(new Date(), "yyyy-MM")],
     category: [],
-    accountType: [],
+    accountId: [],
   })
   const [gaugesMonth, setGaugesMonth] = React.useState(new Date())
 
@@ -76,7 +76,7 @@ export default function HomePage() {
     direction: SortDirection
   } | null>(null)
   const [currentPage, setCurrentPage] = React.useState(1)
-  const { categories, accountTypes } = useSettings()
+  const { categories, accounts } = useSettings()
   const [gaugeSortOrder, setGaugeSortOrder] = React.useState<
     "ascending" | "descending" | null
   >(null)
@@ -160,7 +160,7 @@ export default function HomePage() {
   }
 
   const clearFilters = () => {
-    setFilters({ year: [], month: [], category: [], accountType: [] })
+    setFilters({ year: [], month: [], category: [], accountId: [] })
     setCurrentPage(1)
   }
 
@@ -212,11 +212,11 @@ export default function HomePage() {
       const categoryMatch =
         filters.category.length === 0 ||
         filters.category.includes(expense.category)
-      const accountTypeMatch =
-        filters.accountType.length === 0 ||
-        filters.accountType.includes(expense.accountType)
+      const accountMatch =
+        filters.accountId.length === 0 ||
+        filters.accountId.includes(expense.accountTypeId)
 
-      return yearMatch && monthMatch && categoryMatch && accountTypeMatch
+      return yearMatch && monthMatch && categoryMatch && accountMatch
     })
   }, [expenses, filters])
 
@@ -247,14 +247,14 @@ export default function HomePage() {
   }
 
   const sortedExpenses = React.useMemo(() => {
-    if (!filteredExpenses || !categories || !accountTypes) return []
+    if (!filteredExpenses || !categories || !accounts) return []
 
     const getCategory = (value: string) => {
       return (categories || []).find((c) => c.value === value)
     }
 
-    const getAccountType = (value: string) => {
-      return (accountTypes || []).find((a) => a.value === value)
+    const getAccount = (value: string) => {
+      return (accounts || []).find((a) => a.value === value)
     }
 
     const sortableItems = [...filteredExpenses]
@@ -275,10 +275,10 @@ export default function HomePage() {
             const categoryB = getCategory(b.category)?.label || ""
             comparison = categoryA.localeCompare(categoryB)
             break
-          case "accountType":
-            const accountTypeA = getAccountType(a.accountType)?.label || ""
-            const accountTypeB = getAccountType(b.accountType)?.label || ""
-            comparison = accountTypeA.localeCompare(accountTypeB)
+          case "account":
+            const accountA = getAccount(a.accountTypeId)?.label || ""
+            const accountB = getAccount(b.accountTypeId)?.label || ""
+            comparison = accountA.localeCompare(accountB)
             break
           case "description":
             comparison = a.description.localeCompare(b.description)
@@ -288,7 +288,7 @@ export default function HomePage() {
       })
     }
     return sortableItems
-  }, [filteredExpenses, sortConfig, categories, accountTypes])
+  }, [filteredExpenses, sortConfig, categories, accounts])
 
   const paginatedExpenses = React.useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE

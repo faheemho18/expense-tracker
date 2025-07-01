@@ -45,7 +45,7 @@ type SortableKey =
   | "date"
   | "description"
   | "category"
-  | "accountType"
+  | "account"
   | "amount"
 type SortDirection = "ascending" | "descending"
 
@@ -67,7 +67,7 @@ export function ExpensesTable({
   sortConfig,
   requestSort,
 }: ExpensesTableProps) {
-  const { categories, accountTypes } = useSettings()
+  const { categories, accounts } = useSettings()
 
   const getCategory = React.useCallback(
     (value: string) => {
@@ -76,11 +76,11 @@ export function ExpensesTable({
     [categories]
   )
 
-  const getAccountType = React.useCallback(
+  const getAccount = React.useCallback(
     (value: string) => {
-      return (accountTypes || []).find((a) => a.value === value)
+      return (accounts || []).find((a) => a.value === value)
     },
-    [accountTypes]
+    [accounts]
   )
 
   const getSortIcon = (key: SortableKey) => {
@@ -100,7 +100,7 @@ export function ExpensesTable({
     return <ArrowDown className="ml-2 h-4 w-4" />
   }
 
-  if (!categories || !accountTypes) {
+  if (!categories || !accounts) {
     return (
       <div className="space-y-2">
         <Skeleton className="h-12 w-full" />
@@ -149,11 +149,11 @@ export function ExpensesTable({
             <TableHead className="p-0 text-center">
               <Button
                 variant="ghost"
-                onClick={() => requestSort("accountType")}
+                onClick={() => requestSort("account")}
                 className="w-full justify-center px-4 font-medium"
               >
                 Account
-                {getSortIcon("accountType")}
+                {getSortIcon("account")}
               </Button>
             </TableHead>
             <TableHead className="p-0 text-right">
@@ -175,9 +175,9 @@ export function ExpensesTable({
               const category = getCategory(expense.category)
               const CategoryIcon = category ? getIcon(category.icon) : null
 
-              const accountType = getAccountType(expense.accountType)
-              const AccountIcon = accountType
-                ? getIcon(accountType.icon)
+              const account = getAccount(expense.accountTypeId)
+              const AccountIcon = account
+                ? getIcon(account.icon)
                 : null
               return (
                 <TableRow key={expense.id}>
@@ -232,12 +232,12 @@ export function ExpensesTable({
                     )}
                   </TableCell>
                   <TableCell className="text-center">
-                    {accountType ? (
+                    {account ? (
                       <div className="inline-flex items-center gap-2">
                         {AccountIcon && (
                           <AccountIcon className="h-4 w-4 text-muted-foreground" />
                         )}
-                        <span>{accountType.label}</span>
+                        <span>{`${account.label} (${account.owner})`}</span>
                       </div>
                     ) : (
                       "N/A"

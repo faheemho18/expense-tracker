@@ -22,10 +22,10 @@ interface ExpensesFiltersProps {
     year: string[]
     month: string[]
     category: string[]
-    accountType: string[]
+    accountId: string[]
   }
   onFilterChange: (
-    filterType: "year" | "month" | "category" | "accountType",
+    filterType: "year" | "month" | "category" | "accountId",
     value: string
   ) => void
   onClearFilters: () => void
@@ -38,13 +38,15 @@ const FilterSection = ({
   items,
   selectedItems,
   onSelectionChange,
+  renderLabel,
 }: {
   title: string
-  items: { value: string; label: string }[]
+  items: { value: string; label: string; [key: string]: any }[]
   selectedItems: string[]
   onSelectionChange: (value: string) => void
+  renderLabel?: (item: any) => React.ReactNode
 }) => (
-  <AccordionItem value={title.toLowerCase().replace(" ", "-")}>
+  <AccordionItem value={title.toLowerCase().replace(/\s+/g, "-")}>
     <AccordionTrigger>{title}</AccordionTrigger>
     <AccordionContent>
       <ScrollArea className="h-48">
@@ -60,7 +62,7 @@ const FilterSection = ({
                 htmlFor={`${title}-${item.value}`}
                 className="w-full cursor-pointer font-normal"
               >
-                {item.label}
+                {renderLabel ? renderLabel(item) : item.label}
               </Label>
             </div>
           ))}
@@ -77,7 +79,7 @@ export function ExpensesFilters({
   months,
   years,
 }: ExpensesFiltersProps) {
-  const { categories, accountTypes } = useSettings()
+  const { categories, accounts } = useSettings()
 
   const handleClearFilters = () => {
     onClearFilters()
@@ -87,9 +89,9 @@ export function ExpensesFilters({
     filters.year.length > 0 ||
     filters.month.length > 0 ||
     filters.category.length > 0 ||
-    filters.accountType.length > 0
+    filters.accountId.length > 0
 
-  if (!categories || !accountTypes) {
+  if (!categories || !accounts) {
     return <Skeleton className="h-40 w-full" />
   }
 
@@ -98,7 +100,7 @@ export function ExpensesFilters({
       <Accordion
         type="multiple"
         className="w-full"
-        defaultValue={["years", "months", "categories", "account-types"]}
+        defaultValue={["years", "months", "categories", "accounts"]}
       >
         <FilterSection
           title="Years"
@@ -119,10 +121,11 @@ export function ExpensesFilters({
           onSelectionChange={(value) => onFilterChange("category", value)}
         />
         <FilterSection
-          title="Account Types"
-          items={accountTypes || []}
-          selectedItems={filters.accountType}
-          onSelectionChange={(value) => onFilterChange("accountType", value)}
+          title="Accounts"
+          items={accounts || []}
+          selectedItems={filters.accountId}
+          onSelectionChange={(value) => onFilterChange("accountId", value)}
+          renderLabel={(item) => `${item.label} (${item.owner})`}
         />
       </Accordion>
       <Button

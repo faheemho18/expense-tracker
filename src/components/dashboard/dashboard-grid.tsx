@@ -9,7 +9,7 @@ import { Responsive, WidthProvider, type Layout } from "react-grid-layout"
 import type { Expense, WidgetConfig, WidgetFilters } from "@/lib/types"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
-import { AccountTypePieChartWidget } from "./account-type-pie-chart-widget"
+import { AccountPieChartWidget } from "./account-pie-chart-widget"
 import { CategoryPieChartWidget } from "./category-pie-chart-widget"
 import { HeatmapCalendarWidget } from "./heatmap-calendar-widget"
 import { OverTimeBarChartWidget } from "./over-time-bar-chart-widget"
@@ -39,8 +39,8 @@ const renderWidget = (widget: WidgetConfig, expenses: Expense[]) => {
       return <CategoryPieChartWidget expenses={expenses} />
     case "over-time-bar":
       return <OverTimeBarChartWidget expenses={expenses} />
-    case "account-type-pie":
-      return <AccountTypePieChartWidget expenses={expenses} />
+    case "account-pie":
+      return <AccountPieChartWidget expenses={expenses} />
     case "stacked-area":
       return <StackedAreaChartWidget expenses={expenses} />
     case "heatmap-calendar":
@@ -67,7 +67,7 @@ export function DashboardGrid({
       lg: widgets.map((widget) => {
         const isStats = widget.type === "stats"
         const defaultW = isStats ? 12 : 6
-        const defaultH = 6
+        const defaultH = isStats ? 4 : 6
 
         return {
           i: widget.id,
@@ -76,7 +76,7 @@ export function DashboardGrid({
           w: widget.w ?? defaultW,
           h: widget.h ?? defaultH,
           minW: 6,
-          minH: 6,
+          minH: 4,
           maxH: 6,
           isResizable: true,
         }
@@ -143,7 +143,7 @@ export function DashboardGrid({
           ((widgetFilters.year?.length ?? 0) > 0 ||
             (widgetFilters.month?.length ?? 0) > 0 ||
             (widgetFilters.category?.length ?? 0) > 0 ||
-            (widgetFilters.accountType?.length ?? 0) > 0)
+            (widgetFilters.accountId?.length ?? 0) > 0)
 
         let widgetExpenses = expenses
 
@@ -161,7 +161,7 @@ export function DashboardGrid({
             year = [],
             month = [],
             category = [],
-            accountType = [],
+            accountId = [],
           } = widgetFilters!
 
           widgetExpenses = expenses.filter((expense) => {
@@ -173,11 +173,11 @@ export function DashboardGrid({
             const monthMatch = month.length === 0 || month.includes(expenseMonth)
             const categoryMatch =
               category.length === 0 || category.includes(expense.category)
-            const accountTypeMatch =
-              accountType.length === 0 ||
-              accountType.includes(expense.accountType)
+            const accountMatch =
+              accountId.length === 0 ||
+              accountId.includes(expense.accountTypeId)
 
-            return yearMatch && monthMatch && categoryMatch && accountTypeMatch
+            return yearMatch && monthMatch && categoryMatch && accountMatch
           })
         }
 

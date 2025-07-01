@@ -50,7 +50,7 @@ const expenseSchema = z.object({
   amount: z.coerce.number().refine((val) => val !== 0, "Amount cannot be zero"),
   date: z.date(),
   category: z.string().min(1, "Category is required"),
-  accountType: z.string().min(1, "Account type is required"),
+  accountId: z.string().min(1, "Account is required"),
   receiptImage: z.string().optional(),
 })
 
@@ -73,7 +73,7 @@ export function AddExpenseSheet({
 }: AddExpenseSheetProps) {
   const [isPending, startTransition] = React.useTransition()
   const [isDatePickerOpen, setIsDatePickerOpen] = React.useState(false)
-  const { categories, accountTypes } = useSettings()
+  const { categories, accounts } = useSettings()
 
   const videoRef = React.useRef<HTMLVideoElement>(null)
   const [showCamera, setShowCamera] = React.useState(false)
@@ -90,7 +90,7 @@ export function AddExpenseSheet({
       amount: 0,
       date: new Date(),
       category: "",
-      accountType: "",
+      accountId: "",
       receiptImage: "",
     },
   })
@@ -103,7 +103,7 @@ export function AddExpenseSheet({
           amount: expenseToEdit.amount,
           date: new Date(expenseToEdit.date),
           category: expenseToEdit.category,
-          accountType: expenseToEdit.accountType,
+          accountId: expenseToEdit.accountTypeId,
           receiptImage: expenseToEdit.receiptImage || "",
         })
       } else {
@@ -112,7 +112,7 @@ export function AddExpenseSheet({
           amount: 0,
           date: new Date(),
           category: "",
-          accountType: "",
+          accountId: "",
           receiptImage: "",
         })
       }
@@ -161,18 +161,34 @@ export function AddExpenseSheet({
   const onSubmit = (values: ExpenseFormValues) => {
     startTransition(() => {
       try {
+        if (!accounts) throw new Error("Accounts not loaded")
+
+        const selectedAccount = accounts.find(
+          (a) => a.value === values.accountId
+        )
+        if (!selectedAccount) throw new Error("Selected account not found")
+
+        const expenseData = {
+          description: values.description,
+          amount: values.amount,
+          date: values.date.toISOString(),
+          category: values.category,
+          receiptImage: values.receiptImage,
+          accountTypeId: selectedAccount.value,
+          accountOwner: selectedAccount.owner,
+        }
+
         if (isEditMode && updateExpense && expenseToEdit) {
           updateExpense({
-            ...values,
+            ...expenseData,
             id: expenseToEdit.id,
-            date: values.date.toISOString(),
           })
           toast({
             title: "Expense updated",
             description: "Your expense has been successfully updated.",
           })
         } else {
-          addExpense({ ...values, date: values.date.toISOString() })
+          addExpense(expenseData)
           toast({
             title: "Expense added",
             description: "Your expense has been successfully recorded.",
@@ -206,7 +222,7 @@ export function AddExpenseSheet({
     }
   }
 
-  const isLoading = !categories || !accountTypes
+  const isLoading = !categories || !accounts
 
   return (
     <Sheet
@@ -360,10 +376,10 @@ export function AddExpenseSheet({
               />
               <FormField
                 control={form.control}
-                name="accountType"
+                name="accountId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Account Type</FormLabel>
+                    <FormLabel>Account</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
@@ -371,20 +387,20 @@ export function AddExpenseSheet({
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select an account type" />
+                          <SelectValue placeholder="Select an account" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {accountTypes.map((accountType) => {
-                          const Icon = getIcon(accountType.icon)
+                        {accounts.map((account) => {
+                          const Icon = getIcon(account.icon)
                           return (
                             <SelectItem
-                              key={accountType.value}
-                              value={accountType.value}
+                              key={account.value}
+                              value={account.value}
                             >
                               <div className="flex items-center gap-2">
                                 <Icon className="h-4 w-4" />
-                                {accountType.label}
+                                {account.label} ({account.owner})
                               </div>
                             </SelectItem>
                           )

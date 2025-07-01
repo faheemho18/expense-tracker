@@ -5,7 +5,8 @@ import * as React from "react"
 import { Edit, PlusCircle, Trash2 } from "lucide-react"
 
 import { useSettings } from "@/contexts/settings-context"
-import type { AccountType } from "@/lib/types"
+import { ICONS, type IconName } from "@/lib/constants"
+import type { Account } from "@/lib/types"
 import { getIcon } from "@/lib/utils"
 import {
   AlertDialog,
@@ -37,71 +38,78 @@ import {
 } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 
-const ACCOUNT_ICONS = {
-  Wallet: "Cash",
-  CreditCard: "Credit Card",
-}
+const ACCOUNT_ICONS: IconName[] = ["Wallet", "CreditCard", "Landmark", "Banknote"]
 
-export function ManageAccountTypes() {
-  const { accountTypes, setAccountTypes } = useSettings()
+export function ManageAccounts() {
+  const { accounts, setAccounts } = useSettings()
   const [isFormDialogOpen, setIsFormDialogOpen] = React.useState(false)
-  const [editingAccountType, setEditingAccountType] =
-    React.useState<AccountType | null>(null)
-  const [accountTypeToDelete, setAccountTypeToDelete] =
-    React.useState<AccountType | null>(null)
-  const [newAccountTypeLabel, setNewAccountTypeLabel] = React.useState("")
-  const [newAccountTypeIcon, setNewAccountTypeIcon] = React.useState("")
+  const [editingAccount, setEditingAccount] =
+    React.useState<Account | null>(null)
+  const [accountToDelete, setAccountToDelete] =
+    React.useState<Account | null>(null)
+
+  // Form state
+  const [label, setLabel] = React.useState("")
+  const [owner, setOwner] = React.useState("")
+  const [icon, setIcon] = React.useState<IconName | "">("")
+
+  const resetForm = () => {
+    setLabel("")
+    setOwner("")
+    setIcon("")
+  }
 
   const handleAddClick = () => {
-    setEditingAccountType(null)
-    setNewAccountTypeLabel("")
-    setNewAccountTypeIcon("")
+    setEditingAccount(null)
+    resetForm()
     setIsFormDialogOpen(true)
   }
 
-  const handleEditClick = (accountType: AccountType) => {
-    setEditingAccountType(accountType)
-    setNewAccountTypeLabel(accountType.label)
-    setNewAccountTypeIcon(accountType.icon)
+  const handleEditClick = (account: Account) => {
+    setEditingAccount(account)
+    setLabel(account.label)
+    setOwner(account.owner)
+    setIcon(account.icon as IconName)
     setIsFormDialogOpen(true)
   }
 
-  const handleDeleteClick = (accountType: AccountType) => {
-    setAccountTypeToDelete(accountType)
+  const handleDeleteClick = (account: Account) => {
+    setAccountToDelete(account)
   }
 
   const handleDeleteConfirm = () => {
-    if (accountTypeToDelete) {
-      setAccountTypes((types) =>
-        (types || []).filter((t) => t.value !== accountTypeToDelete.value)
+    if (accountToDelete) {
+      setAccounts((currentAccounts) =>
+        (currentAccounts || []).filter((a) => a.value !== accountToDelete.value)
       )
-      setAccountTypeToDelete(null)
+      setAccountToDelete(null)
     }
   }
 
   const handleSave = () => {
-    if (!newAccountTypeLabel || !newAccountTypeIcon) return
+    if (!label || !icon || !owner) return
 
-    if (editingAccountType) {
-      setAccountTypes((types) =>
-        (types || []).map((t) =>
-          t.value === editingAccountType.value
-            ? { ...t, label: newAccountTypeLabel, icon: newAccountTypeIcon }
-            : t
+    if (editingAccount) {
+      setAccounts((currentAccounts) =>
+        (currentAccounts || []).map((acc) =>
+          acc.value === editingAccount.value
+            ? { ...acc, label, owner, icon }
+            : acc
         )
       )
     } else {
-      const newAccountType: AccountType = {
-        value: newAccountTypeLabel.toLowerCase().replace(/\s+/g, "-"),
-        label: newAccountTypeLabel,
-        icon: newAccountTypeIcon,
+      const newAccount: Account = {
+        value: label.toLowerCase().replace(/\s+/g, "-"),
+        label,
+        owner,
+        icon,
       }
-      setAccountTypes((types) => [...(types || []), newAccountType])
+      setAccounts((currentAccounts) => [...(currentAccounts || []), newAccount])
     }
     setIsFormDialogOpen(false)
   }
 
-  if (!accountTypes) {
+  if (!accounts) {
     return <Skeleton className="h-48 w-full" />
   }
 
@@ -109,29 +117,34 @@ export function ManageAccountTypes() {
     <div className="space-y-4">
       <div className="flex justify-end">
         <Button onClick={handleAddClick}>
-          <PlusCircle className="mr-2 h-4 w-4" /> Add Account Type
+          <PlusCircle className="mr-2 h-4 w-4" /> Add Account
         </Button>
       </div>
       <div className="rounded-md border">
         <ul className="divide-y divide-border">
-          {accountTypes.map((accountType) => {
-            const Icon = getIcon(accountType.icon)
+          {accounts.map((account) => {
+            const Icon = getIcon(account.icon)
             return (
-              <li key={accountType.value} className="flex items-center p-4">
+              <li key={account.value} className="flex items-center p-4">
                 <Icon className="mr-3 h-5 w-5" />
-                <span className="flex-1 font-medium">{accountType.label}</span>
+                <div className="flex-1">
+                  <span className="font-medium">{account.label}</span>
+                  <span className="ml-2 text-sm text-muted-foreground">
+                    ({account.owner})
+                  </span>
+                </div>
                 <div className="flex items-center gap-2">
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => handleEditClick(accountType)}
+                    onClick={() => handleEditClick(account)}
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => handleDeleteClick(accountType)}
+                    onClick={() => handleDeleteClick(account)}
                   >
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
@@ -146,42 +159,50 @@ export function ManageAccountTypes() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingAccountType ? "Edit" : "Add"} Account Type
+              {editingAccount ? "Edit" : "Add"} Account
             </DialogTitle>
             <DialogDescription>
-              {editingAccountType
-                ? "Edit the details of your account type."
-                : "Add a new account type to your list."}
+              {editingAccount
+                ? "Edit the details of your account."
+                : "Add a new account to your list."}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="account-type-label">Label</Label>
+              <Label htmlFor="account-label">Account Label</Label>
               <Input
-                id="account-type-label"
-                value={newAccountTypeLabel}
-                onChange={(e) => setNewAccountTypeLabel(e.target.value)}
+                id="account-label"
+                value={label}
+                onChange={(e) => setLabel(e.target.value)}
                 placeholder="e.g., Savings Account"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="account-type-icon">Icon</Label>
+              <Label htmlFor="account-owner">Account Owner</Label>
+              <Input
+                id="account-owner"
+                value={owner}
+                onChange={(e) => setOwner(e.target.value)}
+                placeholder="e.g., Me, Partner, Joint"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="account-icon">Icon</Label>
               <Select
-                onValueChange={(value) => setNewAccountTypeIcon(value)}
-                value={newAccountTypeIcon}
+                onValueChange={(value) => setIcon(value as IconName)}
+                value={icon}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select an icon" />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(ACCOUNT_ICONS).map(
-                    ([iconName, iconLabel]) => {
+                  {ACCOUNT_ICONS.map((iconName) => {
                       const Icon = getIcon(iconName)
                       return (
                         <SelectItem key={iconName} value={iconName}>
                           <div className="flex items-center gap-2">
                             <Icon className="h-4 w-4" />
-                            <span>{iconLabel}</span>
+                            <span>{iconName}</span>
                           </div>
                         </SelectItem>
                       )
@@ -204,19 +225,19 @@ export function ManageAccountTypes() {
       </Dialog>
 
       <AlertDialog
-        open={!!accountTypeToDelete}
-        onOpenChange={(open) => !open && setAccountTypeToDelete(null)}
+        open={!!accountToDelete}
+        onOpenChange={(open) => !open && setAccountToDelete(null)}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
               This action cannot be undone. This will permanently delete the
-              account type "{accountTypeToDelete?.label}".
+              account "{accountToDelete?.label}".
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setAccountTypeToDelete(null)}>
+            <AlertDialogCancel onClick={() => setAccountToDelete(null)}>
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteConfirm}>

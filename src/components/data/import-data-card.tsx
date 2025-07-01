@@ -6,6 +6,7 @@ import { z } from "zod"
 import { Upload, Loader2, AlertTriangle } from "lucide-react"
 
 import { useLocalStorage } from "@/hooks/use-local-storage"
+import { useSettings } from "@/contexts/settings-context"
 import type { Expense } from "@/lib/types"
 import { parseCsv } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -36,13 +37,15 @@ const expenseImportSchema = z.object({
     .string()
     .refine((val) => !isNaN(Date.parse(val)), { message: "Invalid date format" }),
   category: z.string().min(1, "Category is required"),
-  accountType: z.string().min(1, "Account type is required"),
+  accountType: z.string().min(1, "Account Type is required"),
+  accountOwner: z.string().min(1, "Account Owner is required"),
 })
 
 type ImportedExpense = z.infer<typeof expenseImportSchema>
 
 export function ImportDataCard() {
-  const [expenses, setExpenses] = useLocalStorage<Expense[]>("expenses", [])
+  const [, setExpenses] = useLocalStorage<Expense[]>("expenses", [])
+  const { accounts, categories } = useSettings()
   const [isPending, startTransition] = React.useTransition()
   const [file, setFile] = React.useState<File | null>(null)
   const [isAlertOpen, setIsAlertOpen] = React.useState(false)
@@ -79,7 +82,7 @@ export function ImportDataCard() {
             toast({
               title: "Import Failed",
               description:
-                "The CSV file has invalid data or incorrect formatting.",
+                "The CSV file has invalid data or incorrect formatting. Check column headers.",
               variant: "destructive",
             })
             return
@@ -102,32 +105,69 @@ export function ImportDataCard() {
 
   const handleImportConfirm = (mode: "replace" | "augment") => {
     startTransition(() => {
-      const newExpenses = parsedData.map((exp) => ({
-        ...exp,
-        id: crypto.randomUUID(),
-        date: new Date(exp.date).toISOString(), // Ensure date is ISO string
-      }))
+      try {
+        if (!accounts || !categories) {
+          throw new Error("Settings not loaded")
+        }
 
-      if (mode === "replace") {
-        setExpenses(newExpenses)
-      } else {
-        setExpenses((prevExpenses) => [...(prevExpenses || []), ...newExpenses])
+        const newExpenses: Expense[] = parsedData.map((exp) => {
+          const account = accounts.find(
+            (a) => a.label === exp.accountType && a.owner === exp.accountOwner
+          )
+          const category = categories.find((c) => c.label === exp.category)
+
+          if (!account) {
+            throw new Error(
+              `Account with type "${exp.accountType}" and owner "${exp.accountOwner}" not found. Please create it in Settings first.`
+            )
+          }
+          if (!category) {
+            throw new Error(
+              `Category "${exp.category}" not found. Please create it in Settings first.`
+            )
+          }
+
+          return {
+            id: crypto.randomUUID(),
+            description: exp.description,
+            amount: exp.amount,
+            date: new Date(exp.date).toISOString(),
+            category: category.value,
+            accountTypeId: account.value,
+            accountOwner: account.owner,
+          }
+        })
+
+        if (mode === "replace") {
+          setExpenses(newExpenses)
+        } else {
+          setExpenses((prevExpenses) => [
+            ...(prevExpenses || []),
+            ...newExpenses,
+          ])
+        }
+
+        toast({
+          title: "Import Successful",
+          description: `${newExpenses.length} expenses have been ${
+            mode === "replace" ? "imported" : "added"
+          }.`,
+        })
+      } catch (error: any) {
+        toast({
+          title: "Import Failed",
+          description: error.message || "An unexpected error occurred.",
+          variant: "destructive",
+        })
+      } finally {
+        // Reset state
+        setFile(null)
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ""
+        }
+        setParsedData([])
+        setIsAlertOpen(false)
       }
-
-      toast({
-        title: "Import Successful",
-        description: `${newExpenses.length} expenses have been ${
-          mode === "replace" ? "imported" : "added"
-        }.`,
-      })
-
-      // Reset state
-      setFile(null)
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ""
-      }
-      setParsedData([])
-      setIsAlertOpen(false)
     })
   }
 
@@ -138,7 +178,7 @@ export function ImportDataCard() {
           <CardTitle>Import Data from CSV</CardTitle>
           <CardDescription>
             Upload a CSV file to add expenses. Ensure your file has headers:
-            `description`, `amount`, `date`, `category`, `accountType`.
+            `description`, `amount`, `date`, `category`, `accountType`, `accountOwner`.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

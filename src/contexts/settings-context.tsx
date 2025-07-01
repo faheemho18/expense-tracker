@@ -5,19 +5,19 @@ import * as React from "react"
 
 import { useLocalStorage } from "@/hooks/use-local-storage"
 import {
-  DEFAULT_ACCOUNT_TYPES,
+  DEFAULT_ACCOUNTS,
   DEFAULT_CATEGORIES,
 } from "@/lib/constants"
-import type { AccountType, Category } from "@/lib/types"
+import type { Account, Category } from "@/lib/types"
 
 interface SettingsContextType {
   categories: Category[] | null
   setCategories: (
     value: Category[] | ((val: Category[] | null) => Category[])
   ) => void
-  accountTypes: AccountType[] | null
-  setAccountTypes: (
-    value: AccountType[] | ((val: AccountType[] | null) => AccountType[])
+  accounts: Account[] | null
+  setAccounts: (
+    value: Account[] | ((val: Account[] | null) => Account[])
   ) => void
 }
 
@@ -30,16 +30,16 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     "categories",
     DEFAULT_CATEGORIES
   )
-  const [accountTypes, setAccountTypes] = useLocalStorage<AccountType[]>(
-    "accountTypes",
-    DEFAULT_ACCOUNT_TYPES
+  const [accounts, setAccounts] = useLocalStorage<Account[]>(
+    "accounts",
+    DEFAULT_ACCOUNTS
   )
 
   const value = {
     categories,
     setCategories,
-    accountTypes,
-    setAccountTypes,
+    accounts,
+    setAccounts,
   }
 
   return (

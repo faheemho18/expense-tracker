@@ -87,7 +87,7 @@ export default function DashboardPage() {
     year: [],
     month: [],
     category: [],
-    accountType: [],
+    accountId: [],
   })
 
   const getNewWidgetLayout = (type: WidgetType) => {
@@ -202,7 +202,7 @@ export default function DashboardPage() {
   }
 
   const clearFilters = () => {
-    setFilters({ year: [], month: [], category: [], accountType: [] })
+    setFilters({ year: [], month: [], category: [], accountId: [] })
   }
 
   const areGlobalFiltersActive = React.useMemo(() => {
@@ -210,7 +210,7 @@ export default function DashboardPage() {
       (filters.year?.length ?? 0) > 0 ||
       (filters.month?.length ?? 0) > 0 ||
       (filters.category?.length ?? 0) > 0 ||
-      (filters.accountType?.length ?? 0) > 0
+      (filters.accountId?.length ?? 0) > 0
     )
   }, [filters])
 
@@ -233,12 +233,12 @@ export default function DashboardPage() {
         !filters.category ||
         filters.category.length === 0 ||
         filters.category.includes(expense.category)
-      const accountTypeMatch =
-        !filters.accountType ||
-        filters.accountType.length === 0 ||
-        filters.accountType.includes(expense.accountType)
+      const accountMatch =
+        !filters.accountId ||
+        filters.accountId.length === 0 ||
+        filters.accountId.includes(expense.accountTypeId)
 
-      return yearMatch && monthMatch && categoryMatch && accountTypeMatch
+      return yearMatch && monthMatch && categoryMatch && accountMatch
     })
   }, [expenses, filters])
 

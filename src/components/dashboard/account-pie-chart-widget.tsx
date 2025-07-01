@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/chart"
 import { Skeleton } from "@/components/ui/skeleton"
 
-interface AccountTypePieChartWidgetProps {
+interface AccountPieChartWidgetProps {
   expenses: Expense[]
 }
 
@@ -26,42 +26,42 @@ const generateColor = (index: number) => {
   return `hsl(${hue}, 50%, 60%)`
 }
 
-export function AccountTypePieChartWidget({
+export function AccountPieChartWidget({
   expenses,
-}: AccountTypePieChartWidgetProps) {
-  const { accountTypes } = useSettings()
-  const [inactiveAccountTypes, setInactiveAccountTypes] = React.useState<
+}: AccountPieChartWidgetProps) {
+  const { accounts } = useSettings()
+  const [inactiveAccounts, setInactiveAccounts] = React.useState<
     string[]
   >([])
 
   const data = React.useMemo(() => {
-    const accountTypeTotals = expenses.reduce(
+    const accountTotals = expenses.reduce(
       (acc, expense) => {
         if (expense.amount > 0) {
-          acc[expense.accountType] =
-            (acc[expense.accountType] || 0) + expense.amount
+          acc[expense.accountTypeId] =
+            (acc[expense.accountTypeId] || 0) + expense.amount
         }
         return acc
       },
       {} as Record<string, number>
     )
 
-    return Object.entries(accountTypeTotals)
-      .map(([accountTypeValue, total]) => ({
-        accountType:
-          (accountTypes || []).find((a) => a.value === accountTypeValue)
+    return Object.entries(accountTotals)
+      .map(([accountValue, total]) => ({
+        account:
+          (accounts || []).find((a) => a.value === accountValue)
             ?.label || "Unknown",
         total,
         fill: "var(--color-primary)",
       }))
       .sort((a, b) => b.total - a.total)
-  }, [expenses, accountTypes])
+  }, [expenses, accounts])
 
   const chartConfig = React.useMemo(() => {
     const config: ChartConfig = {}
     data.forEach((item, index) => {
-      config[item.accountType] = {
-        label: item.accountType,
+      config[item.account] = {
+        label: item.account,
         color: generateColor(index),
       }
     })
@@ -69,24 +69,24 @@ export function AccountTypePieChartWidget({
   }, [data])
 
   const handleLegendClick = (item: any) => {
-    const accountType = item.value
-    setInactiveAccountTypes((prev) =>
-      prev.includes(accountType)
-        ? prev.filter((c) => c !== accountType)
-        : [...prev, accountType]
+    const account = item.value
+    setInactiveAccounts((prev) =>
+      prev.includes(account)
+        ? prev.filter((c) => c !== account)
+        : [...prev, account]
     )
   }
 
   const legendPayload = React.useMemo<LegendPayload[]>(() => {
     return data.map((entry, index) => ({
-      value: entry.accountType,
+      value: entry.account,
       type: "square",
-      id: entry.accountType,
-      color: chartConfig[entry.accountType]?.color || generateColor(index),
+      id: entry.account,
+      color: chartConfig[entry.account]?.color || generateColor(index),
     }))
   }, [data, chartConfig])
 
-  if (!accountTypes) {
+  if (!accounts) {
     return <Skeleton className="h-full w-full" />
   }
 
@@ -106,12 +106,12 @@ export function AccountTypePieChartWidget({
             <PieChart>
               <Tooltip
                 cursor={false}
-                content={<ChartTooltipContent hideLabel nameKey="accountType" />}
+                content={<ChartTooltipContent hideLabel nameKey="account" />}
               />
               <Pie
                 data={data}
                 dataKey="total"
-                nameKey="accountType"
+                nameKey="account"
                 innerRadius="60%"
                 strokeWidth={5}
               >
@@ -119,12 +119,12 @@ export function AccountTypePieChartWidget({
                   <Cell
                     key={`cell-${index}`}
                     fill={
-                      chartConfig[entry.accountType]?.color ||
+                      chartConfig[entry.account]?.color ||
                       generateColor(index)
                     }
                     className={cn(
                       "transition-opacity",
-                      inactiveAccountTypes.includes(entry.accountType)
+                      inactiveAccounts.includes(entry.account)
                         ? "opacity-30"
                         : "opacity-100"
                     )}
@@ -138,7 +138,7 @@ export function AccountTypePieChartWidget({
           <ChartLegendContent
             payload={legendPayload as any}
             onItemClick={handleLegendClick}
-            inactiveKeys={inactiveAccountTypes}
+            inactiveKeys={inactiveAccounts}
             className="flex-col items-start"
           />
         </div>

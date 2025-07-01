@@ -42,7 +42,7 @@ const widgetSchema = z.object({
       "stats",
       "category-pie",
       "over-time-bar",
-      "account-type-pie",
+      "account-pie",
       "stacked-area",
       "heatmap-calendar",
     ],
@@ -64,7 +64,7 @@ const WIDGET_TYPE_OPTIONS: { value: WidgetType; label: string }[] = [
   { value: "stats", label: "Statistics Cards" },
   { value: "category-pie", label: "Spending by Category (Pie Chart)" },
   { value: "over-time-bar", label: "Spending Over Time (Bar Chart)" },
-  { value: "account-type-pie", label: "Spending by Account Type (Pie Chart)" },
+  { value: "account-pie", label: "Spending by Account (Pie Chart)" },
   { value: "stacked-area", label: "Monthly Spending Breakdown (Area Chart)" },
   { value: "heatmap-calendar", label: "Yearly Spending Heatmap" },
 ]
