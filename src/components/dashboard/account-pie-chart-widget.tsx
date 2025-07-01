@@ -21,68 +21,65 @@ interface AccountPieChartWidgetProps {
   expenses: Expense[]
 }
 
-const generateColor = (index: number) => {
-  const hue = (index * 137.508) % 360 // Use golden angle approximation
-  return `hsl(${hue}, 50%, 60%)`
-}
-
 export function AccountPieChartWidget({
   expenses,
 }: AccountPieChartWidgetProps) {
   const { accounts } = useSettings()
-  const [inactiveAccounts, setInactiveAccounts] = React.useState<
-    string[]
-  >([])
+  const [inactiveOwners, setInactiveOwners] = React.useState<string[]>([])
 
   const data = React.useMemo(() => {
-    const accountTotals = expenses.reduce(
-      (acc, expense) => {
-        if (expense.amount > 0) {
-          acc[expense.accountTypeId] =
-            (acc[expense.accountTypeId] || 0) + expense.amount
+    const ownerTotals: Record<string, number> = { Fayim: 0, Nining: 0 }
+
+    expenses.forEach((expense) => {
+      if (expense.amount > 0) {
+        const owner = expense.accountOwner
+        if (owner === "Fayim") {
+          ownerTotals["Fayim"] += expense.amount
+        } else if (owner === "Nining") {
+          ownerTotals["Nining"] += expense.amount
+        } else if (owner === "Conjugal") {
+          ownerTotals["Fayim"] += expense.amount / 2
+          ownerTotals["Nining"] += expense.amount / 2
         }
-        return acc
-      },
-      {} as Record<string, number>
-    )
-
-    return Object.entries(accountTotals)
-      .map(([accountValue, total]) => ({
-        account:
-          (accounts || []).find((a) => a.value === accountValue)
-            ?.label || "Unknown",
-        total,
-        fill: "var(--color-primary)",
-      }))
-      .sort((a, b) => b.total - a.total)
-  }, [expenses, accounts])
-
-  const chartConfig = React.useMemo(() => {
-    const config: ChartConfig = {}
-    data.forEach((item, index) => {
-      config[item.account] = {
-        label: item.account,
-        color: generateColor(index),
       }
     })
-    return config
-  }, [data])
+
+    return Object.entries(ownerTotals)
+      .map(([owner, total]) => ({
+        owner,
+        total,
+      }))
+      .sort((a, b) => b.total - a.total)
+  }, [expenses])
+
+  const chartConfig = React.useMemo(() => {
+    return {
+      Fayim: {
+        label: "Fayim",
+        color: "hsl(var(--chart-1))",
+      },
+      Nining: {
+        label: "Nining",
+        color: "hsl(var(--chart-2))",
+      },
+    } satisfies ChartConfig
+  }, [])
 
   const handleLegendClick = (item: any) => {
-    const account = item.value
-    setInactiveAccounts((prev) =>
-      prev.includes(account)
-        ? prev.filter((c) => c !== account)
-        : [...prev, account]
+    const owner = item.value
+    setInactiveOwners((prev) =>
+      prev.includes(owner)
+        ? prev.filter((c) => c !== owner)
+        : [...prev, owner]
     )
   }
 
   const legendPayload = React.useMemo<LegendPayload[]>(() => {
-    return data.map((entry, index) => ({
-      value: entry.account,
+    return data.map((entry) => ({
+      value: entry.owner,
       type: "square",
-      id: entry.account,
-      color: chartConfig[entry.account]?.color || generateColor(index),
+      id: entry.owner,
+      color: chartConfig[entry.owner as keyof typeof chartConfig]?.color,
     }))
   }, [data, chartConfig])
 
@@ -90,7 +87,7 @@ export function AccountPieChartWidget({
     return <Skeleton className="h-full w-full" />
   }
 
-  if (data.length === 0) {
+  if (data.length === 0 || data.every((d) => d.total === 0)) {
     return (
       <div className="flex h-full items-center justify-center text-muted-foreground">
         No expense data to display.
@@ -106,25 +103,24 @@ export function AccountPieChartWidget({
             <PieChart>
               <Tooltip
                 cursor={false}
-                content={<ChartTooltipContent hideLabel nameKey="account" />}
+                content={<ChartTooltipContent hideLabel nameKey="owner" />}
               />
               <Pie
                 data={data}
                 dataKey="total"
-                nameKey="account"
+                nameKey="owner"
                 innerRadius="60%"
                 strokeWidth={5}
               >
-                {data.map((entry, index) => (
+                {data.map((entry) => (
                   <Cell
-                    key={`cell-${index}`}
+                    key={`cell-${entry.owner}`}
                     fill={
-                      chartConfig[entry.account]?.color ||
-                      generateColor(index)
+                      chartConfig[entry.owner as keyof typeof chartConfig]?.color
                     }
                     className={cn(
                       "transition-opacity",
-                      inactiveAccounts.includes(entry.account)
+                      inactiveOwners.includes(entry.owner)
                         ? "opacity-30"
                         : "opacity-100"
                     )}
@@ -138,7 +134,7 @@ export function AccountPieChartWidget({
           <ChartLegendContent
             payload={legendPayload as any}
             onItemClick={handleLegendClick}
-            inactiveKeys={inactiveAccounts}
+            inactiveKeys={inactiveOwners}
             className="flex-col items-start"
           />
         </div>
