@@ -29,13 +29,13 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"
 
 const DEFAULT_WIDGETS: WidgetConfig[] = [
-  { id: "1", type: "stats", title: "Overview", x: 0, y: 0, w: 12, h: 2 },
+  { id: "1", type: "stats", title: "Overview", x: 0, y: 0, w: 12, h: 4 },
   {
     id: "2",
     type: "category-pie",
     title: "Spending by Category",
     x: 0,
-    y: 2,
+    y: 4,
     w: 6,
     h: 6,
   },
@@ -44,7 +44,7 @@ const DEFAULT_WIDGETS: WidgetConfig[] = [
     type: "over-time-bar",
     title: "Monthly Spending",
     x: 6,
-    y: 2,
+    y: 4,
     w: 6,
     h: 6,
   },
@@ -53,7 +53,7 @@ const DEFAULT_WIDGETS: WidgetConfig[] = [
 const DashboardGridSkeleton = () => (
   <div className="grid grid-cols-12 gap-6">
     <div className="col-span-12">
-      <Skeleton className="h-[96px] w-full" />
+      <Skeleton className="h-[200px] w-full" />
     </div>
     <div className="col-span-12 md:col-span-6">
       <Skeleton className="h-[300px] w-full" />
@@ -93,7 +93,7 @@ export default function DashboardPage() {
   const getNewWidgetLayout = (type: WidgetType) => {
     switch (type) {
       case "stats":
-        return { w: 12, h: 2 }
+        return { w: 12, h: 4 }
       default: // All other widgets are charts
         return { w: 6, h: 6 }
     }
