@@ -11,8 +11,6 @@ import { formatCurrency } from "@/lib/utils"
 import {
   ChartContainer,
   type ChartConfig,
-  ChartLegend,
-  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
@@ -22,36 +20,27 @@ interface OverTimeBarChartWidgetProps {
 }
 
 const chartConfig = {
-  expenses: {
-    label: "Expenses",
+  net: {
+    label: "Net",
     color: "hsl(var(--primary))",
-  },
-  refunds: {
-    label: "Refunds",
-    color: "hsl(var(--accent))",
   },
 } satisfies ChartConfig
 
 export function OverTimeBarChartWidget({
   expenses,
 }: OverTimeBarChartWidgetProps) {
-  const [hiddenSeries, setHiddenSeries] = React.useState<string[]>([])
-
   const data = React.useMemo(() => {
     const monthlyTotals = expenses.reduce(
       (acc, expense) => {
         const month = format(startOfMonth(new Date(expense.date)), "MMM yyyy")
         if (!acc[month]) {
-          acc[month] = { expenses: 0, refunds: 0 }
+          acc[month] = { net: 0 }
         }
-        if (expense.amount > 0) {
-          acc[month].expenses += expense.amount
-        } else {
-          acc[month].refunds += Math.abs(expense.amount)
-        }
+        // expense.amount is positive for expenses and negative for refunds
+        acc[month].net += expense.amount
         return acc
       },
-      {} as Record<string, { expenses: number; refunds: number }>
+      {} as Record<string, { net: number }>
     )
 
     return Object.entries(monthlyTotals)
@@ -60,13 +49,6 @@ export function OverTimeBarChartWidget({
         (a, b) => new Date(a.month).getTime() - new Date(b.month).getTime()
       )
   }, [expenses])
-
-  const handleLegendClick = (item: any) => {
-    const key = item.value
-    setHiddenSeries((prev) =>
-      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
-    )
-  }
 
   if (data.length === 0) {
     return (
@@ -90,37 +72,9 @@ export function OverTimeBarChartWidget({
           <YAxis tickFormatter={(value) => formatCurrency(value, "compact")} />
           <ChartTooltip
             cursor={false}
-            content={
-              <ChartTooltipContent
-                formatter={(value, name) => (
-                  <div>
-                    {name}: {formatCurrency(Number(value))}
-                  </div>
-                )}
-              />
-            }
+            content={<ChartTooltipContent hideLabel />}
           />
-          <ChartLegend
-            verticalAlign="bottom"
-            content={
-              <ChartLegendContent
-                onItemClick={handleLegendClick}
-                inactiveKeys={hiddenSeries}
-              />
-            }
-          />
-          <Bar
-            dataKey="expenses"
-            fill="var(--color-expenses)"
-            radius={4}
-            hide={hiddenSeries.includes(chartConfig.expenses.label as string)}
-          />
-          <Bar
-            dataKey="refunds"
-            fill="var(--color-refunds)"
-            radius={4}
-            hide={hiddenSeries.includes(chartConfig.refunds.label as string)}
-          />
+          <Bar dataKey="net" fill="var(--color-net)" radius={4} />
         </BarChart>
       </RechartsPrimitive.ResponsiveContainer>
     </ChartContainer>
