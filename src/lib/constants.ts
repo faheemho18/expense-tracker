@@ -16,7 +16,7 @@ import {
   Wallet,
 } from "lucide-react"
 
-import type { Account, AccountOwner, Category } from "./types"
+import type { Account, AccountOwner, Category, Theme } from "./types"
 
 export const ICONS = {
   Utensils,
@@ -38,6 +38,39 @@ export const ICONS = {
 export type IconName = keyof typeof ICONS
 
 export const ACCOUNT_OWNERS: AccountOwner[] = ["Fayim", "Nining", "Conjugal"]
+
+export const PRESETS: Theme[] = [
+  {
+    name: "Default",
+    primary: { h: 210, s: 60, l: 50 },
+    background: { h: 210, s: 20, l: 95 },
+    accent: { h: 180, s: 50, l: 50 },
+    radius: 0.75,
+  },
+  {
+    name: "Forest",
+    primary: { h: 140, s: 50, l: 40 },
+    background: { h: 100, s: 10, l: 96 },
+    accent: { h: 40, s: 60, l: 60 },
+    radius: 0.5,
+  },
+  {
+    name: "Ocean",
+    primary: { h: 220, s: 70, l: 55 },
+    background: { h: 210, s: 40, l: 97 },
+    accent: { h: 190, s: 80, l: 70 },
+    radius: 1.0,
+  },
+  {
+    name: "Sunset",
+    primary: { h: 25, s: 80, l: 55 },
+    background: { h: 30, s: 50, l: 98 },
+    accent: { h: 330, s: 70, l: 65 },
+    radius: 0.3,
+  },
+]
+
+export const DEFAULT_THEME: Theme = PRESETS[0]
 
 export const DEFAULT_CATEGORIES: Category[] = [
   { value: "food", label: "Food & Dining", icon: "Utensils", color: "#FF6384" },

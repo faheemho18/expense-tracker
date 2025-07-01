@@ -5,6 +5,7 @@ import * as React from "react"
 import { Check, ChevronsUpDown, Plus } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import type { Theme } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -37,7 +38,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
-export function ThemePreview() {
+interface ThemePreviewProps {
+  theme: Theme | null
+}
+
+export function ThemePreview({ theme }: ThemePreviewProps) {
   const [open, setOpen] = React.useState(false)
   const [value, setValue] = React.useState("next.js")
   const frameworks = [
@@ -48,8 +53,19 @@ export function ThemePreview() {
     { value: "astro", label: "Astro" },
   ]
 
+  const themeStyle = React.useMemo(() => {
+    if (!theme) return {}
+    return {
+      "--primary": `${theme.primary.h} ${theme.primary.s}% ${theme.primary.l}%`,
+      "--accent": `${theme.accent.h} ${theme.accent.s}% ${theme.accent.l}%`,
+      "--radius": `${theme.radius}rem`,
+    } as React.CSSProperties
+  }, [theme])
+
+  if (!theme) return null
+
   return (
-    <Card>
+    <Card style={themeStyle}>
       <CardHeader>
         <CardTitle>Preview</CardTitle>
         <CardDescription>

@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -6,8 +7,9 @@ import { useLocalStorage } from "@/hooks/use-local-storage"
 import {
   DEFAULT_ACCOUNTS,
   DEFAULT_CATEGORIES,
+  DEFAULT_THEME,
 } from "@/lib/constants"
-import type { Account, Category } from "@/lib/types"
+import type { Account, Category, Theme } from "@/lib/types"
 
 interface SettingsContextType {
   categories: Category[] | null
@@ -33,6 +35,26 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     "accounts",
     DEFAULT_ACCOUNTS
   )
+  const [theme] = useLocalStorage<Theme>("app-theme", DEFAULT_THEME)
+
+  React.useEffect(() => {
+    if (theme) {
+      const root = document.documentElement
+      root.style.setProperty(
+        "--primary",
+        `${theme.primary.h} ${theme.primary.s}% ${theme.primary.l}%`
+      )
+      root.style.setProperty(
+        "--background",
+        `${theme.background.h} ${theme.background.s}% ${theme.background.l}%`
+      )
+      root.style.setProperty(
+        "--accent",
+        `${theme.accent.h} ${theme.accent.s}% ${theme.accent.l}%`
+      )
+      root.style.setProperty("--radius", `${theme.radius}rem`)
+    }
+  }, [theme])
 
   const value = React.useMemo(
     () => ({

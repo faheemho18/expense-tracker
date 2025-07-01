@@ -2,9 +2,10 @@
 "use client"
 
 import * as React from "react"
-import { Paintbrush } from "lucide-react"
+import { Paintbrush, Save } from "lucide-react"
 
 import { useLocalStorage } from "@/hooks/use-local-storage"
+import { DEFAULT_THEME, PRESETS } from "@/lib/constants"
 import type { Theme } from "@/lib/types"
 
 import { AppLayout } from "@/components/app-layout"
@@ -14,88 +15,52 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
 import { Skeleton } from "@/components/ui/skeleton"
-
-const PRESETS: Theme[] = [
-  {
-    name: "Default",
-    primary: { h: 210, s: 60, l: 50 },
-    background: { h: 210, s: 20, l: 95 },
-    accent: { h: 180, s: 50, l: 50 },
-    radius: 0.75,
-  },
-  {
-    name: "Forest",
-    primary: { h: 140, s: 50, l: 40 },
-    background: { h: 100, s: 10, l: 96 },
-    accent: { h: 40, s: 60, l: 60 },
-    radius: 0.5,
-  },
-  {
-    name: "Ocean",
-    primary: { h: 220, s: 70, l: 55 },
-    background: { h: 210, s: 40, l: 97 },
-    accent: { h: 190, s: 80, l: 70 },
-    radius: 1.0,
-  },
-  {
-    name: "Sunset",
-    primary: { h: 25, s: 80, l: 55 },
-    background: { h: 30, s: 50, l: 98 },
-    accent: { h: 330, s: 70, l: 65 },
-    radius: 0.3,
-  },
-]
+import { toast } from "@/hooks/use-toast"
 
 export default function ThemesPage() {
-  const [theme, setTheme] = useLocalStorage<Theme>("app-theme", PRESETS[0])
-  const [isClient, setIsClient] = React.useState(false)
+  const [savedTheme, setSavedTheme] = useLocalStorage<Theme>(
+    "app-theme",
+    DEFAULT_THEME
+  )
+  const [draftTheme, setDraftTheme] = React.useState<Theme | null>(null)
 
   React.useEffect(() => {
-    setIsClient(true)
-  }, [])
-
-  React.useEffect(() => {
-    if (isClient && theme) {
-      const root = document.documentElement
-      root.style.setProperty(
-        "--primary",
-        `${theme.primary.h} ${theme.primary.s}% ${theme.primary.l}%`
-      )
-      root.style.setProperty(
-        "--background",
-        `${theme.background.h} ${theme.background.s}% ${theme.background.l}%`
-      )
-      root.style.setProperty(
-        "--accent",
-        `${theme.accent.h} ${theme.accent.s}% ${theme.accent.l}%`
-      )
-      root.style.setProperty("--radius", `${theme.radius}rem`)
-    }
-  }, [theme, isClient])
+    setDraftTheme(savedTheme)
+  }, [savedTheme])
 
   const handleColorChange = (
     colorType: "primary" | "background" | "accent",
     channel: "h" | "s" | "l",
     value: number
   ) => {
-    if (!theme) return
-    setTheme({
-      ...theme,
+    if (!draftTheme) return
+    setDraftTheme({
+      ...draftTheme,
       name: "Custom",
       [colorType]: {
-        ...theme[colorType],
+        ...draftTheme[colorType],
         [channel]: value,
       },
     })
   }
 
   const handleRadiusChange = (value: number[]) => {
-    if (!theme) return
-    setTheme({
-      ...theme,
+    if (!draftTheme) return
+    setDraftTheme({
+      ...draftTheme,
       name: "Custom",
       radius: value[0],
     })
+  }
+
+  const handleSaveChanges = () => {
+    if (draftTheme) {
+      setSavedTheme(draftTheme)
+      toast({
+        title: "Theme Saved",
+        description: "Your new theme has been applied.",
+      })
+    }
   }
 
   const ColorSlider = ({
@@ -124,7 +89,7 @@ export default function ThemesPage() {
     </div>
   )
 
-  if (!isClient) {
+  if (!draftTheme) {
     return (
       <AppLayout>
         <div className="flex-1 space-y-4 p-4 sm:p-8">
@@ -145,6 +110,9 @@ export default function ThemesPage() {
       <div className="flex-1 space-y-4 p-4 sm:p-8">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold tracking-tight">Themes</h1>
+          <Button onClick={handleSaveChanges}>
+            <Save className="mr-2 h-4 w-4" /> Save Changes
+          </Button>
         </div>
         <div className="grid gap-8 lg:grid-cols-2">
           <Card>
@@ -161,9 +129,9 @@ export default function ThemesPage() {
                     <Button
                       key={preset.name}
                       variant={
-                        theme.name === preset.name ? "default" : "outline"
+                        draftTheme.name === preset.name ? "default" : "outline"
                       }
-                      onClick={() => setTheme(preset)}
+                      onClick={() => setDraftTheme(preset)}
                     >
                       {preset.name}
                     </Button>
@@ -179,21 +147,21 @@ export default function ThemesPage() {
                     label="Hue"
                     colorType="primary"
                     channel="h"
-                    value={theme.primary.h}
+                    value={draftTheme.primary.h}
                     max={360}
                   />
                   <ColorSlider
                     label="Saturation"
                     colorType="primary"
                     channel="s"
-                    value={theme.primary.s}
+                    value={draftTheme.primary.s}
                     max={100}
                   />
                   <ColorSlider
                     label="Lightness"
                     colorType="primary"
                     channel="l"
-                    value={theme.primary.l}
+                    value={draftTheme.primary.l}
                     max={100}
                   />
                 </div>
@@ -203,21 +171,21 @@ export default function ThemesPage() {
                     label="Hue"
                     colorType="background"
                     channel="h"
-                    value={theme.background.h}
+                    value={draftTheme.background.h}
                     max={360}
                   />
                   <ColorSlider
                     label="Saturation"
                     colorType="background"
                     channel="s"
-                    value={theme.background.s}
+                    value={draftTheme.background.s}
                     max={100}
                   />
                   <ColorSlider
                     label="Lightness"
                     colorType="background"
                     channel="l"
-                    value={theme.background.l}
+                    value={draftTheme.background.l}
                     max={100}
                   />
                 </div>
@@ -227,21 +195,21 @@ export default function ThemesPage() {
                     label="Hue"
                     colorType="accent"
                     channel="h"
-                    value={theme.accent.h}
+                    value={draftTheme.accent.h}
                     max={360}
                   />
                   <ColorSlider
                     label="Saturation"
                     colorType="accent"
                     channel="s"
-                    value={theme.accent.s}
+                    value={draftTheme.accent.s}
                     max={100}
                   />
                   <ColorSlider
                     label="Lightness"
                     colorType="accent"
                     channel="l"
-                    value={theme.accent.l}
+                    value={draftTheme.accent.l}
                     max={100}
                   />
                 </div>
@@ -250,9 +218,9 @@ export default function ThemesPage() {
               <div className="space-y-4">
                 <h3 className="text-lg font-medium">Border Radius</h3>
                 <div className="space-y-2 rounded-md border p-4">
-                  <Label>Radius ({theme.radius.toFixed(2)}rem)</Label>
+                  <Label>Radius ({draftTheme.radius.toFixed(2)}rem)</Label>
                   <Slider
-                    value={[theme.radius]}
+                    value={[draftTheme.radius]}
                     max={2}
                     step={0.05}
                     onValueChange={handleRadiusChange}
@@ -262,7 +230,7 @@ export default function ThemesPage() {
             </CardContent>
           </Card>
 
-          <ThemePreview />
+          <ThemePreview theme={draftTheme} />
         </div>
       </div>
     </AppLayout>
