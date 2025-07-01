@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -35,12 +34,15 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     DEFAULT_ACCOUNTS
   )
 
-  const value = {
-    categories,
-    setCategories,
-    accounts,
-    setAccounts,
-  }
+  const value = React.useMemo(
+    () => ({
+      categories,
+      setCategories,
+      accounts,
+      setAccounts,
+    }),
+    [categories, setCategories, accounts, setAccounts]
+  )
 
   return (
     <SettingsContext.Provider value={value}>
