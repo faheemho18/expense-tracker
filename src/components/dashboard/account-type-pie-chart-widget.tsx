@@ -100,7 +100,7 @@ export function AccountTypePieChartWidget({
 
   return (
     <ChartContainer config={chartConfig} className="flex h-full w-full flex-col">
-      <div className="flex-1 min-h-0 p-4 pb-0">
+      <div className="flex-1 min-h-0 p-3">
         <RechartsPrimitive.ResponsiveContainer className="mx-auto aspect-square h-full">
           <PieChart>
             <Tooltip
@@ -137,7 +137,7 @@ export function AccountTypePieChartWidget({
           payload={legendPayload as any}
           onItemClick={handleLegendClick}
           inactiveKeys={inactiveAccountTypes}
-          className="max-h-[72px] overflow-y-auto justify-start px-4"
+          className="max-h-[72px] overflow-y-auto justify-start px-3"
         />
       </div>
     </ChartContainer>

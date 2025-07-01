@@ -93,7 +93,7 @@ export function CategoryGaugesWidget({
 
   return (
     <ScrollArea className="h-full">
-      <div className="grid grid-cols-2 gap-4 p-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 p-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4">
         {gaugeData.map((item) => {
           const Icon = getIcon(item.category.icon)
           const chartConfig = {

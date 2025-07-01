@@ -77,7 +77,7 @@ export function OverTimeBarChartWidget({
   }
 
   return (
-    <ChartContainer config={chartConfig} className="h-full w-full">
+    <ChartContainer config={chartConfig} className="h-full w-full p-3">
       <RechartsPrimitive.ResponsiveContainer>
         <BarChart data={data} accessibilityLayer>
           <CartesianGrid vertical={false} />

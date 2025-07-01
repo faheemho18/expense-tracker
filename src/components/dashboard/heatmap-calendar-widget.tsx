@@ -78,7 +78,7 @@ export function HeatmapCalendarWidget({
 
   return (
     <TooltipProvider>
-      <div className="flex h-full flex-col items-center justify-center gap-4">
+      <div className="flex h-full flex-col items-center justify-center gap-4 p-3">
         <h3 className="text-lg font-medium">
           {getYear(new Date())} Spending Heatmap
         </h3>
