@@ -61,7 +61,7 @@ export function HeatmapCalendarWidget({
 
   if (!hasData) {
     return (
-      <div className="flex h-full items-center justify-center p-3 text-muted-foreground">
+      <div className="flex h-full items-center justify-center p-5 text-muted-foreground">
         No expense data for the current year.
       </div>
     )
@@ -77,7 +77,7 @@ export function HeatmapCalendarWidget({
 
   return (
     <TooltipProvider>
-      <div className="flex h-full flex-col gap-2 p-3">
+      <div className="flex h-full flex-col justify-start gap-2 p-5">
         <div className="grid flex-1 grid-cols-4 grid-rows-3 gap-2">
           {data.map((monthData) => (
             <Tooltip key={monthData.month}>

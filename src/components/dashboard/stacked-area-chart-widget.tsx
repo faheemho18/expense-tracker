@@ -93,7 +93,7 @@ export function StackedAreaChartWidget({
   }
 
   return (
-    <ChartContainer config={chartConfig} className="h-full w-full p-3">
+    <ChartContainer config={chartConfig} className="h-full w-full p-5">
       <RechartsPrimitive.ResponsiveContainer>
         <AreaChart
           accessibilityLayer
