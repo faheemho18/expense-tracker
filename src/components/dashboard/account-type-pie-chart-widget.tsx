@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -99,7 +100,7 @@ export function AccountTypePieChartWidget({
 
   return (
     <ChartContainer config={chartConfig} className="h-full w-full p-5">
-      <div className="flex h-full w-full flex-row items-center gap-4">
+      <div className="flex h-full w-full flex-row gap-4">
         <div className="min-h-0 flex-1">
           <RechartsPrimitive.ResponsiveContainer width="100%" height="100%">
             <PieChart>
