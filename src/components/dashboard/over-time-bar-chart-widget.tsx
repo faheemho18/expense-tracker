@@ -3,18 +3,19 @@
 
 import * as React from "react"
 import { format, startOfMonth } from "date-fns"
+import * as RechartsPrimitive from "recharts"
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
 
+import type { Expense } from "@/lib/types"
+import { formatCurrency } from "@/lib/utils"
 import {
   ChartContainer,
+  type ChartConfig,
   ChartLegend,
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
-  type ChartConfig,
 } from "@/components/ui/chart"
-import { formatCurrency } from "@/lib/utils"
-import type { Expense } from "@/lib/types"
 
 interface OverTimeBarChartWidgetProps {
   expenses: Expense[]
@@ -77,49 +78,51 @@ export function OverTimeBarChartWidget({
 
   return (
     <ChartContainer config={chartConfig} className="h-full w-full">
-      <BarChart data={data} accessibilityLayer>
-        <CartesianGrid vertical={false} />
-        <XAxis
-          dataKey="month"
-          tickLine={false}
-          tickMargin={10}
-          axisLine={false}
-        />
-        <YAxis tickFormatter={(value) => formatCurrency(value, "compact")} />
-        <ChartTooltip
-          cursor={false}
-          content={
-            <ChartTooltipContent
-              formatter={(value, name) => (
-                <div>
-                  {name}: {formatCurrency(Number(value))}
-                </div>
-              )}
-            />
-          }
-        />
-        <ChartLegend
-          verticalAlign="bottom"
-          content={
-            <ChartLegendContent
-              onItemClick={handleLegendClick}
-              inactiveKeys={hiddenSeries}
-            />
-          }
-        />
-        <Bar
-          dataKey="expenses"
-          fill="var(--color-expenses)"
-          radius={4}
-          hide={hiddenSeries.includes(chartConfig.expenses.label as string)}
-        />
-        <Bar
-          dataKey="refunds"
-          fill="var(--color-refunds)"
-          radius={4}
-          hide={hiddenSeries.includes(chartConfig.refunds.label as string)}
-        />
-      </BarChart>
+      <RechartsPrimitive.ResponsiveContainer>
+        <BarChart data={data} accessibilityLayer>
+          <CartesianGrid vertical={false} />
+          <XAxis
+            dataKey="month"
+            tickLine={false}
+            tickMargin={10}
+            axisLine={false}
+          />
+          <YAxis tickFormatter={(value) => formatCurrency(value, "compact")} />
+          <ChartTooltip
+            cursor={false}
+            content={
+              <ChartTooltipContent
+                formatter={(value, name) => (
+                  <div>
+                    {name}: {formatCurrency(Number(value))}
+                  </div>
+                )}
+              />
+            }
+          />
+          <ChartLegend
+            verticalAlign="bottom"
+            content={
+              <ChartLegendContent
+                onItemClick={handleLegendClick}
+                inactiveKeys={hiddenSeries}
+              />
+            }
+          />
+          <Bar
+            dataKey="expenses"
+            fill="var(--color-expenses)"
+            radius={4}
+            hide={hiddenSeries.includes(chartConfig.expenses.label as string)}
+          />
+          <Bar
+            dataKey="refunds"
+            fill="var(--color-refunds)"
+            radius={4}
+            hide={hiddenSeries.includes(chartConfig.refunds.label as string)}
+          />
+        </BarChart>
+      </RechartsPrimitive.ResponsiveContainer>
     </ChartContainer>
   )
 }

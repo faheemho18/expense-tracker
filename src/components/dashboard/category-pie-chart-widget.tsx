@@ -3,6 +3,7 @@
 
 import * as React from "react"
 import type { LegendPayload } from "recharts"
+import * as RechartsPrimitive from "recharts"
 import { Cell, Pie, PieChart, Tooltip } from "recharts"
 
 import { useSettings } from "@/contexts/settings-context"
@@ -93,12 +94,9 @@ export function CategoryPieChartWidget({
   }
 
   return (
-    <div className="flex h-full w-full flex-col">
+    <ChartContainer config={chartConfig} className="flex h-full w-full flex-col">
       <div className="flex-1 min-h-0 p-4 pb-0">
-        <ChartContainer
-          config={chartConfig}
-          className="mx-auto aspect-square h-full"
-        >
+        <RechartsPrimitive.ResponsiveContainer className="mx-auto aspect-square h-full">
           <PieChart>
             <Tooltip
               cursor={false}
@@ -125,7 +123,7 @@ export function CategoryPieChartWidget({
               ))}
             </Pie>
           </PieChart>
-        </ChartContainer>
+        </RechartsPrimitive.ResponsiveContainer>
       </div>
       <div className="mt-auto border-t">
         <ChartLegendContent
@@ -135,6 +133,6 @@ export function CategoryPieChartWidget({
           className="max-h-[72px] overflow-y-auto justify-start px-4"
         />
       </div>
-    </div>
+    </ChartContainer>
   )
 }

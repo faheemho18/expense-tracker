@@ -3,6 +3,7 @@
 
 import * as React from "react"
 import { format, startOfMonth, parse } from "date-fns"
+import * as RechartsPrimitive from "recharts"
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts"
 
 import { useSettings } from "@/contexts/settings-context"
@@ -93,56 +94,58 @@ export function StackedAreaChartWidget({
 
   return (
     <ChartContainer config={chartConfig} className="h-full w-full">
-      <AreaChart
-        accessibilityLayer
-        data={data}
-        margin={{
-          left: 12,
-          right: 12,
-        }}
-      >
-        <CartesianGrid vertical={false} />
-        <XAxis
-          dataKey="month"
-          tickLine={false}
-          axisLine={false}
-          tickMargin={8}
-          tickFormatter={(value) => value}
-        />
-        <YAxis
-          tickLine={false}
-          axisLine={false}
-          tickMargin={8}
-          tickFormatter={(value) => formatCurrency(Number(value), "compact")}
-        />
-        <ChartTooltip
-          cursor={false}
-          content={<ChartTooltipContent indicator="dot" />}
-        />
-        <ChartLegend
-          align="center"
-          verticalAlign="bottom"
-          content={
-            <ChartLegendContent
-              onItemClick={handleLegendClick}
-              inactiveKeys={hiddenSeries}
-            />
-          }
-          wrapperStyle={{ paddingTop: 24 }}
-        />
-        {Object.keys(chartConfig).map((key) => (
-          <Area
-            key={key}
-            dataKey={key}
-            type="natural"
-            fill={`var(--color-${key})`}
-            fillOpacity={0.4}
-            stroke={`var(--color-${key})`}
-            stackId="a"
-            hide={hiddenSeries.includes(chartConfig[key].label as string)}
+      <RechartsPrimitive.ResponsiveContainer>
+        <AreaChart
+          accessibilityLayer
+          data={data}
+          margin={{
+            left: 12,
+            right: 12,
+          }}
+        >
+          <CartesianGrid vertical={false} />
+          <XAxis
+            dataKey="month"
+            tickLine={false}
+            axisLine={false}
+            tickMargin={8}
+            tickFormatter={(value) => value}
           />
-        ))}
-      </AreaChart>
+          <YAxis
+            tickLine={false}
+            axisLine={false}
+            tickMargin={8}
+            tickFormatter={(value) => formatCurrency(Number(value), "compact")}
+          />
+          <ChartTooltip
+            cursor={false}
+            content={<ChartTooltipContent indicator="dot" />}
+          />
+          <ChartLegend
+            align="center"
+            verticalAlign="bottom"
+            content={
+              <ChartLegendContent
+                onItemClick={handleLegendClick}
+                inactiveKeys={hiddenSeries}
+              />
+            }
+            wrapperStyle={{ paddingTop: 24 }}
+          />
+          {Object.keys(chartConfig).map((key) => (
+            <Area
+              key={key}
+              dataKey={key}
+              type="natural"
+              fill={`var(--color-${key})`}
+              fillOpacity={0.4}
+              stroke={`var(--color-${key})`}
+              stackId="a"
+              hide={hiddenSeries.includes(chartConfig[key].label as string)}
+            />
+          ))}
+        </AreaChart>
+      </RechartsPrimitive.ResponsiveContainer>
     </ChartContainer>
   )
 }

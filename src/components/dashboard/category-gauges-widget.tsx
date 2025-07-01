@@ -2,6 +2,7 @@
 "use client"
 
 import * as React from "react"
+import * as RechartsPrimitive from "recharts"
 import { Label, Pie, PieChart } from "recharts"
 
 import { useSettings } from "@/contexts/settings-context"
@@ -116,47 +117,49 @@ export function CategoryGaugesWidget({
                 config={chartConfig}
                 className="mx-auto aspect-square h-32"
               >
-                <PieChart>
-                  <ChartTooltip
-                    cursor={false}
-                    content={<ChartTooltipContent hideLabel />}
-                  />
-                  <Pie
-                    data={item.data}
-                    dataKey="value"
-                    nameKey="name"
-                    innerRadius={35}
-                    outerRadius={45}
-                    cornerRadius={item.threshold > 0 ? 99 : 0}
-                    startAngle={item.threshold > 0 ? 220 : undefined}
-                    endAngle={item.threshold > 0 ? -40 : undefined}
-                  >
-                    {item.threshold > 0 && (
-                      <Label
-                        content={({ viewBox }) => {
-                          if (viewBox && "cx" in viewBox && "cy" in viewBox) {
-                            return (
-                              <text
-                                x={viewBox.cx}
-                                y={viewBox.cy}
-                                textAnchor="middle"
-                                dominantBaseline="middle"
-                              >
-                                <tspan
+                <RechartsPrimitive.ResponsiveContainer>
+                  <PieChart>
+                    <ChartTooltip
+                      cursor={false}
+                      content={<ChartTooltipContent hideLabel />}
+                    />
+                    <Pie
+                      data={item.data}
+                      dataKey="value"
+                      nameKey="name"
+                      innerRadius={35}
+                      outerRadius={45}
+                      cornerRadius={item.threshold > 0 ? 99 : 0}
+                      startAngle={item.threshold > 0 ? 220 : undefined}
+                      endAngle={item.threshold > 0 ? -40 : undefined}
+                    >
+                      {item.threshold > 0 && (
+                        <Label
+                          content={({ viewBox }) => {
+                            if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                              return (
+                                <text
                                   x={viewBox.cx}
                                   y={viewBox.cy}
-                                  className="fill-foreground text-xl font-bold"
+                                  textAnchor="middle"
+                                  dominantBaseline="middle"
                                 >
-                                  {item.percentage.toLocaleString()}%
-                                </tspan>
-                              </text>
-                            )
-                          }
-                        }}
-                      />
-                    )}
-                  </Pie>
-                </PieChart>
+                                  <tspan
+                                    x={viewBox.cx}
+                                    y={viewBox.cy}
+                                    className="fill-foreground text-xl font-bold"
+                                  >
+                                    {item.percentage.toLocaleString()}%
+                                  </tspan>
+                                </text>
+                              )
+                            }
+                          }}
+                        />
+                      )}
+                    </Pie>
+                  </PieChart>
+                </RechartsPrimitive.ResponsiveContainer>
               </ChartContainer>
               <div className="text-xs text-muted-foreground">
                 {item.threshold > 0
