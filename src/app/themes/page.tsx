@@ -15,6 +15,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
 import { Skeleton } from "@/components/ui/skeleton"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { toast } from "@/hooks/use-toast"
 
 export default function ThemesPage() {
@@ -23,6 +33,7 @@ export default function ThemesPage() {
     DEFAULT_THEME
   )
   const [draftTheme, setDraftTheme] = React.useState<Theme | null>(null)
+  const [isConfirmOpen, setIsConfirmOpen] = React.useState(false)
 
   React.useEffect(() => {
     setDraftTheme(savedTheme)
@@ -31,7 +42,7 @@ export default function ThemesPage() {
   const handleColorChange = (
     colorType: "primary" | "background" | "accent",
     channel: "h" | "s" | "l",
-    value: number
+    value: number[]
   ) => {
     if (!draftTheme) return
     setDraftTheme({
@@ -39,7 +50,7 @@ export default function ThemesPage() {
       name: "Custom",
       [colorType]: {
         ...draftTheme[colorType],
-        [channel]: value,
+        [channel]: value[0],
       },
     })
   }
@@ -53,7 +64,11 @@ export default function ThemesPage() {
     })
   }
 
-  const handleSaveChanges = () => {
+  const handleSetPreset = (preset: Theme) => {
+    setDraftTheme(preset)
+  }
+
+  const handleConfirmSave = () => {
     if (draftTheme) {
       setSavedTheme(draftTheme)
       toast({
@@ -61,7 +76,13 @@ export default function ThemesPage() {
         description: "Your new theme has been applied.",
       })
     }
+    setIsConfirmOpen(false)
   }
+
+  const hasUnsavedChanges = React.useMemo(() => {
+    if (!draftTheme || !savedTheme) return false
+    return JSON.stringify(draftTheme) !== JSON.stringify(savedTheme)
+  }, [draftTheme, savedTheme])
 
   const ColorSlider = ({
     label,
@@ -84,7 +105,7 @@ export default function ThemesPage() {
         value={[value]}
         max={max}
         step={1}
-        onValueChange={(val) => handleColorChange(colorType, channel, val[0])}
+        onValueChange={(val) => handleColorChange(colorType, channel, val)}
       />
     </div>
   )
@@ -110,9 +131,11 @@ export default function ThemesPage() {
       <div className="flex-1 space-y-4 p-4 sm:p-8">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold tracking-tight">Themes</h1>
-          <Button onClick={handleSaveChanges}>
-            <Save className="mr-2 h-4 w-4" /> Save Changes
-          </Button>
+          {hasUnsavedChanges && (
+            <Button onClick={() => setIsConfirmOpen(true)}>
+              <Save className="mr-2 h-4 w-4" /> Save Changes
+            </Button>
+          )}
         </div>
         <div className="grid gap-8 lg:grid-cols-2">
           <Card>
@@ -131,7 +154,7 @@ export default function ThemesPage() {
                       variant={
                         draftTheme.name === preset.name ? "default" : "outline"
                       }
-                      onClick={() => setDraftTheme(preset)}
+                      onClick={() => handleSetPreset(preset)}
                     >
                       {preset.name}
                     </Button>
@@ -233,6 +256,23 @@ export default function ThemesPage() {
           <ThemePreview theme={draftTheme} />
         </div>
       </div>
+      <AlertDialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Apply Theme Changes</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will apply your custom theme across the entire application.
+              Are you sure you want to save these changes?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmSave}>
+              Save & Apply
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppLayout>
   )
 }
