@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
+import { Skeleton } from "@/components/ui/skeleton"
 
 const PRESETS: Theme[] = [
   {
@@ -47,9 +48,14 @@ const PRESETS: Theme[] = [
 
 export default function ThemesPage() {
   const [theme, setTheme] = useLocalStorage<Theme>("app-theme", PRESETS[0])
+  const [isClient, setIsClient] = React.useState(false)
 
   React.useEffect(() => {
-    if (typeof window !== "undefined" && theme) {
+    setIsClient(true)
+  }, [])
+
+  React.useEffect(() => {
+    if (isClient && theme) {
       const root = document.documentElement
       root.style.setProperty(
         "--primary",
@@ -65,7 +71,7 @@ export default function ThemesPage() {
       )
       root.style.setProperty("--radius", `${theme.radius}rem`)
     }
-  }, [theme])
+  }, [theme, isClient])
 
   const handleColorChange = (
     colorType: "primary" | "background" | "accent",
@@ -117,6 +123,22 @@ export default function ThemesPage() {
       />
     </div>
   )
+
+  if (!isClient) {
+    return (
+      <AppLayout>
+        <div className="flex-1 space-y-4 p-4 sm:p-8">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-9 w-48" />
+          </div>
+          <div className="grid gap-8 lg:grid-cols-2">
+            <Skeleton className="h-[800px] w-full" />
+            <Skeleton className="h-[700px] w-full" />
+          </div>
+        </div>
+      </AppLayout>
+    )
+  }
 
   return (
     <AppLayout>
