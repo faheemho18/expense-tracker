@@ -56,7 +56,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               >
                 <Link href="/">
                   <Wallet />
-                  <span className="group-data-[collapsible=icon]:hidden">
+                  <span className="transition-opacity duration-200 group-data-[collapsible=icon]:opacity-0">
                     Expenses
                   </span>
                 </Link>
@@ -70,7 +70,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               >
                 <Link href="/dashboard">
                   <LayoutDashboard />
-                  <span className="group-data-[collapsible=icon]:hidden">
+                  <span className="transition-opacity duration-200 group-data-[collapsible=icon]:opacity-0">
                     Dashboard
                   </span>
                 </Link>
@@ -84,7 +84,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               >
                 <Link href="/data">
                   <Database />
-                  <span className="group-data-[collapsible=icon]:hidden">
+                  <span className="transition-opacity duration-200 group-data-[collapsible=icon]:opacity-0">
                     Data
                   </span>
                 </Link>
@@ -98,7 +98,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               >
                 <Link href="/settings">
                   <Settings />
-                  <span className="group-data-[collapsible=icon]:hidden">
+                  <span className="transition-opacity duration-200 group-data-[collapsible=icon]:opacity-0">
                     Settings
                   </span>
                 </Link>
