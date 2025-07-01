@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -99,46 +98,49 @@ export function AccountTypePieChartWidget({
   }
 
   return (
-    <ChartContainer config={chartConfig} className="flex h-full w-full flex-col">
-      <div className="flex-1 min-h-0 p-5">
-        <RechartsPrimitive.ResponsiveContainer className="mx-auto aspect-square h-full">
-          <PieChart>
-            <Tooltip
-              cursor={false}
-              content={<ChartTooltipContent hideLabel nameKey="accountType" />}
-            />
-            <Pie
-              data={data}
-              dataKey="total"
-              nameKey="accountType"
-              innerRadius="60%"
-              strokeWidth={5}
-            >
-              {data.map((entry, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={
-                    chartConfig[entry.accountType]?.color || generateColor(index)
-                  }
-                  className={cn(
-                    "transition-opacity",
-                    inactiveAccountTypes.includes(entry.accountType)
-                      ? "opacity-30"
-                      : "opacity-100"
-                  )}
-                />
-              ))}
-            </Pie>
-          </PieChart>
-        </RechartsPrimitive.ResponsiveContainer>
-      </div>
-      <div className="mt-auto border-t">
-        <ChartLegendContent
-          payload={legendPayload as any}
-          onItemClick={handleLegendClick}
-          inactiveKeys={inactiveAccountTypes}
-          className="max-h-[72px] overflow-y-auto justify-start px-5"
-        />
+    <ChartContainer config={chartConfig} className="h-full w-full p-5">
+      <div className="flex h-full w-full flex-row items-center gap-4">
+        <div className="min-h-0 flex-1">
+          <RechartsPrimitive.ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Tooltip
+                cursor={false}
+                content={<ChartTooltipContent hideLabel nameKey="accountType" />}
+              />
+              <Pie
+                data={data}
+                dataKey="total"
+                nameKey="accountType"
+                innerRadius="60%"
+                strokeWidth={5}
+              >
+                {data.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={
+                      chartConfig[entry.accountType]?.color ||
+                      generateColor(index)
+                    }
+                    className={cn(
+                      "transition-opacity",
+                      inactiveAccountTypes.includes(entry.accountType)
+                        ? "opacity-30"
+                        : "opacity-100"
+                    )}
+                  />
+                ))}
+              </Pie>
+            </PieChart>
+          </RechartsPrimitive.ResponsiveContainer>
+        </div>
+        <div className="flex h-full max-h-full w-40 flex-col justify-center overflow-y-auto border-l pl-4">
+          <ChartLegendContent
+            payload={legendPayload as any}
+            onItemClick={handleLegendClick}
+            inactiveKeys={inactiveAccountTypes}
+            className="flex-col items-start"
+          />
+        </div>
       </div>
     </ChartContainer>
   )
