@@ -30,38 +30,45 @@ export function AccountPieChartWidget({
   const [inactiveOwners, setInactiveOwners] = React.useState<string[]>([])
 
   const data = React.useMemo(() => {
-    const ownerTotals: Record<string, number> = { Fayim: 0, Nining: 0 }
+    const ownerTotals: Record<string, number> = {}
     const accountIdFilter = filters?.accountId ?? []
 
-    let displayFayim = true
-    let displayNining = true
+    let showAll = true
+    let selectedOwners: Set<string> | null = null
 
-    // If accounts are filtered, determine which owner's totals to display.
+    // If accounts are filtered, determine which owners are selected.
     if (accountIdFilter.length > 0 && accounts) {
-      const selectedOwners = new Set(
+      selectedOwners = new Set(
         accounts
           .filter((a) => accountIdFilter.includes(a.value))
           .map((a) => a.owner)
       )
 
-      // Only restrict display if a personal account (Fayim/Nining) is selected.
-      // If only 'Conjugal' is selected, we show both.
+      // If a specific owner is selected, don't show all totals.
       if (selectedOwners.has("Fayim") || selectedOwners.has("Nining")) {
-        displayFayim = selectedOwners.has("Fayim")
-        displayNining = selectedOwners.has("Nining")
+        showAll = false
       }
     }
 
     expenses.forEach((expense) => {
-      if (expense.amount > 0) {
-        const owner = expense.accountOwner
-        if (owner === "Fayim" && displayFayim) {
-          ownerTotals["Fayim"] += expense.amount
-        } else if (owner === "Nining" && displayNining) {
-          ownerTotals["Nining"] += expense.amount
-        } else if (owner === "Conjugal") {
-          if (displayFayim) ownerTotals["Fayim"] += expense.amount / 2
-          if (displayNining) ownerTotals["Nining"] += expense.amount / 2
+      // Ignore refunds/income
+      if (expense.amount <= 0) return
+
+      const owner = expense.accountOwner
+      if (owner === "Conjugal") {
+        const halfAmount = expense.amount / 2
+        // Add half to Fayim if no filter is active or if Fayim is selected.
+        if (showAll || (selectedOwners && selectedOwners.has("Fayim"))) {
+          ownerTotals["Fayim"] = (ownerTotals["Fayim"] || 0) + halfAmount
+        }
+        // Add half to Nining if no filter is active or if Nining is selected.
+        if (showAll || (selectedOwners && selectedOwners.has("Nining"))) {
+          ownerTotals["Nining"] = (ownerTotals["Nining"] || 0) + halfAmount
+        }
+      } else {
+        // For Fayim or Nining, add full amount if no filter or if they are selected.
+        if (showAll || (selectedOwners && selectedOwners.has(owner))) {
+          ownerTotals[owner] = (ownerTotals[owner] || 0) + expense.amount
         }
       }
     })
