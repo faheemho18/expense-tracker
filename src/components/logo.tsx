@@ -11,7 +11,7 @@ export function Logo() {
   return (
     <button
       onClick={toggleSidebar}
-      className="flex w-full cursor-pointer items-center gap-3 overflow-hidden p-2 text-lg font-semibold text-sidebar-foreground transition-[gap] duration-200 ease-in-out group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0"
+      className="flex w-full cursor-pointer items-center gap-3 overflow-hidden p-2 text-lg font-semibold text-sidebar-foreground transition-[gap] duration-200 ease-in-out group-data-[collapsible=icon]:gap-0"
     >
       <div className="dark:bg-primary dark:text-primary-foreground bg-sidebar-primary text-sidebar-primary-foreground flex items-center justify-center p-2 rounded-lg">
         <ScanEye className="h-6 w-6" />
