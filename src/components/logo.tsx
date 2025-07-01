@@ -1,3 +1,4 @@
+
 "use client"
 
 import { ScanEye } from "lucide-react"
@@ -15,7 +16,7 @@ export function Logo() {
       <div className="dark:bg-primary dark:text-primary-foreground bg-sidebar-primary text-sidebar-primary-foreground flex items-center justify-center p-2 rounded-lg">
         <ScanEye className="h-6 w-6" />
       </div>
-      <span className="whitespace-nowrap transition-all duration-200 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:opacity-0">
+      <span className="whitespace-nowrap overflow-hidden transition-all duration-200 group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0">
         Expense Gazer
       </span>
     </button>

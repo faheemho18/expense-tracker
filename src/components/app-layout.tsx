@@ -56,7 +56,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               >
                 <Link href="/">
                   <Wallet />
-                  <span className="transition-all duration-200 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:opacity-0">
+                  <span className="whitespace-nowrap overflow-hidden transition-all duration-200 group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0">
                     Expenses
                   </span>
                 </Link>
@@ -70,7 +70,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               >
                 <Link href="/dashboard">
                   <LayoutDashboard />
-                  <span className="transition-all duration-200 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:opacity-0">
+                  <span className="whitespace-nowrap overflow-hidden transition-all duration-200 group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0">
                     Dashboard
                   </span>
                 </Link>
@@ -84,7 +84,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               >
                 <Link href="/data">
                   <Database />
-                  <span className="transition-all duration-200 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:opacity-0">
+                  <span className="whitespace-nowrap overflow-hidden transition-all duration-200 group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0">
                     Data
                   </span>
                 </Link>
@@ -98,7 +98,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               >
                 <Link href="/settings">
                   <Settings />
-                  <span className="transition-all duration-200 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:opacity-0">
+                  <span className="whitespace-nowrap overflow-hidden transition-all duration-200 group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0">
                     Settings
                   </span>
                 </Link>
