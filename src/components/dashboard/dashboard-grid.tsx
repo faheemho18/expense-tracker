@@ -67,7 +67,7 @@ export function DashboardGrid({
       lg: widgets.map((widget) => {
         const isChart = widget.type !== "stats"
         const defaultW = isChart ? 6 : 12
-        const defaultH = isChart ? 6 : 4
+        const defaultH = isChart ? 6 : 6
 
         return {
           i: widget.id,
@@ -76,8 +76,8 @@ export function DashboardGrid({
           w: widget.w ?? defaultW,
           h: widget.h ?? defaultH,
           minW: isChart ? 6 : 12,
-          minH: isChart ? 6 : 4,
-          maxH: isChart ? 6 : 4,
+          minH: isChart ? 6 : 6,
+          maxH: isChart ? 6 : 6,
           isResizable: isChart,
         }
       }),
