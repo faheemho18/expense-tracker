@@ -9,11 +9,13 @@ export type Category = {
   threshold?: number
 }
 
+export type AccountOwner = "Fayim" | "Nining" | "Conjugal"
+
 export type Account = {
   value: string
   label: string
   icon: string // Corresponds to a key in the ICONS map
-  owner: string
+  owner: AccountOwner
 }
 
 export type Expense = {
@@ -23,7 +25,7 @@ export type Expense = {
   date: string // ISO string
   category: string // category value
   accountTypeId: string
-  accountOwner: string
+  accountOwner: AccountOwner
   receiptImage?: string // Optional data URI of the receipt image
 }
 

@@ -16,7 +16,7 @@ import {
   Wallet,
 } from "lucide-react"
 
-import type { Account, Category } from "./types"
+import type { Account, AccountOwner, Category } from "./types"
 
 export const ICONS = {
   Utensils,
@@ -36,6 +36,8 @@ export const ICONS = {
 } as const
 
 export type IconName = keyof typeof ICONS
+
+export const ACCOUNT_OWNERS: AccountOwner[] = ["Fayim", "Nining", "Conjugal"]
 
 export const DEFAULT_CATEGORIES: Category[] = [
   { value: "food", label: "Food & Dining", icon: "Utensils", color: "#FF6384" },
@@ -84,25 +86,25 @@ export const DEFAULT_ACCOUNTS: Account[] = [
     value: "primary-checking",
     label: "Primary Checking",
     icon: "Landmark",
-    owner: "Me",
+    owner: "Fayim",
   },
   {
     value: "joint-savings",
     label: "Joint Savings",
     icon: "Banknote",
-    owner: "Joint",
+    owner: "Conjugal",
   },
   {
     value: "main-credit-card",
     label: "Main Credit Card",
     icon: "CreditCard",
-    owner: "Me",
+    owner: "Fayim",
   },
   {
     value: "partner-credit-card",
     label: "Partner's Credit Card",
     icon: "CreditCard",
-    owner: "Partner",
+    owner: "Nining",
   },
-  { value: "cash-wallet", label: "Cash", icon: "Wallet", owner: "Me" },
+  { value: "cash-wallet", label: "Cash", icon: "Wallet", owner: "Fayim" },
 ]

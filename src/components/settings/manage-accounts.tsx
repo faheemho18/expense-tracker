@@ -5,8 +5,8 @@ import * as React from "react"
 import { Edit, PlusCircle, Trash2 } from "lucide-react"
 
 import { useSettings } from "@/contexts/settings-context"
-import { ICONS, type IconName } from "@/lib/constants"
-import type { Account } from "@/lib/types"
+import { ACCOUNT_OWNERS, ICONS, type IconName } from "@/lib/constants"
+import type { Account, AccountOwner } from "@/lib/types"
 import { getIcon } from "@/lib/utils"
 import {
   AlertDialog,
@@ -50,7 +50,7 @@ export function ManageAccounts() {
 
   // Form state
   const [label, setLabel] = React.useState("")
-  const [owner, setOwner] = React.useState("")
+  const [owner, setOwner] = React.useState<AccountOwner | "">("")
   const [icon, setIcon] = React.useState<IconName | "">("")
 
   const resetForm = () => {
@@ -179,12 +179,21 @@ export function ManageAccounts() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="account-owner">Account Owner</Label>
-              <Input
-                id="account-owner"
+              <Select
+                onValueChange={(value) => setOwner(value as AccountOwner)}
                 value={owner}
-                onChange={(e) => setOwner(e.target.value)}
-                placeholder="e.g., Me, Partner, Joint"
-              />
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select an owner" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ACCOUNT_OWNERS.map((ownerName) => (
+                    <SelectItem key={ownerName} value={ownerName}>
+                      {ownerName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="account-icon">Icon</Label>
