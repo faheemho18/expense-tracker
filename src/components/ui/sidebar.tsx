@@ -4,7 +4,7 @@
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { VariantProps, cva } from "class-variance-authority"
-import { ScanEye } from "lucide-react"
+import { Banknote } from "lucide-react"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
@@ -280,7 +280,7 @@ const SidebarTrigger = React.forwardRef<
       }}
       {...props}
     >
-      <ScanEye />
+      <Banknote />
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
   )
@@ -361,7 +361,7 @@ const SidebarHeader = React.forwardRef<
       ref={ref}
       data-sidebar="header"
       className={cn(
-        "flex flex-col gap-2 p-3 group-data-[collapsible=icon]:p-2",
+        "flex flex-col gap-2 p-3 group-data-[collapsible=icon]:p-2 group-data-[collapsible=icon]:items-center",
         className
       )}
       {...props}
@@ -412,7 +412,7 @@ const SidebarContent = React.forwardRef<
       ref={ref}
       data-sidebar="content"
       className={cn(
-        "flex min-h-0 flex-1 flex-col gap-y-2 overflow-auto p-3 group-data-[collapsible=icon]:p-2",
+        "flex min-h-0 flex-1 flex-col gap-y-2 overflow-auto p-3 group-data-[collapsible=icon]:p-2 group-data-[collapsible=icon]:items-center",
         className
       )}
       {...props}
@@ -502,6 +502,7 @@ const SidebarMenu = React.forwardRef<
     data-sidebar="menu"
     className={cn(
       "flex w-full min-w-0 flex-col gap-1",
+      "group-data-[collapsible=icon]:w-min",
       className
     )}
     {...props}

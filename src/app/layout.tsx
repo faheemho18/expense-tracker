@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/toaster"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "Expense Gazer",
+  title: "Expense Tracker",
   description: "Track your expenses and create insightful dashboards.",
 }
 
