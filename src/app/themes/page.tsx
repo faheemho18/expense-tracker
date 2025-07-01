@@ -12,6 +12,7 @@ import { ThemePreview } from "@/components/themes/theme-preview"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Slider } from "@/components/ui/slider"
 
 const PRESETS: Theme[] = [
@@ -44,6 +45,55 @@ const PRESETS: Theme[] = [
     radius: 0.3,
   },
 ]
+
+const ThemesPageSkeleton = () => (
+  <AppLayout>
+    <div className="flex-1 space-y-4 p-4 sm:p-8">
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold tracking-tight">Themes</h1>
+      </div>
+      <div className="grid gap-8 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Paintbrush /> Customize
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-4">
+              <h3 className="mb-4 text-lg font-medium">Presets</h3>
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            </div>
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Colors</h3>
+              <div className="space-y-4 rounded-md border p-4">
+                <Skeleton className="h-[120px] w-full" />
+              </div>
+              <div className="space-y-4 rounded-md border p-4">
+                <Skeleton className="h-[120px] w-full" />
+              </div>
+              <div className="space-y-4 rounded-md border p-4">
+                <Skeleton className="h-[120px] w-full" />
+              </div>
+            </div>
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Border Radius</h3>
+              <div className="space-y-2 rounded-md border p-4">
+                <Skeleton className="h-12 w-full" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <ThemePreview />
+      </div>
+    </div>
+  </AppLayout>
+)
 
 export default function ThemesPage() {
   const [theme, setTheme] = useLocalStorage<Theme>("app-theme", PRESETS[0])
@@ -90,6 +140,10 @@ export default function ThemesPage() {
       name: "Custom",
       radius: value[0],
     })
+  }
+
+  if (!theme) {
+    return <ThemesPageSkeleton />
   }
 
   const ColorSlider = ({
@@ -139,7 +193,7 @@ export default function ThemesPage() {
                     <Button
                       key={preset.name}
                       variant={
-                        theme?.name === preset.name ? "default" : "outline"
+                        theme.name === preset.name ? "default" : "outline"
                       }
                       onClick={() => setTheme(preset)}
                     >
@@ -157,21 +211,21 @@ export default function ThemesPage() {
                     label="Hue"
                     colorType="primary"
                     channel="h"
-                    value={theme?.primary.h ?? 0}
+                    value={theme.primary.h}
                     max={360}
                   />
                   <ColorSlider
                     label="Saturation"
                     colorType="primary"
                     channel="s"
-                    value={theme?.primary.s ?? 0}
+                    value={theme.primary.s}
                     max={100}
                   />
                   <ColorSlider
                     label="Lightness"
                     colorType="primary"
                     channel="l"
-                    value={theme?.primary.l ?? 0}
+                    value={theme.primary.l}
                     max={100}
                   />
                 </div>
@@ -181,21 +235,21 @@ export default function ThemesPage() {
                     label="Hue"
                     colorType="background"
                     channel="h"
-                    value={theme?.background.h ?? 0}
+                    value={theme.background.h}
                     max={360}
                   />
                   <ColorSlider
                     label="Saturation"
                     colorType="background"
                     channel="s"
-                    value={theme?.background.s ?? 0}
+                    value={theme.background.s}
                     max={100}
                   />
                   <ColorSlider
                     label="Lightness"
                     colorType="background"
                     channel="l"
-                    value={theme?.background.l ?? 0}
+                    value={theme.background.l}
                     max={100}
                   />
                 </div>
@@ -205,21 +259,21 @@ export default function ThemesPage() {
                     label="Hue"
                     colorType="accent"
                     channel="h"
-                    value={theme?.accent.h ?? 0}
+                    value={theme.accent.h}
                     max={360}
                   />
                   <ColorSlider
                     label="Saturation"
                     colorType="accent"
                     channel="s"
-                    value={theme?.accent.s ?? 0}
+                    value={theme.accent.s}
                     max={100}
                   />
                   <ColorSlider
                     label="Lightness"
                     colorType="accent"
                     channel="l"
-                    value={theme?.accent.l ?? 0}
+                    value={theme.accent.l}
                     max={100}
                   />
                 </div>
@@ -228,9 +282,9 @@ export default function ThemesPage() {
               <div className="space-y-4">
                 <h3 className="text-lg font-medium">Border Radius</h3>
                 <div className="space-y-2 rounded-md border p-4">
-                  <Label>Radius ({theme?.radius.toFixed(2)}rem)</Label>
+                  <Label>Radius ({theme.radius.toFixed(2)}rem)</Label>
                   <Slider
-                    value={[theme?.radius ?? 0.75]}
+                    value={[theme.radius]}
                     max={2}
                     step={0.05}
                     onValueChange={handleRadiusChange}

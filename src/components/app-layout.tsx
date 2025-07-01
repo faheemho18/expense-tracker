@@ -100,20 +100,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <SidebarMenuItem>
               <SidebarMenuButton
                 asChild
-                isActive={isActive("/settings")}
-                tooltip={settingsTooltip}
-              >
-                <Link href="/settings">
-                  <Settings />
-                  <span className="whitespace-nowrap overflow-hidden transition-[max-width,opacity] duration-200 ease-in-out group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0">
-                    Settings
-                  </span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
                 isActive={isActive("/themes")}
                 tooltip={themesTooltip}
               >
@@ -121,6 +107,20 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   <Palette />
                   <span className="whitespace-nowrap overflow-hidden transition-[max-width,opacity] duration-200 ease-in-out group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0">
                     Themes
+                  </span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={isActive("/settings")}
+                tooltip={settingsTooltip}
+              >
+                <Link href="/settings">
+                  <Settings />
+                  <span className="whitespace-nowrap overflow-hidden transition-[max-width,opacity] duration-200 ease-in-out group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0">
+                    Settings
                   </span>
                 </Link>
               </SidebarMenuButton>
