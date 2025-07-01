@@ -6,7 +6,7 @@ import type { LegendPayload } from "recharts"
 import * as RechartsPrimitive from "recharts"
 import { Cell, Pie, PieChart, Tooltip } from "recharts"
 
-import type { Account, Expense, WidgetFilters } from "@/lib/types"
+import type { Expense } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import {
   ChartContainer,
@@ -14,64 +14,27 @@ import {
   ChartLegendContent,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-import { Skeleton } from "@/components/ui/skeleton"
 
 interface AccountPieChartWidgetProps {
   expenses: Expense[]
-  accounts: Account[]
-  filters?: WidgetFilters
 }
 
 export function AccountPieChartWidget({
   expenses,
-  accounts,
-  filters,
 }: AccountPieChartWidgetProps) {
   const [inactiveOwners, setInactiveOwners] = React.useState<string[]>([])
 
   const data = React.useMemo(() => {
-    const ownerTotals: Record<string, number> = {}
-    const accountIdFilter = filters?.accountId ?? []
-
-    let showAll = true
-    let selectedOwners: Set<string> | null = null
-
-    // If accounts are filtered, determine which owners are selected.
-    if (accountIdFilter.length > 0 && accounts) {
-      selectedOwners = new Set(
-        accounts
-          .filter((a) => accountIdFilter.includes(a.value))
-          .map((a) => a.owner)
-      )
-
-      // If a specific owner is selected, don't show all totals.
-      if (selectedOwners.has("Fayim") || selectedOwners.has("Nining")) {
-        showAll = false
-      }
-    }
-
-    expenses.forEach((expense) => {
-      // Ignore refunds/income
-      if (expense.amount <= 0) return
-
-      const owner = expense.accountOwner
-      if (owner === "Conjugal") {
-        const halfAmount = expense.amount / 2
-        // Add half to Fayim if no filter is active or if Fayim is selected.
-        if (showAll || (selectedOwners && selectedOwners.has("Fayim"))) {
-          ownerTotals["Fayim"] = (ownerTotals["Fayim"] || 0) + halfAmount
+    const ownerTotals = expenses.reduce(
+      (acc, expense) => {
+        if (expense.amount > 0) {
+          const owner = expense.accountOwner
+          acc[owner] = (acc[owner] || 0) + expense.amount
         }
-        // Add half to Nining if no filter is active or if Nining is selected.
-        if (showAll || (selectedOwners && selectedOwners.has("Nining"))) {
-          ownerTotals["Nining"] = (ownerTotals["Nining"] || 0) + halfAmount
-        }
-      } else {
-        // For Fayim or Nining, add full amount if no filter or if they are selected.
-        if (showAll || (selectedOwners && selectedOwners.has(owner))) {
-          ownerTotals[owner] = (ownerTotals[owner] || 0) + expense.amount
-        }
-      }
-    })
+        return acc
+      },
+      {} as Record<string, number>
+    )
 
     return Object.entries(ownerTotals)
       .map(([owner, total]) => ({
@@ -80,7 +43,7 @@ export function AccountPieChartWidget({
       }))
       .filter((item) => item.total > 0)
       .sort((a, b) => b.total - a.total)
-  }, [expenses, accounts, filters])
+  }, [expenses])
 
   const chartConfig = React.useMemo(() => {
     return {
@@ -91,6 +54,10 @@ export function AccountPieChartWidget({
       Nining: {
         label: "Nining",
         color: "hsl(var(--chart-2))",
+      },
+      Conjugal: {
+        label: "Conjugal",
+        color: "hsl(var(--chart-3))",
       },
     } satisfies ChartConfig
   }, [])
@@ -112,10 +79,6 @@ export function AccountPieChartWidget({
       color: chartConfig[entry.owner as keyof typeof chartConfig]?.color,
     }))
   }, [data, chartConfig])
-
-  if (!accounts) {
-    return <Skeleton className="h-full w-full" />
-  }
 
   if (data.length === 0 || data.every((d) => d.total === 0)) {
     return (

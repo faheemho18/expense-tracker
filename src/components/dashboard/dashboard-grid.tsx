@@ -35,8 +35,7 @@ interface DashboardGridProps {
 const renderWidget = (
   widget: WidgetConfig,
   expenses: Expense[],
-  accounts: Account[],
-  filters?: WidgetFilters
+  accounts: Account[]
 ) => {
   switch (widget.type) {
     case "stats":
@@ -46,13 +45,7 @@ const renderWidget = (
     case "over-time-bar":
       return <OverTimeBarChartWidget expenses={expenses} />
     case "account-pie":
-      return (
-        <AccountPieChartWidget
-          expenses={expenses}
-          accounts={accounts}
-          filters={filters}
-        />
-      )
+      return <AccountPieChartWidget expenses={expenses} />
     case "stacked-area":
       return <StackedAreaChartWidget expenses={expenses} />
     case "heatmap-calendar":
@@ -79,8 +72,8 @@ export function DashboardGrid({
     return {
       lg: widgets.map((widget) => {
         const isStats = widget.type === "stats"
-        const defaultW = 6
-        const defaultH = 6
+        const defaultW = isStats ? 12 : 6
+        const defaultH = isStats ? 4 : 6
 
         return {
           i: widget.id,
@@ -90,7 +83,7 @@ export function DashboardGrid({
           h: widget.h ?? defaultH,
           minW: 6,
           minH: 4,
-          maxH: 6,
+          maxH: isStats ? 4 : 6,
           isResizable: true,
         }
       }),
@@ -186,25 +179,9 @@ export function DashboardGrid({
             const monthMatch = month.length === 0 || month.includes(expenseMonth)
             const categoryMatch =
               category.length === 0 || category.includes(expense.category)
-
-            let accountMatch =
+            const accountMatch =
               accountId.length === 0 ||
               accountId.includes(expense.accountTypeId)
-
-            // For the owner pie chart, if a user filters by an account belonging
-            // to a specific owner, we must also include 'Conjugal' expenses
-            // so they can be correctly split in the chart.
-            if (widget.type === "account-pie" && accountId.length > 0) {
-              const isOwnerSelected = accounts.some(
-                (acc) =>
-                  accountId.includes(acc.value) &&
-                  (acc.owner === "Fayim" || acc.owner === "Nining")
-              )
-
-              if (isOwnerSelected && expense.accountOwner === "Conjugal") {
-                accountMatch = true
-              }
-            }
 
             return yearMatch && monthMatch && categoryMatch && accountMatch
           })
@@ -220,7 +197,7 @@ export function DashboardGrid({
               availableMonths={availableMonths}
               availableYears={availableYears}
             >
-              {renderWidget(widget, widgetExpenses, accounts, widget.filters)}
+              {renderWidget(widget, widgetExpenses, accounts)}
             </WidgetWrapper>
           </div>
         )
