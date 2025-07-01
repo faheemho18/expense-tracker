@@ -35,44 +35,44 @@ export function StatsWidget({ expenses }: StatsWidgetProps) {
     <div className="grid gap-4 p-5 md:grid-cols-2 lg:grid-cols-4">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
+          <CardTitle className="text-base font-medium">Total Expenses</CardTitle>
           <ArrowDown className="h-4 w-4 text-destructive" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">
+          <div className="text-3xl font-bold">
             {formatCurrency(stats.totalExpenses)}
           </div>
         </CardContent>
       </Card>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Refunds</CardTitle>
+          <CardTitle className="text-base font-medium">Total Refunds</CardTitle>
           <ArrowUp className="h-4 w-4 text-emerald-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">
+          <div className="text-3xl font-bold">
             {formatCurrency(stats.totalRefunds)}
           </div>
         </CardContent>
       </Card>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Net Total</CardTitle>
+          <CardTitle className="text-base font-medium">Net Total</CardTitle>
           <Banknote className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">
+          <div className="text-3xl font-bold">
             {formatCurrency(stats.netTotal)}
           </div>
         </CardContent>
       </Card>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Transactions</CardTitle>
+          <CardTitle className="text-base font-medium">Transactions</CardTitle>
           <List className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{stats.transactionCount}</div>
+          <div className="text-3xl font-bold">{stats.transactionCount}</div>
         </CardContent>
       </Card>
     </div>

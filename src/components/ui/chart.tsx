@@ -309,7 +309,7 @@ const ChartLegendContent = React.forwardRef<
                 }
               }}
               className={cn(
-                "flex items-center gap-1.5 transition-opacity [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-muted-foreground",
+                "flex items-center gap-1.5 text-xs transition-opacity [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-muted-foreground",
                 onItemClick ? "cursor-pointer" : "",
                 isInactive ? "opacity-50" : "opacity-100"
               )}
