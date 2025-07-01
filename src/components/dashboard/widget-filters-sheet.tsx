@@ -24,6 +24,13 @@ interface WidgetFiltersSheetProps {
   years: { value: string; label: string }[]
 }
 
+const defaultFilters: WidgetFilters = {
+  year: [],
+  month: [],
+  category: [],
+  accountId: [],
+}
+
 export function WidgetFiltersSheet({
   isOpen,
   setIsOpen,
@@ -32,9 +39,16 @@ export function WidgetFiltersSheet({
   months,
   years,
 }: WidgetFiltersSheetProps) {
-  const [filters, setFilters] = React.useState<WidgetFilters>(
-    widget.filters || { year: [], month: [], category: [], accountId: [] }
+  const getInitialFilters = React.useCallback(
+    () => ({
+      ...defaultFilters,
+      ...(widget.filters || {}),
+    }),
+    [widget.filters]
   )
+
+  const [filters, setFilters] =
+    React.useState<WidgetFilters>(getInitialFilters())
 
   const handleFilterChange = (
     filterType: keyof WidgetFilters,
@@ -50,7 +64,7 @@ export function WidgetFiltersSheet({
   }
 
   const clearFilters = () => {
-    setFilters({ year: [], month: [], category: [], accountId: [] })
+    setFilters(defaultFilters)
   }
 
   const handleApply = () => {
@@ -60,11 +74,9 @@ export function WidgetFiltersSheet({
 
   React.useEffect(() => {
     if (isOpen) {
-      setFilters(
-        widget.filters || { year: [], month: [], category: [], accountId: [] }
-      )
+      setFilters(getInitialFilters())
     }
-  }, [isOpen, widget.filters])
+  }, [isOpen, getInitialFilters])
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
