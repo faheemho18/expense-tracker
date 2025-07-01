@@ -19,10 +19,10 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 interface ExpensesFiltersProps {
   filters: {
-    year: string[]
-    month: string[]
-    category: string[]
-    accountId: string[]
+    year?: string[]
+    month?: string[]
+    category?: string[]
+    accountId?: string[]
   }
   onFilterChange: (
     filterType: "year" | "month" | "category" | "accountId",
@@ -86,10 +86,10 @@ export function ExpensesFilters({
   }
 
   const hasActiveFilters =
-    filters.year.length > 0 ||
-    filters.month.length > 0 ||
-    filters.category.length > 0 ||
-    filters.accountId.length > 0
+    (filters.year?.length ?? 0) > 0 ||
+    (filters.month?.length ?? 0) > 0 ||
+    (filters.category?.length ?? 0) > 0 ||
+    (filters.accountId?.length ?? 0) > 0
 
   if (!categories || !accounts) {
     return <Skeleton className="h-40 w-full" />
@@ -105,25 +105,25 @@ export function ExpensesFilters({
         <FilterSection
           title="Years"
           items={years}
-          selectedItems={filters.year}
+          selectedItems={filters.year ?? []}
           onSelectionChange={(value) => onFilterChange("year", value)}
         />
         <FilterSection
           title="Months"
           items={months}
-          selectedItems={filters.month}
+          selectedItems={filters.month ?? []}
           onSelectionChange={(value) => onFilterChange("month", value)}
         />
         <FilterSection
           title="Categories"
           items={categories || []}
-          selectedItems={filters.category}
+          selectedItems={filters.category ?? []}
           onSelectionChange={(value) => onFilterChange("category", value)}
         />
         <FilterSection
           title="Accounts"
           items={accounts || []}
-          selectedItems={filters.accountId}
+          selectedItems={filters.accountId ?? []}
           onSelectionChange={(value) => onFilterChange("accountId", value)}
           renderLabel={(item) => `${item.label} (${item.owner})`}
         />
