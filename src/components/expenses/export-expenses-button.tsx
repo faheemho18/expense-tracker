@@ -4,17 +4,16 @@
 import { Download } from "lucide-react"
 
 import { exportToCsv } from "@/lib/utils"
-import type { Expense } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { toast } from "@/hooks/use-toast"
 
 interface ExportExpensesButtonProps {
-  expenses: Expense[]
+  data: Record<string, any>[]
 }
 
-export function ExportExpensesButton({ expenses }: ExportExpensesButtonProps) {
+export function ExportExpensesButton({ data }: ExportExpensesButtonProps) {
   const handleExport = () => {
-    if (expenses.length === 0) {
+    if (!data || data.length === 0) {
       toast({
         title: "No expenses to export",
         description: "There are no expenses matching the current filters.",
@@ -23,8 +22,7 @@ export function ExportExpensesButton({ expenses }: ExportExpensesButtonProps) {
       return
     }
 
-    const dataToExport = expenses.map(({ id, ...rest }) => rest)
-    exportToCsv(dataToExport, "expenses.csv")
+    exportToCsv(data, "expenses.csv")
   }
 
   return (
