@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -44,6 +43,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { Skeleton } from "@/components/ui/skeleton"
 
 type SortableKey =
   | "date"
@@ -80,6 +80,11 @@ export default function HomePage() {
   const [gaugeSortOrder, setGaugeSortOrder] = React.useState<
     "ascending" | "descending" | null
   >(null)
+  const [isClient, setIsClient] = React.useState(false)
+
+  React.useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   const ITEMS_PER_PAGE = 8
 
@@ -410,13 +415,22 @@ export default function HomePage() {
               </div>
             </CardHeader>
             <CardContent>
-              <ExpensesTable
-                expenses={paginatedExpenses}
-                deleteExpense={deleteExpense}
-                editExpense={handleEdit}
-                sortConfig={sortConfig}
-                requestSort={requestSort}
-              />
+              {isClient ? (
+                <ExpensesTable
+                  expenses={paginatedExpenses}
+                  deleteExpense={deleteExpense}
+                  editExpense={handleEdit}
+                  sortConfig={sortConfig}
+                  requestSort={requestSort}
+                />
+              ) : (
+                <div className="space-y-2">
+                  <Skeleton className="h-12 w-full" />
+                  <Skeleton className="h-12 w-full" />
+                  <Skeleton className="h-12 w-full" />
+                  <Skeleton className="h-12 w-full" />
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
