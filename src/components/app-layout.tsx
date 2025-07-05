@@ -43,6 +43,16 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     [pathname]
   )
 
+  // Pre-compute all memoized values at the top level
+  const expensesTooltip = React.useMemo(() => ({ children: "Expenses" }), [])
+  const dashboardTooltip = React.useMemo(
+    () => ({ children: "Dashboard" }),
+    []
+  )
+  const dataTooltip = React.useMemo(() => ({ children: "Import/Export" }), [])
+  const settingsTooltip = React.useMemo(() => ({ children: "Settings" }), [])
+  const themesTooltip = React.useMemo(() => ({ children: "Themes" }), [])
+
   // Show loading state while checking authentication
   if (loading) {
     return (
@@ -66,15 +76,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       return <AuthPage />
     }
   }
-
-  const expensesTooltip = React.useMemo(() => ({ children: "Expenses" }), [])
-  const dashboardTooltip = React.useMemo(
-    () => ({ children: "Dashboard" }),
-    []
-  )
-  const dataTooltip = React.useMemo(() => ({ children: "Import/Export" }), [])
-  const settingsTooltip = React.useMemo(() => ({ children: "Settings" }), [])
-  const themesTooltip = React.useMemo(() => ({ children: "Themes" }), [])
 
   return (
     <SidebarProvider>
