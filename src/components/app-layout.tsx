@@ -54,9 +54,15 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   // Show auth page if user is not authenticated and Supabase is configured
   if (!user && typeof window !== 'undefined') {
-    // Check if we're in localStorage mode by checking if auth context has auth methods
-    // This will be null if we're in localStorage mode, otherwise it's a function
-    if (typeof signIn === 'function') {
+    // Check if Supabase is properly configured (not in localStorage mode)
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    const isSupabaseConfigured = supabaseUrl && 
+      supabaseKey && 
+      !supabaseUrl.includes('your_supabase_project_url_here') &&
+      !supabaseKey.includes('your_supabase_anon_key_here')
+    
+    if (isSupabaseConfigured) {
       return <AuthPage />
     }
   }
