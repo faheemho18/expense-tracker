@@ -14,13 +14,13 @@ try {
 // Create Genkit instance with dynamic API key
 export const ai = genkit({
   plugins: [googleAI({
-    apiKey: () => {
+    apiKey: (() => {
       if (!apiKeyManager) {
         // Fallback to environment variables
-        return process.env.GOOGLE_AI_API_KEY || process.env.GOOGLE_GENAI_API_KEY;
+        return process.env.GOOGLE_AI_API_KEY || process.env.GOOGLE_GENAI_API_KEY || '';
       }
-      return apiKeyManager.getCurrentKey();
-    }
+      return apiKeyManager.getCurrentKey() || '';
+    })()
   })],
   model: 'googleai/gemini-2.0-flash',
 });
