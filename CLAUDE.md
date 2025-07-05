@@ -81,6 +81,26 @@ This is a Next.js 15 expense tracking application built with:
 - Auto-population of expense form fields
 - Confidence-based validation and error handling
 
+## Supabase Integration & Data Management
+
+**Hybrid Data Storage Architecture**:
+- Primary storage in localStorage for immediate development
+- Supabase integration layer with graceful fallback handling
+- Null-safety checks preventing crashes when Supabase is not configured
+- Migration system for transitioning from localStorage to cloud storage
+
+**Configuration Handling**:
+- Environment variables: `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- Automatic detection of placeholder values vs real configuration
+- Console warnings when running in localStorage-only mode
+- Data service automatically switches primary source based on availability
+
+**Recent Fixes Applied**:
+- Fixed Supabase client initialization errors that prevented server startup
+- Added null checks to all Supabase operations in data service layer
+- Updated data migration functions to handle missing Supabase configuration
+- Server now starts successfully regardless of Supabase configuration status
+
 ## Development Notes
 
 - TypeScript and ESLint errors are ignored during builds (configured in next.config.ts)
@@ -113,11 +133,11 @@ When running in WSL2 (Windows Subsystem for Linux), special networking configura
    - Try: `http://localhost:3000`
    - If this works, it's the easiest method
 
-### Verified Working Access (Latest Test)
-- **Server Status**: ✅ Running on port 3000
-- **WSL IP Access**: ✅ `http://172.20.72.33:3000` (tested)
-- **Local Access**: ✅ `http://localhost:3000` (WSL internal)
-- **External Binding**: ✅ Server bound to `0.0.0.0:3000`
+### Current Server Status
+- **Server Status**: ⚠️ Starts but not accessible (connection refused)
+- **WSL IP Access**: ❌ `http://172.20.72.33:3000` (not responding)
+- **Local Access**: ❌ `http://localhost:3000` (connection refused)
+- **Issue**: Server appears to start successfully but no processes listening on port 3000
 
 ### Troubleshooting WSL2 Networking
 - If localhost doesn't work, use the WSL IP address method
@@ -183,100 +203,12 @@ gh pr merge --merge  # or --squash or --rebase
 - **Authentication required** - run `gh auth login` if not already authenticated
 - **Supports both HTTPS and SSH** authentication methods
 
-# Using Gemini CLI for Large Codebase Analysis
-
-When analyzing large codebases or multiple files that might exceed context limits, use the Gemini CLI with its massive
-context window. Use `gemini -p` to leverage Google Gemini's large context capacity.
-
-## File and Directory Inclusion Syntax
-
-Use the `@` syntax to include files and directories in your Gemini prompts. The paths should be relative to WHERE you run the
-  gemini command:
-
-### Examples:
-
-**Single file analysis:**
-gemini -p "@src/main.py Explain this file's purpose and structure"
-
-Multiple files:
-gemini -p "@package.json @src/index.js Analyze the dependencies used in the code"
-
-Entire directory:
-gemini -p "@src/ Summarize the architecture of this codebase"
-
-Multiple directories:
-gemini -p "@src/ @tests/ Analyze test coverage for the source code"
-
-Current directory and subdirectories:
-gemini -p "@./ Give me an overview of this entire project"
-
-# Or use --all_files flag:
-gemini --all_files -p "Analyze the project structure and dependencies"
-
-Implementation Verification Examples
-
-Check if a feature is implemented:
-gemini -p "@src/ @lib/ Has dark mode been implemented in this codebase? Show me the relevant files and functions"
-
-Verify authentication implementation:
-gemini -p "@src/ @middleware/ Is JWT authentication implemented? List all auth-related endpoints and middleware"
-
-Check for specific patterns:
-gemini -p "@src/ Are there any React hooks that handle WebSocket connections? List them with file paths"
-
-Verify error handling:
-gemini -p "@src/ @api/ Is proper error handling implemented for all API endpoints? Show examples of try-catch blocks"
-
-Check for rate limiting:
-gemini -p "@backend/ @middleware/ Is rate limiting implemented for the API? Show the implementation details"
-
-Verify caching strategy:
-gemini -p "@src/ @lib/ @services/ Is Redis caching implemented? List all cache-related functions and their usage"
-
-Check for specific security measures:
-gemini -p "@src/ @api/ Are SQL injection protections implemented? Show how user inputs are sanitized"
-
-Verify test coverage for features:
-gemini -p "@src/payment/ @tests/ Is the payment processing module fully tested? List all test cases"
-
-When to Use Gemini CLI
-
-Use gemini -p when:
-- Analyzing entire codebases or large directories
-- Comparing multiple large files
-- Need to understand project-wide patterns or architecture
-- Current context window is insufficient for the task
-- Working with files totaling more than 100KB
-- Verifying if specific features, patterns, or security measures are implemented
-- Checking for the presence of certain coding patterns across the entire codebase
-
-Important Notes
-
-- Paths in @ syntax are relative to your current working directory when invoking gemini
-- The CLI will include file contents directly in the context
-- No need for --yolo flag for read-only analysis
-- Gemini's context window can handle entire codebases that would overflow Claude's context
-- When checking implementations, be specific about what you're looking for to get accurate results
 
 # MCP Tool Capabilities
 
 This project is enhanced with Model Context Protocol (MCP) tools that provide extended capabilities. Here's a comprehensive overview of available tools and their use cases:
 
 ## AI Integration Tools
-
-### Gemini CLI Integration
-- **ask-gemini**: Execute Gemini AI analysis with massive context windows
-- **sandbox-test**: Safely test code in isolated environments
-- **Ping/Help**: Test connectivity and get command documentation
-
-**Usage Examples:**
-```bash
-# Analyze large codebases beyond Claude's context limits
-gemini -p "@src/ @lib/ Analyze this entire codebase architecture"
-
-# Safe code testing in sandbox
-gemini -s -p "Test this Python script and explain potential issues"
-```
 
 ### IDE Integration
 - **getDiagnostics**: Get VS Code language diagnostics for error detection
@@ -382,12 +314,6 @@ execute_command "npm test" --timeout_ms 30000
 
 ### When to Use Each Tool Category:
 
-**Gemini CLI**: 
-- Large codebase analysis (>100KB)
-- Architecture reviews
-- Cross-file pattern analysis
-- When Claude's context is insufficient
-
 **Magic UI**:
 - Enhancing user interface with animations
 - Adding interactive components
@@ -419,8 +345,7 @@ execute_command "npm test" --timeout_ms 30000
 // 1. Research with Tavily
 // 2. Get docs with Context7
 // 3. Implement with Magic UI
-// 4. Test with Gemini CLI
-// 5. Deploy with Desktop Commander
+// 4. Deploy with Desktop Commander
 
 // Research latest React patterns
 const trends = await tavily_search("React 2024 performance patterns")
@@ -430,18 +355,21 @@ const docs = await get_library_docs("/reactjs/react.dev", "performance")
 
 // Implement with animated components
 import { BlurFade } from '@/components/ui/blur-fade'
-
-// Test implementation
-gemini -s -p "@src/components/ Test these new React patterns"
 ```
 
 ## Configuration and Setup
 
 Most MCP tools work out of the box, but some require configuration:
 
-1. **API Keys**: Set up Google AI API key for Gemini integration
+1. **API Keys**: Set up Google AI API key for AI-powered expense categorization and receipt OCR
 2. **Permissions**: Desktop Commander uses security allowlists
 3. **Limits**: Configure file size and operation limits
 4. **Telemetry**: Enable/disable usage tracking
 
 Check individual tool documentation for specific setup requirements.
+
+# important-instruction-reminders
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.

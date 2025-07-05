@@ -3,8 +3,14 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables')
+// Check if environment variables are properly configured (not placeholder values)
+const isValidConfig = supabaseUrl && 
+  supabaseAnonKey && 
+  !supabaseUrl.includes('your_supabase_project_url_here') &&
+  !supabaseAnonKey.includes('your_supabase_anon_key_here')
+
+if (!isValidConfig) {
+  console.warn('Supabase not configured - running in localStorage mode. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to enable cloud storage.')
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = isValidConfig ? createClient(supabaseUrl!, supabaseAnonKey!) : null

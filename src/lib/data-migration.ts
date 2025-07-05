@@ -18,6 +18,10 @@ const getLocalStorageItem = <T>(key: string): T | null => {
 export const migrateData = async () => {
   console.log('Starting data migration...')
 
+  if (!supabase) {
+    throw new Error('Supabase not configured. Cannot perform migration.')
+  }
+
   try {
     // 1. Migrate Accounts
     const localAccounts: Account[] = getLocalStorageData('accounts')

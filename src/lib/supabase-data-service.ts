@@ -84,10 +84,18 @@ class DataCache {
 export class SupabaseDataService {
   private config: DataServiceConfig
   private cache: DataCache
+  private isSupabaseEnabled: boolean
 
   constructor(config: Partial<DataServiceConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config }
     this.cache = new DataCache(this.config.cacheTimeout)
+    this.isSupabaseEnabled = supabase !== null
+    
+    // If Supabase is not configured, force localStorage as primary source
+    if (!this.isSupabaseEnabled) {
+      this.config.primarySource = 'localStorage'
+      this.config.fallbackToSecondary = false
+    }
   }
 
   // ==================== ACCOUNTS ====================
@@ -104,6 +112,10 @@ export class SupabaseDataService {
     const cached = this.cache.get('accounts')
     if (cached) {
       return { data: cached, error: null, source: 'supabase' }
+    }
+
+    if (!supabase) {
+      return { data: [], error: new Error('Supabase not configured'), source: 'supabase' }
     }
 
     try {
@@ -133,6 +145,10 @@ export class SupabaseDataService {
   }
 
   async createAccount(account: Omit<Account, 'id'>): Promise<DataServiceResult<Account>> {
+    if (!supabase) {
+      return { data: null, error: new Error('Supabase not configured'), source: 'supabase' }
+    }
+
     try {
       const { data, error } = await supabase
         .from('accounts')
@@ -168,6 +184,10 @@ export class SupabaseDataService {
   }
 
   async updateAccount(value: string, updates: Partial<Account>): Promise<DataServiceResult<Account>> {
+    if (!supabase) {
+      return { data: null, error: new Error('Supabase not configured'), source: 'supabase' }
+    }
+
     try {
       const { data, error } = await supabase
         .from('accounts')
@@ -204,6 +224,10 @@ export class SupabaseDataService {
   }
 
   async deleteAccount(value: string): Promise<DataServiceResult<boolean>> {
+    if (!supabase) {
+      return { data: false, error: new Error('Supabase not configured'), source: 'supabase' }
+    }
+
     try {
       const { error } = await supabase
         .from('accounts')
@@ -239,6 +263,10 @@ export class SupabaseDataService {
       return { data: cached, error: null, source: 'supabase' }
     }
 
+    if (!supabase) {
+      return { data: [], error: new Error('Supabase not configured'), source: 'supabase' }
+    }
+
     try {
       const { data, error } = await supabase
         .from('categories')
@@ -267,6 +295,10 @@ export class SupabaseDataService {
   }
 
   async createCategory(category: Omit<Category, 'id'>): Promise<DataServiceResult<Category>> {
+    if (!supabase) {
+      return { data: null, error: new Error('Supabase not configured'), source: 'supabase' }
+    }
+
     try {
       const { data, error } = await supabase
         .from('categories')
@@ -318,6 +350,10 @@ export class SupabaseDataService {
       return { data: cached, error: null, source: 'supabase' }
     }
 
+    if (!supabase) {
+      return { data: null, error: new Error('Supabase not configured'), source: 'supabase' }
+    }
+
     try {
       const { data, error } = await supabase
         .from('themes')
@@ -360,6 +396,10 @@ export class SupabaseDataService {
   }
 
   async saveTheme(theme: Theme): Promise<DataServiceResult<Theme>> {
+    if (!supabase) {
+      return { data: null, error: new Error('Supabase not configured'), source: 'supabase' }
+    }
+
     try {
       const { data, error } = await supabase
         .from('themes')
@@ -406,6 +446,10 @@ export class SupabaseDataService {
       return { data: cached, error: null, source: 'supabase' }
     }
 
+    if (!supabase) {
+      return { data: [], error: new Error('Supabase not configured'), source: 'supabase' }
+    }
+
     try {
       const { data, error } = await supabase
         .from('expenses')
@@ -441,6 +485,10 @@ export class SupabaseDataService {
   }
 
   // ==================== UTILITY METHODS ====================
+
+  private checkSupabaseConnection(): boolean {
+    return supabase !== null
+  }
 
   private getLocalStorageData<T>(key: string): T[] {
     if (typeof window === 'undefined') return []
