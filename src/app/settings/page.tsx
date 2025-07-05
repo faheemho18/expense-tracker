@@ -4,6 +4,7 @@
 import { AppLayout } from "@/components/app-layout"
 import { ManageAccounts } from "@/components/settings/manage-accounts"
 import { ManageCategories } from "@/components/settings/manage-categories"
+import { DataMigration } from "@/components/settings/data-migration"
 import {
   Card,
   CardContent,
@@ -27,6 +28,7 @@ export default function SettingsPage() {
           <TabsList>
             <TabsTrigger value="categories">Categories</TabsTrigger>
             <TabsTrigger value="accounts">Accounts</TabsTrigger>
+            <TabsTrigger value="migration">Data Migration</TabsTrigger>
           </TabsList>
           <TabsContent value="categories">
             <Card>
@@ -54,6 +56,9 @@ export default function SettingsPage() {
                 <ManageAccounts />
               </CardContent>
             </Card>
+          </TabsContent>
+          <TabsContent value="migration">
+            <DataMigration />
           </TabsContent>
         </Tabs>
       </div>
