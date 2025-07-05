@@ -20,17 +20,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is a Next.js 15 expense tracking application built with:
 - **Frontend**: React 18, TypeScript, Tailwind CSS
 - **UI Library**: Radix UI components with custom styling
-- **Data Storage**: Local storage with Supabase migration capability
+- **Data Storage**: Hybrid localStorage + Supabase with user authentication
+- **Authentication**: Supabase Auth with email/password and user management
 - **AI Integration**: Firebase Genkit with Google AI
 - **PWA Support**: Service worker for offline functionality
 
 ### Key Structure
 
 **Core Data Models** (src/lib/types.ts):
-- `Expense` - Transaction records with category, account, and amount
-- `Category` - Expense categorization with icons and thresholds
-- `Account` - Financial accounts with ownership tracking
-- `Theme` - Custom theming system with HSL colors
+- `Expense` - Transaction records with category, account, and amount (user-scoped)
+- `Category` - Expense categorization with icons and thresholds (user-scoped)
+- `Account` - Financial accounts with ownership tracking (user-scoped)
+- `Theme` - Custom theming system with HSL colors (user-scoped)
+- `User` - Authentication user profile with email and metadata
+- `AuthContextType` - Authentication context interface for session management
 
 **Main Pages**:
 - `/` - Home page with expense management and monthly reports
@@ -40,9 +43,11 @@ This is a Next.js 15 expense tracking application built with:
 - `/themes` - Theme customization
 
 **Context & State**:
-- `SettingsContext` - Global settings for categories, accounts, and themes
-- `useLocalStorage` - Custom hook for persistent state management
-- Data migration system for Supabase integration
+- `AuthContext` - User authentication and session management
+- `SettingsContext` - Global settings for categories, accounts, and themes (user-scoped)
+- `useLocalStorage` - Custom hook for persistent state management (user-scoped)
+- `useAuthDataService` - Integration hook connecting authentication with data service
+- Data migration system for Supabase integration with user authentication
 
 **AI Components**:
 - `src/ai/genkit.ts` - Genkit configuration with Google AI
@@ -50,6 +55,13 @@ This is a Next.js 15 expense tracking application built with:
 - `src/lib/ai-services.ts` - AI-powered expense categorization and receipt OCR services
 - `src/hooks/use-expense-categorization.ts` - Hook for AI expense categorization
 - `src/hooks/use-receipt-ocr.ts` - Hook for AI receipt processing
+
+**Authentication Components**:
+- `src/contexts/auth-context.tsx` - Authentication context with user session management
+- `src/components/auth/auth-form.tsx` - Login/signup forms with validation
+- `src/components/auth/user-menu.tsx` - User profile dropdown menu
+- `src/components/auth/auth-page.tsx` - Authentication page wrapper
+- `src/hooks/use-auth-data-service.ts` - Integration hook connecting auth with data service
 
 ### Component Architecture
 
@@ -63,9 +75,10 @@ This is a Next.js 15 expense tracking application built with:
 - Grid-based layout with drag-and-drop support
 
 **Data Management**:
-- Local storage as primary data store
-- Migration system for Supabase transition
-- Real-time filtering and sorting
+- Hybrid data storage: localStorage with Supabase cloud sync capability
+- User-scoped data isolation with Row Level Security (RLS)
+- Migration system for Supabase transition with user authentication
+- Real-time filtering and sorting with multi-user support
 
 ## AI Features
 
@@ -101,6 +114,14 @@ This is a Next.js 15 expense tracking application built with:
 - Updated data migration functions to handle missing Supabase configuration
 - Server now starts successfully regardless of Supabase configuration status
 
+**Phase 4 Authentication Implementation (COMPLETED)**:
+- Implemented complete Supabase authentication system with user management
+- Added multi-user data isolation with Row Level Security (RLS) policies
+- Updated all data models to include user_id relationships
+- Enhanced data service layer with user-scoped operations
+- Created authentication UI components and user session management
+- Maintained backward compatibility with localStorage-only mode
+
 ## Development Notes
 
 - TypeScript and ESLint errors are ignored during builds (configured in next.config.ts)
@@ -109,6 +130,31 @@ This is a Next.js 15 expense tracking application built with:
 - Icons sourced from Lucide React with custom icon mapping system
 - Theme system uses CSS custom properties for dynamic theming
 - AI services require Google AI API key configured in environment variables
+
+## Authentication & Security
+
+**Authentication System**:
+- Supabase Auth with email/password authentication
+- User session management with automatic token refresh
+- Graceful fallback to localStorage mode when Supabase is not configured
+- Authentication UI components with form validation and error handling
+
+**Data Security**:
+- Row Level Security (RLS) policies ensuring users only access their own data
+- User-scoped data operations in all CRUD functions
+- Secure data isolation with foreign key constraints to auth.users
+- Environment variable validation with placeholder detection
+
+**Multi-User Architecture**:
+- All data models include optional user_id fields for backward compatibility
+- Data service layer automatically scopes operations to authenticated user
+- localStorage keys scoped per user (e.g., 'expenses_user123')
+- Default data creation for new users (categories, accounts, themes)
+
+**Provider Hierarchy**:
+```
+RootLayout → ClientLayout → AuthProvider → SettingsProvider → AppLayout
+```
 
 ## WSL2 Development Setup
 
@@ -134,10 +180,10 @@ When running in WSL2 (Windows Subsystem for Linux), special networking configura
    - If this works, it's the easiest method
 
 ### Current Server Status
-- **Server Status**: ⚠️ Starts but not accessible (connection refused)
-- **WSL IP Access**: ❌ `http://172.20.72.33:3000` (not responding)
-- **Local Access**: ❌ `http://localhost:3000` (connection refused)
-- **Issue**: Server appears to start successfully but no processes listening on port 3000
+- **Server Status**: ✅ Running and accessible (HTTP 200)
+- **WSL IP Access**: ✅ `http://172.20.72.33:3000` (responding)
+- **Local Access**: ✅ `http://localhost:3000` (responding)
+- **Issue**: ✅ RESOLVED - Server starts successfully and processes are listening on port 3000
 
 ### Troubleshooting WSL2 Networking
 - If localhost doesn't work, use the WSL IP address method
@@ -367,6 +413,30 @@ Most MCP tools work out of the box, but some require configuration:
 4. **Telemetry**: Enable/disable usage tracking
 
 Check individual tool documentation for specific setup requirements.
+
+## Database Schema
+
+The application uses a user-aware database schema with Row Level Security:
+
+### Core Tables (schema.sql)
+- **accounts** - Financial accounts with user_id foreign key and RLS policies
+- **categories** - Expense categories with user_id foreign key and RLS policies
+- **themes** - Custom themes with user_id foreign key and RLS policies
+- **expenses** - Transaction records with user_id foreign key and RLS policies
+- **widget_configs** - Dashboard widgets with user_id foreign key and RLS policies
+
+### Security Features
+- **Row Level Security (RLS)** enabled on all tables
+- **Foreign key constraints** to auth.users with CASCADE delete
+- **Unique constraints** scoped per user (e.g., category names unique per user)
+- **Default data creation** via trigger function for new users
+- **Automatic user cleanup** when users are deleted
+
+### Authentication Integration
+- **Supabase Auth** manages the auth.users table
+- **User registration trigger** automatically creates default data
+- **Session-based queries** automatically filter by authenticated user
+- **Graceful fallback** to localStorage when authentication is disabled
 
 # important-instruction-reminders
 Do what has been asked; nothing more, nothing less.

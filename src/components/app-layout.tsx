@@ -26,10 +26,14 @@ import {
 } from "@/components/ui/sidebar"
 import { Logo } from "@/components/logo"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { useAuth } from "@/contexts/auth-context"
+import { UserMenu } from "@/components/auth/user-menu"
+import { AuthPage } from "@/components/auth/auth-page"
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const isMobile = useIsMobile()
+  const { user, loading } = useAuth()
 
   const isActive = React.useCallback(
     (path: string) => {
@@ -37,6 +41,25 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     },
     [pathname]
   )
+
+  // Show loading state while checking authentication
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
+
+  // Show auth page if user is not authenticated and Supabase is configured
+  if (!user && typeof window !== 'undefined') {
+    // Check if we're in localStorage mode by checking if auth context has auth methods
+    const { signIn } = useAuth()
+    // This will be null if we're in localStorage mode, otherwise it's a function
+    if (typeof signIn === 'function') {
+      return <AuthPage />
+    }
+  }
 
   const expensesTooltip = React.useMemo(() => ({ children: "Expenses" }), [])
   const dashboardTooltip = React.useMemo(
@@ -128,7 +151,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter>
-          {/* You can add a user profile or settings link here */}
+          {user && (
+            <div className="p-2">
+              <UserMenu />
+            </div>
+          )}
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
@@ -137,6 +164,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="flex-1">
             {/* You can add a page title or breadcrumbs here */}
           </div>
+          {user && !isMobile && (
+            <div className="flex items-center gap-2">
+              <UserMenu />
+            </div>
+          )}
         </header>
         <main>{children}</main>
       </SidebarInset>

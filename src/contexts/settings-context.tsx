@@ -10,6 +10,7 @@ import {
   useSupabaseTheme,
   useDataServiceConfig 
 } from "@/hooks/use-supabase-data"
+import { useAuthDataService } from "@/hooks/use-auth-data-service"
 import {
   DEFAULT_ACCOUNTS,
   DEFAULT_CATEGORIES,
@@ -48,6 +49,8 @@ const SettingsContext = React.createContext<SettingsContextType | undefined>(
 )
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
+  // Connect auth state with data service
+  const { isAuthenticated } = useAuthDataService()
   // Data service configuration
   const { config, updateConfig, clearCache } = useDataServiceConfig()
   

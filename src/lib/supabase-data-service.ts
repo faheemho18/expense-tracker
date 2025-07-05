@@ -5,8 +5,8 @@
  * Handles CRUD operations for all data types with proper error handling and caching.
  */
 
-import { supabase } from './supabase'
-import { Account, Category, Expense, Theme, HSLColor } from './types'
+import { supabase, createAuthClient } from './supabase'
+import { Account, Category, Expense, Theme, HSLColor, User } from './types'
 
 export type DataSource = 'localStorage' | 'supabase'
 
@@ -85,6 +85,7 @@ export class SupabaseDataService {
   private config: DataServiceConfig
   private cache: DataCache
   private isSupabaseEnabled: boolean
+  private userId: string | null = null
 
   constructor(config: Partial<DataServiceConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config }
@@ -96,6 +97,29 @@ export class SupabaseDataService {
       this.config.primarySource = 'localStorage'
       this.config.fallbackToSecondary = false
     }
+  }
+
+  /**
+   * Set the current user ID for user-scoped operations
+   */
+  setUserId(userId: string | null): void {
+    this.userId = userId
+    // Clear cache when user changes
+    this.cache.clear()
+  }
+
+  /**
+   * Get current user ID
+   */
+  getUserId(): string | null {
+    return this.userId
+  }
+
+  /**
+   * Get localStorage key scoped to user (when authenticated) or global (when not)
+   */
+  private getStorageKey(key: string): string {
+    return this.userId ? `${key}_${this.userId}` : key
   }
 
   // ==================== ACCOUNTS ====================
@@ -119,10 +143,17 @@ export class SupabaseDataService {
     }
 
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('accounts')
         .select('*')
         .order('created_at', { ascending: true })
+
+      // Add user filter if authenticated
+      if (this.userId) {
+        query = query.eq('user_id', this.userId)
+      }
+
+      const { data, error } = await query
 
       if (error) throw error
 
@@ -131,6 +162,7 @@ export class SupabaseDataService {
         label: row.label,
         icon: row.icon,
         owner: row.owner,
+        user_id: row.user_id,
       }))
 
       this.cache.set('accounts', accounts)
@@ -149,10 +181,15 @@ export class SupabaseDataService {
       return { data: null, error: new Error('Supabase not configured'), source: 'supabase' }
     }
 
+    if (!this.userId) {
+      return { data: null, error: new Error('User not authenticated'), source: 'supabase' }
+    }
+
     try {
       const { data, error } = await supabase
         .from('accounts')
         .insert({
+          user_id: this.userId,
           value: account.value,
           label: account.label,
           icon: account.icon,
@@ -168,6 +205,7 @@ export class SupabaseDataService {
         label: data.label,
         icon: data.icon,
         owner: data.owner,
+        user_id: data.user_id,
       }
 
       // Update localStorage if it's being used
@@ -268,10 +306,17 @@ export class SupabaseDataService {
     }
 
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('categories')
         .select('*')
         .order('created_at', { ascending: true })
+
+      // Add user filter if authenticated
+      if (this.userId) {
+        query = query.eq('user_id', this.userId)
+      }
+
+      const { data, error } = await query
 
       if (error) throw error
 
@@ -281,6 +326,7 @@ export class SupabaseDataService {
         icon: row.icon,
         color: row.color,
         threshold: row.threshold || undefined,
+        user_id: row.user_id,
       }))
 
       this.cache.set('categories', categories)
@@ -299,10 +345,15 @@ export class SupabaseDataService {
       return { data: null, error: new Error('Supabase not configured'), source: 'supabase' }
     }
 
+    if (!this.userId) {
+      return { data: null, error: new Error('User not authenticated'), source: 'supabase' }
+    }
+
     try {
       const { data, error } = await supabase
         .from('categories')
         .insert({
+          user_id: this.userId,
           value: category.value,
           label: category.label,
           icon: category.icon,
@@ -320,6 +371,7 @@ export class SupabaseDataService {
         icon: data.icon,
         color: data.color,
         threshold: data.threshold || undefined,
+        user_id: data.user_id,
       }
 
       // Update localStorage
@@ -493,7 +545,8 @@ export class SupabaseDataService {
   private getLocalStorageData<T>(key: string): T[] {
     if (typeof window === 'undefined') return []
     try {
-      const item = window.localStorage.getItem(key)
+      const scopedKey = this.getStorageKey(key)
+      const item = window.localStorage.getItem(scopedKey)
       return item ? JSON.parse(item) : []
     } catch {
       return []
@@ -503,7 +556,8 @@ export class SupabaseDataService {
   private getLocalStorageItem<T>(key: string): T | null {
     if (typeof window === 'undefined') return null
     try {
-      const item = window.localStorage.getItem(key)
+      const scopedKey = this.getStorageKey(key)
+      const item = window.localStorage.getItem(scopedKey)
       return item ? JSON.parse(item) : null
     } catch {
       return null
@@ -513,7 +567,8 @@ export class SupabaseDataService {
   private setLocalStorageData<T>(key: string, data: T[]): void {
     if (typeof window === 'undefined') return
     try {
-      window.localStorage.setItem(key, JSON.stringify(data))
+      const scopedKey = this.getStorageKey(key)
+      window.localStorage.setItem(scopedKey, JSON.stringify(data))
     } catch (error) {
       console.error(`Failed to save to localStorage: ${error}`)
     }
@@ -522,7 +577,8 @@ export class SupabaseDataService {
   private setLocalStorageItem<T>(key: string, data: T): void {
     if (typeof window === 'undefined') return
     try {
-      window.localStorage.setItem(key, JSON.stringify(data))
+      const scopedKey = this.getStorageKey(key)
+      window.localStorage.setItem(scopedKey, JSON.stringify(data))
     } catch (error) {
       console.error(`Failed to save to localStorage: ${error}`)
     }
