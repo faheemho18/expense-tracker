@@ -34,7 +34,7 @@ import { MiniSyncStatus } from "@/components/sync/sync-status-indicator"
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const isMobile = useIsMobile()
-  const { user, loading } = useAuth()
+  const { user, loading, signIn } = useAuth()
 
   const isActive = React.useCallback(
     (path: string) => {
@@ -55,7 +55,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   // Show auth page if user is not authenticated and Supabase is configured
   if (!user && typeof window !== 'undefined') {
     // Check if we're in localStorage mode by checking if auth context has auth methods
-    const { signIn } = useAuth()
     // This will be null if we're in localStorage mode, otherwise it's a function
     if (typeof signIn === 'function') {
       return <AuthPage />
