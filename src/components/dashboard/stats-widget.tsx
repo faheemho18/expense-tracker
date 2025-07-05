@@ -8,6 +8,8 @@ import type { Expense } from "@/lib/types"
 import { formatCurrency } from "@/lib/utils"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { CurrencyTicker } from "@/components/ui/currency-ticker"
+import { NumberTicker } from "@/components/magicui/number-ticker"
 
 interface StatsWidgetProps {
   expenses: Expense[]
@@ -43,7 +45,10 @@ export function StatsWidget({ expenses }: StatsWidgetProps) {
           </CardHeader>
           <CardContent className="flex flex-1 flex-col items-center justify-center">
             <div className="text-3xl font-bold">
-              {formatCurrency(stats.totalExpenses)}
+              <CurrencyTicker 
+                value={stats.totalExpenses} 
+                delay={0.2}
+              />
             </div>
           </CardContent>
         </Card>
@@ -56,7 +61,10 @@ export function StatsWidget({ expenses }: StatsWidgetProps) {
           </CardHeader>
           <CardContent className="flex flex-1 flex-col items-center justify-center">
             <div className="text-3xl font-bold">
-              {formatCurrency(stats.totalRefunds)}
+              <CurrencyTicker 
+                value={stats.totalRefunds} 
+                delay={0.4}
+              />
             </div>
           </CardContent>
         </Card>
@@ -67,7 +75,10 @@ export function StatsWidget({ expenses }: StatsWidgetProps) {
           </CardHeader>
           <CardContent className="flex flex-1 flex-col items-center justify-center">
             <div className="text-3xl font-bold">
-              {formatCurrency(stats.netTotal)}
+              <CurrencyTicker 
+                value={stats.netTotal} 
+                delay={0.6}
+              />
             </div>
           </CardContent>
         </Card>
@@ -77,7 +88,13 @@ export function StatsWidget({ expenses }: StatsWidgetProps) {
             <List className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent className="flex flex-1 flex-col items-center justify-center">
-            <div className="text-3xl font-bold">{stats.transactionCount}</div>
+            <div className="text-3xl font-bold">
+              <NumberTicker 
+                value={stats.transactionCount} 
+                delay={0.8}
+                className="tabular-nums tracking-wider"
+              />
+            </div>
           </CardContent>
         </Card>
       </div>

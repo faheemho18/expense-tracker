@@ -5,6 +5,7 @@ import { AppLayout } from "@/components/app-layout"
 import { ManageAccounts } from "@/components/settings/manage-accounts"
 import { ManageCategories } from "@/components/settings/manage-categories"
 import { DataMigration } from "@/components/settings/data-migration"
+import { APIKeyMonitor } from "@/components/settings/api-key-monitor"
 import {
   Card,
   CardContent,
@@ -29,6 +30,7 @@ export default function SettingsPage() {
             <TabsTrigger value="categories">Categories</TabsTrigger>
             <TabsTrigger value="accounts">Accounts</TabsTrigger>
             <TabsTrigger value="migration">Data Migration</TabsTrigger>
+            <TabsTrigger value="api-keys">API Keys</TabsTrigger>
           </TabsList>
           <TabsContent value="categories">
             <Card>
@@ -59,6 +61,9 @@ export default function SettingsPage() {
           </TabsContent>
           <TabsContent value="migration">
             <DataMigration />
+          </TabsContent>
+          <TabsContent value="api-keys">
+            <APIKeyMonitor />
           </TabsContent>
         </Tabs>
       </div>

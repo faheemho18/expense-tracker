@@ -18,6 +18,8 @@ import type { Expense } from "@/lib/types"
 import { cn, formatCurrency, getIcon } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { BlurFade } from "@/components/magicui/blur-fade"
+import { CurrencyTicker } from "@/components/ui/currency-ticker"
 import {
   Dialog,
   DialogContent,
@@ -100,16 +102,7 @@ export function ExpensesTable({
     return <ArrowDown className="ml-2 h-4 w-4" />
   }
 
-  if (!categories || !accounts) {
-    return (
-      <div className="space-y-2">
-        <Skeleton className="h-12 w-full" />
-        <Skeleton className="h-12 w-full" />
-        <Skeleton className="h-12 w-full" />
-        <Skeleton className="h-12 w-full" />
-      </div>
-    )
-  }
+  // Remove skeleton loading - components should render with default data
 
   return (
     <div className="w-full overflow-hidden rounded-md border">
@@ -171,7 +164,7 @@ export function ExpensesTable({
         </TableHeader>
         <TableBody>
           {expenses.length > 0 ? (
-            expenses.map((expense) => {
+            expenses.map((expense, index) => {
               const category = getCategory(expense.category)
               const CategoryIcon = category ? getIcon(category.icon) : null
 
@@ -180,7 +173,8 @@ export function ExpensesTable({
                 ? getIcon(account.icon)
                 : null
               return (
-                <TableRow key={expense.id}>
+                <BlurFade key={expense.id} delay={0.05 + index * 0.05} inView>
+                  <TableRow>
                   <TableCell>
                     {format(new Date(expense.date), "MMM dd, yyyy")}
                   </TableCell>
@@ -251,7 +245,15 @@ export function ExpensesTable({
                         : "text-foreground"
                     )}
                   >
-                    {formatCurrency(expense.amount)}
+                    <CurrencyTicker 
+                      value={expense.amount} 
+                      delay={0.1 + index * 0.05}
+                      className={cn(
+                        expense.amount < 0
+                          ? "text-emerald-500"
+                          : "text-foreground"
+                      )}
+                    />
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
@@ -276,7 +278,8 @@ export function ExpensesTable({
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
-                </TableRow>
+                  </TableRow>
+                </BlurFade>
               )
             })
           ) : (

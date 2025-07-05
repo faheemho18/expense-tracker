@@ -29,6 +29,7 @@ import { AddExpenseSheet } from "@/components/expenses/add-expense-sheet"
 import { ExpensesFilters } from "@/components/expenses/expenses-filters"
 import { ExpensesTable } from "@/components/expenses/expenses-table"
 import { Button } from "@/components/ui/button"
+import { RainbowButton } from "@/components/magicui/rainbow-button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Sheet,
@@ -80,11 +81,7 @@ export default function HomePage() {
   const [gaugeSortOrder, setGaugeSortOrder] = React.useState<
     "ascending" | "descending" | null
   >(null)
-  const [isClient, setIsClient] = React.useState(false)
-
-  React.useEffect(() => {
-    setIsClient(true)
-  }, [])
+  // Remove isClient state - data should be available from hooks
 
   const ITEMS_PER_PAGE = 8
 
@@ -415,27 +412,18 @@ export default function HomePage() {
               </div>
             </CardHeader>
             <CardContent>
-              {isClient ? (
-                <ExpensesTable
-                  expenses={paginatedExpenses}
-                  deleteExpense={deleteExpense}
-                  editExpense={handleEdit}
-                  sortConfig={sortConfig}
-                  requestSort={requestSort}
-                />
-              ) : (
-                <div className="space-y-2">
-                  <Skeleton className="h-12 w-full" />
-                  <Skeleton className="h-12 w-full" />
-                  <Skeleton className="h-12 w-full" />
-                  <Skeleton className="h-12 w-full" />
-                </div>
-              )}
+              <ExpensesTable
+                expenses={paginatedExpenses}
+                deleteExpense={deleteExpense}
+                editExpense={handleEdit}
+                sortConfig={sortConfig}
+                requestSort={requestSort}
+              />
             </CardContent>
           </Card>
         </div>
       </div>
-      <Button
+      <RainbowButton
         onClick={() => {
           setExpenseToEdit(null)
           setIsAddSheetOpen(true)
@@ -445,7 +433,7 @@ export default function HomePage() {
       >
         <span className="sr-only">Add Expense</span>
         <Plus className="h-6 w-6" />
-      </Button>
+      </RainbowButton>
       <AddExpenseSheet
         isOpen={isAddSheetOpen}
         setIsOpen={handleSheetOpenChange}

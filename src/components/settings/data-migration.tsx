@@ -24,6 +24,8 @@ import { migrateData } from "@/lib/data-migration"
 import { runHealthCheck } from "@/lib/supabase-test"
 import { dataService } from "@/lib/supabase-data-service"
 import { useDataSourceStatus, useDataSync } from "@/hooks/use-supabase-data"
+import { SyncControls } from "@/components/sync/sync-status-indicator"
+import { useSettings } from "@/contexts/settings-context"
 
 interface MigrationStep {
   id: string
@@ -34,6 +36,13 @@ interface MigrationStep {
 }
 
 export function DataMigration() {
+  const { 
+    isRealtimeSyncEnabled, 
+    isRealtimeSyncActive, 
+    enableRealtimeSync, 
+    disableRealtimeSync 
+  } = useSettings()
+  
   const [migrationSteps, setMigrationSteps] = useState<MigrationStep[]>([
     {
       id: 'health-check',
@@ -244,6 +253,62 @@ export function DataMigration() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Real-time Sync Section */}
+      {sourceStatus.supabaseAvailable && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Wifi className="h-5 w-5" />
+              Real-time Synchronization
+            </CardTitle>
+            <CardDescription>
+              Enable real-time data sync across all your devices for instant updates
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <div className="font-medium">Sync Status</div>
+                <div className="text-sm text-muted-foreground">
+                  Real-time sync is {isRealtimeSyncEnabled ? 'enabled' : 'disabled'}
+                  {isRealtimeSyncActive && ' and active'}
+                </div>
+              </div>
+              <SyncControls />
+            </div>
+            
+            <Separator />
+            
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-medium">Enable Real-time Sync</div>
+                <div className="text-sm text-muted-foreground">
+                  Automatically sync changes across all your devices
+                </div>
+              </div>
+              <Button
+                variant={isRealtimeSyncEnabled ? "destructive" : "default"}
+                onClick={isRealtimeSyncEnabled ? disableRealtimeSync : enableRealtimeSync}
+                disabled={!sourceStatus.supabaseAvailable}
+              >
+                {isRealtimeSyncEnabled ? 'Disable' : 'Enable'} Sync
+              </Button>
+            </div>
+
+            {isRealtimeSyncEnabled && (
+              <Alert>
+                <Wifi className="h-4 w-4" />
+                <AlertTitle>Real-time Sync Active</AlertTitle>
+                <AlertDescription>
+                  Your data will automatically sync across all devices when changes are made.
+                  You can see the sync status in the header bar.
+                </AlertDescription>
+              </Alert>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Migration Section */}
       <Card>

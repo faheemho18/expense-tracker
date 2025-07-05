@@ -4,15 +4,19 @@
 import * as React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { format } from "date-fns"
-import { CalendarIcon, Loader2, Camera } from "lucide-react"
+import { CalendarIcon, Loader2, Camera, Sparkles, CheckCircle, Scan } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
 import { useSettings } from "@/contexts/settings-context"
 import type { Expense } from "@/lib/types"
 import { cn, getIcon } from "@/lib/utils"
+import { useExpenseCategorization } from "@/hooks/use-expense-categorization"
+import { useReceiptOCR } from "@/hooks/use-receipt-ocr"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
+import { ShimmerButton } from "@/components/magicui/shimmer-button"
+import { PulsatingButton } from "@/components/magicui/pulsating-button"
 import { Calendar } from "@/components/ui/calendar"
 import {
   Form,
@@ -74,6 +78,10 @@ export function AddExpenseSheet({
   const [isPending, startTransition] = React.useTransition()
   const [isDatePickerOpen, setIsDatePickerOpen] = React.useState(false)
   const { categories, accounts } = useSettings()
+  const { categorizeExpense, isLoading: isCategorizationLoading } = useExpenseCategorization()
+  const { processReceipt, isProcessing: isOCRProcessing } = useReceiptOCR()
+  const [aiSuggestions, setAiSuggestions] = React.useState<{category: string, confidence: number, reasoning: string}[]>([])
+  const [showAiSuggestions, setShowAiSuggestions] = React.useState(false)
 
   const videoRef = React.useRef<HTMLVideoElement>(null)
   const [showCamera, setShowCamera] = React.useState(false)
@@ -218,7 +226,118 @@ export function AddExpenseSheet({
         const dataUrl = canvas.toDataURL("image/jpeg")
         form.setValue("receiptImage", dataUrl, { shouldValidate: true })
         setShowCamera(false)
+        
+        // Automatically process the receipt
+        handleReceiptProcessing(dataUrl)
       }
+    }
+  }
+
+  const handleAiCategorization = async () => {
+    if (!categories) return
+    
+    const description = form.getValues("description")
+    const amount = form.getValues("amount")
+    
+    if (!description || !amount) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter a description and amount first.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      const result = await categorizeExpense({
+        description,
+        amount,
+        availableCategories: categories,
+      })
+      
+      setAiSuggestions(result.suggestions)
+      setShowAiSuggestions(true)
+      
+      // Auto-apply the primary suggestion if confidence is high
+      if (result.primarySuggestion.confidence > 0.8) {
+        form.setValue("category", result.primarySuggestion.category, { shouldValidate: true })
+        toast({
+          title: "Category Suggested",
+          description: `AI categorized as "${categories.find(c => c.value === result.primarySuggestion.category)?.label}" with ${Math.round(result.primarySuggestion.confidence * 100)}% confidence.`,
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Categorization Failed",
+        description: "Unable to categorize expense. Please select manually.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const applySuggestion = (categoryValue: string) => {
+    form.setValue("category", categoryValue, { shouldValidate: true })
+    setShowAiSuggestions(false)
+    
+    const categoryName = categories?.find(c => c.value === categoryValue)?.label
+    toast({
+      title: "Category Applied",
+      description: `Set category to "${categoryName}"`,
+    })
+  }
+
+  const handleReceiptProcessing = async (imageData: string) => {
+    try {
+      const result = await processReceipt(imageData)
+      
+      if (result.success && result.extractedData.confidence > 0.3) {
+        const { extractedData } = result
+        
+        // Auto-fill form fields with extracted data
+        if (extractedData.amount > 0) {
+          form.setValue("amount", extractedData.amount, { shouldValidate: true })
+        }
+        
+        if (extractedData.description) {
+          form.setValue("description", extractedData.description, { shouldValidate: true })
+        }
+        
+        if (extractedData.date) {
+          try {
+            const parsedDate = new Date(extractedData.date)
+            if (!isNaN(parsedDate.getTime())) {
+              form.setValue("date", parsedDate, { shouldValidate: true })
+            }
+          } catch (e) {
+            console.warn('Could not parse date from receipt:', extractedData.date)
+          }
+        }
+        
+        // Try to match and set category if available
+        if (extractedData.category && categories) {
+          const matchingCategory = categories.find(c => c.value === extractedData.category)
+          if (matchingCategory) {
+            form.setValue("category", matchingCategory.value, { shouldValidate: true })
+          }
+        }
+        
+        toast({
+          title: "Receipt Processed",
+          description: `Extracted expense data with ${Math.round(extractedData.confidence * 100)}% confidence`,
+        })
+      } else {
+        toast({
+          title: "Receipt Processing",
+          description: "Could not extract clear data from receipt. Please fill in details manually.",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Processing Failed",
+        description: "Unable to process receipt. Please enter details manually.",
+        variant: "destructive",
+      })
     }
   }
 
@@ -342,9 +461,29 @@ export function AddExpenseSheet({
                 name="category"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Category</FormLabel>
+                    <div className="flex items-center justify-between">
+                      <FormLabel>Category</FormLabel>
+                      <PulsatingButton
+                        type="button"
+                        onClick={handleAiCategorization}
+                        disabled={isCategorizationLoading || isPending}
+                        className="h-auto px-2 py-1 text-xs"
+                        pulseColor="#8b5cf6"
+                        duration="2s"
+                      >
+                        {isCategorizationLoading ? (
+                          <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                        ) : (
+                          <Sparkles className="mr-1 h-3 w-3" />
+                        )}
+                        AI Suggest
+                      </PulsatingButton>
+                    </div>
                     <Select
-                      onValueChange={field.onChange}
+                      onValueChange={(value) => {
+                        field.onChange(value)
+                        setShowAiSuggestions(false)
+                      }}
                       defaultValue={field.value}
                       value={field.value}
                     >
@@ -370,6 +509,54 @@ export function AddExpenseSheet({
                         })}
                       </SelectContent>
                     </Select>
+                    
+                    {showAiSuggestions && aiSuggestions.length > 0 && (
+                      <div className="mt-2 space-y-2">
+                        <div className="text-sm text-muted-foreground">AI Suggestions:</div>
+                        {aiSuggestions.map((suggestion, index) => {
+                          const category = categories.find(c => c.value === suggestion.category)
+                          if (!category) return null
+                          
+                          const Icon = getIcon(category.icon)
+                          const confidenceColor = suggestion.confidence > 0.8 
+                            ? "text-green-600" 
+                            : suggestion.confidence > 0.6 
+                            ? "text-yellow-600" 
+                            : "text-orange-600"
+                          
+                          return (
+                            <div
+                              key={index}
+                              className="flex items-center justify-between p-2 rounded-md border cursor-pointer hover:bg-muted/50"
+                              onClick={() => applySuggestion(suggestion.category)}
+                            >
+                              <div className="flex items-center gap-2">
+                                <Icon className="h-4 w-4" />
+                                <span className="text-sm font-medium">{category.label}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className={cn("text-xs font-medium", confidenceColor)}>
+                                  {Math.round(suggestion.confidence * 100)}%
+                                </span>
+                                {suggestion.confidence > 0.8 && (
+                                  <CheckCircle className="h-3 w-3 text-green-600" />
+                                )}
+                              </div>
+                            </div>
+                          )
+                        })}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowAiSuggestions(false)}
+                          className="w-full text-xs"
+                        >
+                          Hide suggestions
+                        </Button>
+                      </div>
+                    )}
+                    
                     <FormMessage />
                   </FormItem>
                 )}
@@ -474,13 +661,27 @@ export function AddExpenseSheet({
                               <Button
                                 type="button"
                                 variant="outline"
+                                onClick={() => handleReceiptProcessing(field.value)}
+                                disabled={isPending || isOCRProcessing}
+                                className="flex-1"
+                              >
+                                {isOCRProcessing ? (
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                ) : (
+                                  <Scan className="mr-2 h-4 w-4" />
+                                )}
+                                Process Receipt
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="outline"
                                 onClick={() => {
                                   form.setValue("receiptImage", "", {
                                     shouldValidate: true,
                                   })
                                   setShowCamera(true)
                                 }}
-                                disabled={isPending}
+                                disabled={isPending || isOCRProcessing}
                               >
                                 Retake
                               </Button>
@@ -492,7 +693,7 @@ export function AddExpenseSheet({
                                     shouldValidate: true,
                                   })
                                 }}
-                                disabled={isPending}
+                                disabled={isPending || isOCRProcessing}
                               >
                                 Remove
                               </Button>
@@ -505,10 +706,16 @@ export function AddExpenseSheet({
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" disabled={isPending}>
+              <ShimmerButton 
+                type="submit" 
+                className="w-full" 
+                disabled={isPending}
+                shimmerColor="#ffffff40"
+                background="hsl(var(--primary))"
+              >
                 {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isEditMode ? "Save Changes" : "Save Expense"}
-              </Button>
+              </ShimmerButton>
             </form>
           </Form>
         )}

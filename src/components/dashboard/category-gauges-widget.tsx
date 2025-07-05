@@ -26,11 +26,6 @@ export function CategoryGaugesWidget({
   sortOrder,
 }: CategoryGaugesWidgetProps) {
   const { categories } = useSettings()
-  const [isClient, setIsClient] = React.useState(false)
-
-  React.useEffect(() => {
-    setIsClient(true)
-  }, [])
 
   const gaugeData = React.useMemo(() => {
     if (!categories) return []
@@ -84,9 +79,7 @@ export function CategoryGaugesWidget({
     return data
   }, [expenses, categories, sortOrder])
 
-  if (!isClient || !categories) {
-    return <Skeleton className="h-full w-full" />
-  }
+  // Remove isClient check - data should be available from SettingsContext
 
   if (gaugeData.length === 0) {
     return (

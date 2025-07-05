@@ -620,6 +620,196 @@ export class SupabaseDataService {
 
     return { accounts, categories, theme, expenses }
   }
+
+  // ==================== REAL-TIME SYNC SUPPORT ====================
+
+  /**
+   * Enable real-time synchronization
+   */
+  enableRealTimeSync(): void {
+    this.config.enableRealTimeSync = true
+    console.log('Real-time sync enabled in data service')
+  }
+
+  /**
+   * Disable real-time synchronization
+   */
+  disableRealTimeSync(): void {
+    this.config.enableRealTimeSync = false
+    console.log('Real-time sync disabled in data service')
+  }
+
+  /**
+   * Check if real-time sync is enabled
+   */
+  isRealTimeSyncEnabled(): boolean {
+    return this.config.enableRealTimeSync
+  }
+
+  /**
+   * Handle real-time sync events from Supabase
+   */
+  handleRealtimeEvent(table: string, eventType: 'INSERT' | 'UPDATE' | 'DELETE', data: any): void {
+    if (!this.config.enableRealTimeSync) return
+
+    // Invalidate cache for the affected table
+    this.cache.invalidate(table)
+    
+    // Update localStorage if it's the fallback source
+    if (this.config.fallbackToSecondary || this.config.primarySource === 'localStorage') {
+      this.updateLocalStorageFromRealtimeEvent(table, eventType, data)
+    }
+
+    console.log(`Real-time event processed: ${eventType} on ${table}`)
+  }
+
+  /**
+   * Update localStorage based on real-time events
+   */
+  private updateLocalStorageFromRealtimeEvent(
+    table: string, 
+    eventType: 'INSERT' | 'UPDATE' | 'DELETE', 
+    data: any
+  ): void {
+    try {
+      const currentData = this.getLocalStorageData<any>(table)
+      
+      switch (eventType) {
+        case 'INSERT':
+          // Add new item to localStorage
+          const insertData = this.transformSupabaseToLocal(table, data)
+          if (insertData) {
+            currentData.push(insertData)
+            this.setLocalStorageData(table, currentData)
+          }
+          break
+          
+        case 'UPDATE':
+          // Update existing item in localStorage
+          const updateData = this.transformSupabaseToLocal(table, data)
+          if (updateData) {
+            const index = currentData.findIndex((item: any) => item.id === updateData.id)
+            if (index !== -1) {
+              currentData[index] = updateData
+              this.setLocalStorageData(table, currentData)
+            }
+          }
+          break
+          
+        case 'DELETE':
+          // Remove item from localStorage
+          const filteredData = currentData.filter((item: any) => item.id !== data.id)
+          this.setLocalStorageData(table, filteredData)
+          break
+      }
+    } catch (error) {
+      console.error(`Failed to update localStorage for ${table}:`, error)
+    }
+  }
+
+  /**
+   * Transform Supabase data format to localStorage format
+   */
+  private transformSupabaseToLocal(table: string, supabaseData: any): any {
+    switch (table) {
+      case 'expenses':
+        return {
+          id: supabaseData.id,
+          description: supabaseData.description,
+          amount: supabaseData.amount,
+          date: supabaseData.date,
+          category: supabaseData.category || 'other',
+          accountTypeId: supabaseData.account || 'cash',
+          accountOwner: supabaseData.account_owner || 'User',
+          receiptImage: supabaseData.receipt_image || undefined,
+        }
+      
+      case 'accounts':
+      case 'categories':
+      case 'themes':
+        // These already match the localStorage format
+        return supabaseData
+        
+      default:
+        return supabaseData
+    }
+  }
+
+  /**
+   * Queue a change for real-time sync when offline
+   */
+  queueOfflineChange(table: string, operation: 'INSERT' | 'UPDATE' | 'DELETE', data: any): void {
+    if (typeof window === 'undefined') return
+
+    try {
+      const queueKey = this.getStorageKey('offline_queue')
+      const queue = JSON.parse(window.localStorage.getItem(queueKey) || '[]')
+      
+      queue.push({
+        table,
+        operation,
+        data,
+        timestamp: Date.now(),
+        id: crypto.randomUUID()
+      })
+      
+      window.localStorage.setItem(queueKey, JSON.stringify(queue))
+      console.log(`Queued offline change: ${operation} on ${table}`)
+    } catch (error) {
+      console.error('Failed to queue offline change:', error)
+    }
+  }
+
+  /**
+   * Process queued offline changes when back online
+   */
+  async processOfflineQueue(): Promise<void> {
+    if (typeof window === 'undefined' || !supabase) return
+
+    try {
+      const queueKey = this.getStorageKey('offline_queue')
+      const queue = JSON.parse(window.localStorage.getItem(queueKey) || '[]')
+      
+      if (queue.length === 0) return
+
+      console.log(`Processing ${queue.length} offline changes...`)
+      
+      for (const change of queue) {
+        try {
+          await this.applyOfflineChange(change)
+        } catch (error) {
+          console.error('Failed to apply offline change:', change, error)
+        }
+      }
+      
+      // Clear the queue after processing
+      window.localStorage.removeItem(queueKey)
+      console.log('Offline queue processed successfully')
+    } catch (error) {
+      console.error('Failed to process offline queue:', error)
+    }
+  }
+
+  /**
+   * Apply a single offline change to Supabase
+   */
+  private async applyOfflineChange(change: any): Promise<void> {
+    if (!supabase) return
+
+    const { table, operation, data } = change
+
+    switch (operation) {
+      case 'INSERT':
+        await supabase.from(table).insert(data)
+        break
+      case 'UPDATE':
+        await supabase.from(table).update(data).eq('id', data.id)
+        break
+      case 'DELETE':
+        await supabase.from(table).delete().eq('id', data.id)
+        break
+    }
+  }
 }
 
 // Export singleton instance

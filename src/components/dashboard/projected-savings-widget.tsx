@@ -9,6 +9,7 @@ import type { Expense } from "@/lib/types"
 import { formatCurrency } from "@/lib/utils"
 
 import { Skeleton } from "@/components/ui/skeleton"
+import { CurrencyTicker } from "@/components/ui/currency-ticker"
 import {
   Tooltip,
   TooltipContent,
@@ -23,11 +24,6 @@ export function ProjectedSavingsWidget({
   expenses,
 }: ProjectedSavingsWidgetProps) {
   const { categories } = useSettings()
-  const [isClient, setIsClient] = React.useState(false)
-
-  React.useEffect(() => {
-    setIsClient(true)
-  }, [])
 
   const projectedSavings = React.useMemo(() => {
     if (!categories) return 0
@@ -57,13 +53,7 @@ export function ProjectedSavingsWidget({
     return totalUnusedThreshold
   }, [expenses, categories])
 
-  if (!categories) {
-    return (
-      <div className="flex justify-center">
-        <Skeleton className="h-32 w-32 rounded-full" />
-      </div>
-    )
-  }
+  // Remove skeleton loading - component should render with default data
 
   const formattedSavings = `+${formatCurrency(projectedSavings, "compact")}`
   const fullSavings = `Projected Savings: ${formatCurrency(projectedSavings)}`
@@ -74,12 +64,17 @@ export function ProjectedSavingsWidget({
         <div className="relative flex h-32 w-32 items-center justify-center">
           <PiggyBank className="absolute h-32 w-32 text-muted-foreground/20" />
           <div className="relative text-3xl font-bold text-emerald-500">
-            {isClient ? formattedSavings : <Skeleton className="h-8 w-24" />}
+            <CurrencyTicker 
+              value={projectedSavings} 
+              notation="compact"
+              delay={0.3}
+              className="text-emerald-500"
+            />
           </div>
         </div>
       </TooltipTrigger>
       <TooltipContent>
-        <p>{isClient ? fullSavings : "Calculating..."}</p>
+        <p>{fullSavings}</p>
       </TooltipContent>
     </Tooltip>
   )

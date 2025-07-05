@@ -29,6 +29,7 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { useAuth } from "@/contexts/auth-context"
 import { UserMenu } from "@/components/auth/user-menu"
 import { AuthPage } from "@/components/auth/auth-page"
+import { MiniSyncStatus } from "@/components/sync/sync-status-indicator"
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -164,9 +165,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="flex-1">
             {/* You can add a page title or breadcrumbs here */}
           </div>
-          {user && !isMobile && (
-            <div className="flex items-center gap-2">
-              <UserMenu />
+          {user && (
+            <div className="flex items-center gap-4">
+              <MiniSyncStatus />
+              {!isMobile && <UserMenu />}
             </div>
           )}
         </header>

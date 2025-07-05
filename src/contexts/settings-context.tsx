@@ -11,6 +11,7 @@ import {
   useDataServiceConfig 
 } from "@/hooks/use-supabase-data"
 import { useAuthDataService } from "@/hooks/use-auth-data-service"
+import { useRealtimeSync } from "@/hooks/use-realtime-sync"
 import {
   DEFAULT_ACCOUNTS,
   DEFAULT_CATEGORIES,
@@ -42,6 +43,12 @@ interface SettingsContextType {
   // Sync operations
   syncData: () => Promise<void>
   clearCache: () => void
+  
+  // Real-time sync
+  isRealtimeSyncEnabled: boolean
+  isRealtimeSyncActive: boolean
+  enableRealtimeSync: () => void
+  disableRealtimeSync: () => void
 }
 
 const SettingsContext = React.createContext<SettingsContextType | undefined>(
@@ -53,6 +60,12 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthDataService()
   // Data service configuration
   const { config, updateConfig, clearCache } = useDataServiceConfig()
+  
+  // Real-time sync integration
+  const { isActive: isRealtimeSyncActive, start: startRealtimeSync, stop: stopRealtimeSync } = useRealtimeSync({
+    autoInit: config.primarySource === 'supabase' && isAuthenticated,
+    pauseOnHidden: true
+  })
   
   // Local storage hooks (fallback)
   const [localCategories, setLocalCategories] = useLocalStorage<Category[]>(
@@ -133,6 +146,19 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     }
   }, [usingSupabase, supabaseAccounts, supabaseCategories, supabaseTheme])
 
+  // Real-time sync control functions
+  const enableRealtimeSync = React.useCallback(async () => {
+    updateConfig({ enableRealTimeSync: true })
+    if (isAuthenticated && config.primarySource === 'supabase') {
+      await startRealtimeSync()
+    }
+  }, [updateConfig, isAuthenticated, config.primarySource, startRealtimeSync])
+
+  const disableRealtimeSync = React.useCallback(() => {
+    updateConfig({ enableRealTimeSync: false })
+    stopRealtimeSync()
+  }, [updateConfig, stopRealtimeSync])
+
   // Apply theme to DOM
   React.useEffect(() => {
     if (theme) {
@@ -163,6 +189,12 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       // Sync operations
       syncData,
       clearCache,
+      
+      // Real-time sync
+      isRealtimeSyncEnabled: config.enableRealTimeSync,
+      isRealtimeSyncActive,
+      enableRealtimeSync,
+      disableRealtimeSync,
     }),
     [
       categories,
@@ -177,6 +209,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       error,
       syncData,
       clearCache,
+      config.enableRealTimeSync,
+      isRealtimeSyncActive,
+      enableRealtimeSync,
+      disableRealtimeSync,
     ]
   )
 
