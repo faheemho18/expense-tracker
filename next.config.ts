@@ -25,12 +25,30 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Enable standalone output for better deployment
-  output: 'standalone',
-  // Optimize for production
-  swcMinify: true,
   experimental: {
     optimizePackageImports: ['@radix-ui/react-icons', 'lucide-react'],
+  },
+  webpack: (config, { isServer }) => {
+    // Fix Genkit/OpenTelemetry module resolution issues
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        module: false,
+        handlebars: false,
+      };
+    }
+    
+    // Ignore specific problematic modules during client-side bundling
+    config.externals = config.externals || [];
+    if (!isServer) {
+      config.externals.push({
+        '@opentelemetry/exporter-jaeger': 'commonjs @opentelemetry/exporter-jaeger',
+        'handlebars': 'commonjs handlebars',
+      });
+    }
+    
+    return config;
   },
 };
 
