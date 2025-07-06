@@ -23,7 +23,7 @@ import type {
 import { Button } from "@/components/ui/button"
 import { RainbowButton } from "@/components/magicui/rainbow-button"
 import { AppLayout } from "@/components/app-layout"
-import { AddWidgetDialog } from "@/components/dashboard/add-widget-dialog"
+import { AddWidgetSheet } from "@/components/dashboard/add-widget-sheet"
 import { ExpensesFilters } from "@/components/expenses/expenses-filters"
 import {
   Sheet,
@@ -88,7 +88,7 @@ export default function DashboardPage() {
     "widgets",
     DEFAULT_WIDGETS
   )
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false)
+  const [isWidgetSheetOpen, setIsWidgetSheetOpen] = React.useState(false)
   const [isFilterSheetOpen, setIsFilterSheetOpen] = React.useState(false)
   const [filters, setFilters] = React.useState<WidgetFilters>({
     year: [],
@@ -281,7 +281,7 @@ export default function DashboardPage() {
       </div>
       <RainbowButton
         onClick={() => {
-          setIsDialogOpen(true)
+          setIsWidgetSheetOpen(true)
           // Haptic feedback for mobile
           if (isMobile) {
             vibrate(100)
@@ -301,9 +301,9 @@ export default function DashboardPage() {
           isMobile ? "h-7 w-7" : "h-6 w-6"
         )} />
       </RainbowButton>
-      <AddWidgetDialog
-        isOpen={isDialogOpen}
-        setIsOpen={setIsDialogOpen}
+      <AddWidgetSheet
+        isOpen={isWidgetSheetOpen}
+        setIsOpen={setIsWidgetSheetOpen}
         addWidget={addWidget}
       />
       <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>

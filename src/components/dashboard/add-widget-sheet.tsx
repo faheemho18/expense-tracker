@@ -8,15 +8,17 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 
 import type { WidgetConfig, WidgetType } from "@/lib/types"
+import { cn } from "@/lib/utils"
+import { useIsMobile } from "@/hooks/use-mobile"
+import { MOBILE_SPACING } from "@/utils/mobile-utils"
 import { Button } from "@/components/ui/button"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet"
 import {
   Form,
   FormControl,
@@ -54,7 +56,7 @@ const widgetSchema = z.object({
 
 type WidgetFormValues = z.infer<typeof widgetSchema>
 
-interface AddWidgetDialogProps {
+interface AddWidgetSheetProps {
   isOpen: boolean
   setIsOpen: (isOpen: boolean) => void
   addWidget: (widget: Pick<WidgetConfig, "title" | "type">) => void
@@ -69,12 +71,13 @@ const WIDGET_TYPE_OPTIONS: { value: WidgetType; label: string }[] = [
   { value: "heatmap-calendar", label: "Yearly Spending Heatmap" },
 ]
 
-export function AddWidgetDialog({
+export function AddWidgetSheet({
   isOpen,
   setIsOpen,
   addWidget,
-}: AddWidgetDialogProps) {
+}: AddWidgetSheetProps) {
   const [isPending, startTransition] = React.useTransition()
+  const isMobile = useIsMobile()
 
   const form = useForm<WidgetFormValues>({
     resolver: zodResolver(widgetSchema),
@@ -104,23 +107,34 @@ export function AddWidgetDialog({
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Add a New Widget</DialogTitle>
-          <DialogDescription>
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      <SheetContent>
+        <SheetHeader>
+          <SheetTitle>Add a New Widget</SheetTitle>
+          <SheetDescription>
             Choose a widget type and give it a title to add it to your
             dashboard.
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className={cn(
+              "mt-4",
+              isMobile ? "space-y-6" : "space-y-4"
+            )}
+          >
             <FormField
               control={form.control}
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Widget Title</FormLabel>
+                  <FormLabel className={cn(
+                    "text-sm font-medium",
+                    isMobile ? "text-base" : "text-sm"
+                  )}>
+                    Widget Title
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="e.g., Monthly Overview" {...field} />
                   </FormControl>
@@ -133,7 +147,12 @@ export function AddWidgetDialog({
               name="type"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Widget Type</FormLabel>
+                  <FormLabel className={cn(
+                    "text-sm font-medium",
+                    isMobile ? "text-base" : "text-sm"
+                  )}>
+                    Widget Type
+                  </FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
@@ -155,24 +174,36 @@ export function AddWidgetDialog({
                 </FormItem>
               )}
             />
-            <DialogFooter>
+            <div className={cn(
+              "flex gap-2 pt-4",
+              isMobile ? "flex-col space-y-2" : "flex-row"
+            )}>
               <Button
                 variant="outline"
                 onClick={() => setIsOpen(false)}
                 type="button"
+                className={cn(
+                  isMobile ? "w-full h-12" : "flex-1"
+                )}
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isPending}>
+              <Button 
+                type="submit" 
+                disabled={isPending} 
+                className={cn(
+                  isMobile ? "w-full h-12" : "flex-1"
+                )}
+              >
                 {isPending && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
                 Add Widget
               </Button>
-            </DialogFooter>
+            </div>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   )
 }
