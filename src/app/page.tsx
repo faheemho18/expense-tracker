@@ -445,31 +445,31 @@ export default function HomePage() {
             </Card>
           </div>
         </div>
+        
+        <RainbowButton
+          onClick={() => {
+            setExpenseToEdit(null)
+            setIsAddSheetOpen(true)
+            // Haptic feedback for mobile
+            if (isMobile) {
+              vibrate(100)
+            }
+          }}
+          className={cn(
+            "fixed z-[9999] rounded-full shadow-lg",
+            TOUCH_CLASSES.TOUCH_FEEDBACK,
+            isMobile 
+              ? "bottom-20 right-4 h-16 w-16" // Above bottom nav on mobile
+              : "bottom-6 right-6 h-14 w-14"
+          )}
+          size="icon"
+        >
+          <span className="sr-only">Add Expense</span>
+          <Plus className={cn(
+            isMobile ? "h-7 w-7" : "h-6 w-6"
+          )} />
+        </RainbowButton>
       </AppLayout>
-      
-      <RainbowButton
-        onClick={() => {
-          setExpenseToEdit(null)
-          setIsAddSheetOpen(true)
-          // Haptic feedback for mobile
-          if (isMobile) {
-            vibrate(100)
-          }
-        }}
-        className={cn(
-          "fixed z-[9999] rounded-full shadow-lg",
-          TOUCH_CLASSES.TOUCH_FEEDBACK,
-          isMobile 
-            ? "bottom-20 right-4 h-16 w-16" // Above bottom nav on mobile
-            : "bottom-6 right-6 h-14 w-14"
-        )}
-        size="icon"
-      >
-        <span className="sr-only">Add Expense</span>
-        <Plus className={cn(
-          isMobile ? "h-7 w-7" : "h-6 w-6"
-        )} />
-      </RainbowButton>
       <AddExpenseSheet
         isOpen={isAddSheetOpen}
         setIsOpen={handleSheetOpenChange}
