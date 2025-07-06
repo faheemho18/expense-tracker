@@ -39,20 +39,84 @@ const ChartContainer = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<"div"> & {
     config: ChartConfig
+    aspectRatio?: number
+    minHeight?: number
+    maxHeight?: number
   }
->(({ id, className, children, config, ...props }, ref) => {
+>(({ id, className, children, config, aspectRatio, minHeight = 200, maxHeight, ...props }, ref) => {
   const uniqueId = React.useId()
   const chartId = `chart-${id || uniqueId.replace(/:/g, "")}`
+  const containerRef = React.useRef<HTMLDivElement>(null)
+  const [containerSize, setContainerSize] = React.useState({ width: 0, height: 0 })
+
+  // Use ResizeObserver to track container size changes
+  React.useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
+    const updateSize = () => {
+      const { width, height } = container.getBoundingClientRect()
+      setContainerSize({ width, height })
+    }
+
+    const resizeObserver = new ResizeObserver(updateSize)
+    resizeObserver.observe(container)
+    updateSize() // Initial size
+
+    return () => resizeObserver.disconnect()
+  }, [])
+
+  // Calculate responsive height based on aspect ratio and constraints
+  const responsiveHeight = React.useMemo(() => {
+    if (!containerSize.width) return minHeight
+
+    let calculatedHeight = minHeight
+
+    // Apply aspect ratio if specified
+    if (aspectRatio) {
+      calculatedHeight = containerSize.width / aspectRatio
+    }
+
+    // Apply min/max constraints
+    calculatedHeight = Math.max(calculatedHeight, minHeight)
+    if (maxHeight) {
+      calculatedHeight = Math.min(calculatedHeight, maxHeight)
+    }
+
+    return calculatedHeight
+  }, [containerSize.width, aspectRatio, minHeight, maxHeight])
+
+  // Combine refs to track both container size and forward ref
+  const combinedRef = React.useCallback((node: HTMLDivElement) => {
+    // Update our internal ref for ResizeObserver
+    ;(containerRef as React.MutableRefObject<HTMLDivElement | null>).current = node
+    
+    // Forward to the external ref if provided
+    if (ref) {
+      if (typeof ref === 'function') ref(node)
+      else if (ref.current !== undefined) ref.current = node
+    }
+  }, [ref])
 
   return (
     <ChartContext.Provider value={{ config }}>
       <div
         data-chart={chartId}
-        ref={ref}
+        ref={combinedRef}
         className={cn(
+          "w-full overflow-hidden", // Ensure proper containment
           "[&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-none [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border [&_.recharts-radial-bar-background-sector]:fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted [&_.recharts-reference-line_[stroke='#ccc']]:stroke-border [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-sector]:outline-none [&_.recharts-surface]:outline-none",
+          // Mobile-specific responsive text sizing
+          "[&_.recharts-text]:text-xs sm:[&_.recharts-text]:text-sm",
+          "[&_.recharts-cartesian-axis-tick_text]:text-xs sm:[&_.recharts-cartesian-axis-tick_text]:text-sm",
           className
         )}
+        style={{
+          height: aspectRatio ? responsiveHeight : undefined,
+          minHeight: minHeight,
+          maxHeight: maxHeight,
+          ...props.style
+        }}
         {...props}
       >
         <ChartStyle id={chartId} config={config} />

@@ -107,7 +107,7 @@ export function ChartZoomWrapper({
   }
 
   return (
-    <div className={cn("relative", className)}>
+    <div className={cn("relative h-full w-full", className)}>
       {/* Zoom controls */}
       {scale !== 1 && (
         <div className="absolute top-2 right-2 z-10 flex gap-1">
@@ -116,7 +116,7 @@ export function ChartZoomWrapper({
             size="icon"
             onClick={handleZoomOut}
             disabled={scale <= 0.8}
-            className="h-8 w-8 bg-white/90 text-black hover:bg-white"
+            className="h-8 w-8 bg-white/90 text-black hover:bg-white shadow-md"
           >
             <ZoomOut className="h-4 w-4" />
           </Button>
@@ -125,7 +125,7 @@ export function ChartZoomWrapper({
             size="icon"
             onClick={handleZoomIn}
             disabled={scale >= 3}
-            className="h-8 w-8 bg-white/90 text-black hover:bg-white"
+            className="h-8 w-8 bg-white/90 text-black hover:bg-white shadow-md"
           >
             <ZoomIn className="h-4 w-4" />
           </Button>
@@ -133,39 +133,45 @@ export function ChartZoomWrapper({
             variant="secondary"
             size="icon"
             onClick={resetZoom}
-            className="h-8 w-8 bg-white/90 text-black hover:bg-white"
+            className="h-8 w-8 bg-white/90 text-black hover:bg-white shadow-md"
           >
             <RotateCcw className="h-4 w-4" />
           </Button>
         </div>
       )}
 
-      {/* Chart container */}
+      {/* Chart container with proper bounds */}
       <div
         ref={containerRef}
-        className="overflow-hidden"
+        className="h-full w-full overflow-hidden rounded-lg" // Added rounded borders and full size
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         style={{
           cursor: isDragging ? 'grabbing' : scale > 1 ? 'grab' : 'default',
+          // Ensure container respects bounds
+          position: 'relative',
         }}
       >
         <div
+          className="h-full w-full" // Ensure children take full space
           style={{
             transform: `scale(${scale}) translate(${position.x / scale}px, ${position.y / scale}px)`,
             transformOrigin: 'center center',
             transition: isDragging ? 'none' : 'transform 0.2s ease-out',
+            // Prevent content from exceeding bounds
+            minHeight: '100%',
+            minWidth: '100%',
           }}
         >
           {children}
         </div>
       </div>
 
-      {/* Instructions */}
-      {scale === 1 && (
-        <div className="absolute bottom-2 left-2 right-2 z-10">
-          <div className="rounded bg-black/50 p-2 text-center text-xs text-white">
+      {/* Instructions - only show on mobile and when not zoomed */}
+      {scale === 1 && isMobile && (
+        <div className="absolute bottom-2 left-2 right-2 z-10 pointer-events-none">
+          <div className="rounded bg-black/60 px-3 py-1 text-center text-xs text-white backdrop-blur-sm">
             <p>Pinch to zoom • Drag to pan</p>
           </div>
         </div>

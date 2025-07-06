@@ -58,3 +58,64 @@
     background: hsl(var(--background));
     border-radius: 2px;
 }
+
+/* Mobile-specific optimizations */
+@media (max-width: 768px) {
+  .react-grid-layout {
+    /* Ensure proper stacking on mobile */
+    min-height: auto !important;
+  }
+  
+  .react-grid-item {
+    /* Optimize mobile transitions */
+    transition: all 150ms ease;
+    /* Ensure proper containment */
+    overflow: hidden;
+    /* Add subtle borders for better separation */
+    border: 1px solid hsl(var(--border) / 0.1);
+    border-radius: var(--radius);
+  }
+  
+  .react-grid-item.cssTransforms {
+    /* Faster transforms on mobile */
+    transition-property: transform;
+    transition-duration: 150ms;
+  }
+  
+  /* Hide resize handles on mobile */
+  .react-grid-item > .react-resizable-handle {
+    display: none !important;
+  }
+  
+  /* Optimize placeholder appearance on mobile */
+  .react-grid-item.react-grid-placeholder {
+    background: hsl(var(--primary) / 0.1);
+    border: 2px dashed hsl(var(--primary) / 0.3);
+    opacity: 0.6;
+  }
+}
+
+/* Touch-friendly spacing */
+@media (max-width: 480px) {
+  .react-grid-layout {
+    /* Reduce spacing on very small screens */
+    gap: 8px;
+  }
+  
+  .react-grid-item {
+    /* Minimum touch target size */
+    min-height: 44px;
+    /* Better mobile borders */
+    border-width: 1px;
+    margin: 2px 0;
+  }
+}
+
+/* Prevent layout shifts during loading */
+.react-grid-layout {
+  contain: layout style;
+}
+
+.react-grid-item {
+  contain: layout style paint;
+}
