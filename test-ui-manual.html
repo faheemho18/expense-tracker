@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UI Analysis Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .results { background: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 3px; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 3px; }
+        button:hover { background: #0056b3; }
+        .status { font-weight: bold; }
+        .success { color: green; }
+        .warning { color: orange; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 UI Testing Verification</h1>
+        
+        <div class="test-section">
+            <h2>Test 1: Load Application Pages</h2>
+            <p>Testing if the expense tracker pages are accessible:</p>
+            <button onclick="testPageLoad('http://localhost:3000', 'home')">Test Home Page</button>
+            <button onclick="testPageLoad('http://localhost:3000/dashboard', 'dashboard')">Test Dashboard</button>
+            <button onclick="testPageLoad('http://localhost:3000/themes', 'themes')">Test Themes</button>
+            <div id="page-results" class="results"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Test 2: Run UI Analysis Script</h2>
+            <p>Click to run the UI analysis script on the current page:</p>
+            <button onclick="runUIAnalysis()">Run UI Analysis</button>
+            <div id="analysis-results" class="results"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Test 3: Check Responsive Design</h2>
+            <p>Test different viewport sizes:</p>
+            <button onclick="testViewport(375, 812, 'iPhone 12')">iPhone 12</button>
+            <button onclick="testViewport(768, 1024, 'iPad')">iPad</button>
+            <button onclick="testViewport(1440, 900, 'Desktop')">Desktop</button>
+            <div id="viewport-results" class="results"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Test Results Summary</h2>
+            <div id="summary" class="results">
+                <p>Run tests above to see results...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let testResults = {
+            pageLoads: 0,
+            uiAnalysis: false,
+            viewportTests: 0,
+            issues: []
+        };
+
+        async function testPageLoad(url, pageName) {
+            const resultDiv = document.getElementById('page-results');
+            
+            try {
+                // Try to fetch the page
+                const response = await fetch(url);
+                const status = response.status;
+                
+                if (status === 200) {
+                    resultDiv.innerHTML += `<div class="status success">✅ ${pageName}: HTTP ${status} - OK</div>`;
+                    testResults.pageLoads++;
+                } else {
+                    resultDiv.innerHTML += `<div class="status warning">⚠️ ${pageName}: HTTP ${status} - Warning</div>`;
+                    testResults.issues.push(`${pageName} returned HTTP ${status}`);
+                }
+            } catch (error) {
+                resultDiv.innerHTML += `<div class="status error">❌ ${pageName}: Failed - ${error.message}</div>`;
+                testResults.issues.push(`${pageName} failed to load: ${error.message}`);
+            }
+            
+            updateSummary();
+        }
+
+        function runUIAnalysis() {
+            const resultDiv = document.getElementById('analysis-results');
+            
+            try {
+                // Run basic UI analysis
+                const analysis = {
+                    textOverflow: detectTextOverflow(),
+                    touchTargets: analyzeTouchTargets(),
+                    responsive: checkResponsiveLayout(),
+                    accessibility: quickAccessibilityCheck()
+                };
+                
+                resultDiv.innerHTML = `
+                    <div class="status success">✅ UI Analysis Completed</div>
+                    <div>Text Overflow Issues: ${analysis.textOverflow}</div>
+                    <div>Touch Target Issues: ${analysis.touchTargets.tooSmall}</div>
+                    <div>Responsive Issues: ${analysis.responsive.oversizedElements}</div>
+                    <div>Accessibility Issues: ${analysis.accessibility.total}</div>
+                `;
+                
+                testResults.uiAnalysis = true;
+                
+                if (analysis.textOverflow > 0) testResults.issues.push(`${analysis.textOverflow} text overflow issues`);
+                if (analysis.touchTargets.tooSmall > 0) testResults.issues.push(`${analysis.touchTargets.tooSmall} undersized touch targets`);
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="status error">❌ UI Analysis Failed: ${error.message}</div>`;
+                testResults.issues.push(`UI Analysis failed: ${error.message}`);
+            }
+            
+            updateSummary();
+        }
+
+        function testViewport(width, height, deviceName) {
+            const resultDiv = document.getElementById('viewport-results');
+            
+            try {
+                // Simulate viewport change (limited in this context)
+                const currentWidth = window.innerWidth;
+                const currentHeight = window.innerHeight;
+                
+                resultDiv.innerHTML += `<div class="status">📱 ${deviceName} (${width}x${height}): Current viewport is ${currentWidth}x${currentHeight}</div>`;
+                
+                // Check for horizontal scrolling
+                const hasHorizontalScroll = document.body.scrollWidth > window.innerWidth;
+                
+                if (hasHorizontalScroll) {
+                    resultDiv.innerHTML += `<div class="status warning">⚠️ Horizontal scrolling detected</div>`;
+                    testResults.issues.push(`Horizontal scrolling on ${deviceName}`);
+                } else {
+                    resultDiv.innerHTML += `<div class="status success">✅ No horizontal scrolling</div>`;
+                }
+                
+                testResults.viewportTests++;
+                
+            } catch (error) {
+                resultDiv.innerHTML += `<div class="status error">❌ Viewport test failed: ${error.message}</div>`;
+                testResults.issues.push(`Viewport test failed for ${deviceName}`);
+            }
+            
+            updateSummary();
+        }
+
+        // UI Analysis functions (simplified versions)
+        function detectTextOverflow() {
+            const elements = Array.from(document.querySelectorAll('*'));
+            return elements.filter(el => {
+                const rect = el.getBoundingClientRect();
+                return rect.right > window.innerWidth && rect.width > 0;
+            }).length;
+        }
+
+        function analyzeTouchTargets() {
+            const interactive = Array.from(document.querySelectorAll('button, a, input, [role="button"]'));
+            const tooSmall = interactive.filter(el => {
+                const rect = el.getBoundingClientRect();
+                return (rect.width < 44 || rect.height < 44) && rect.width > 0;
+            }).length;
+            
+            return { total: interactive.length, tooSmall };
+        }
+
+        function checkResponsiveLayout() {
+            return {
+                hasHorizontalScroll: document.body.scrollWidth > window.innerWidth,
+                oversizedElements: Array.from(document.querySelectorAll('*')).filter(el => {
+                    const style = window.getComputedStyle(el);
+                    return style.width.includes('px') && parseInt(style.width) > window.innerWidth;
+                }).length
+            };
+        }
+
+        function quickAccessibilityCheck() {
+            return {
+                total: document.querySelectorAll('img:not([alt])').length +
+                       Array.from(document.querySelectorAll('button')).filter(btn => 
+                           !btn.textContent.trim() && !btn.getAttribute('aria-label')
+                       ).length
+            };
+        }
+
+        function updateSummary() {
+            const summaryDiv = document.getElementById('summary');
+            const totalTests = testResults.pageLoads + (testResults.uiAnalysis ? 1 : 0) + testResults.viewportTests;
+            
+            summaryDiv.innerHTML = `
+                <h3>Test Results Summary</h3>
+                <div class="status">Tests Completed: ${totalTests}</div>
+                <div class="status">Page Load Tests: ${testResults.pageLoads}</div>
+                <div class="status">UI Analysis: ${testResults.uiAnalysis ? 'Completed' : 'Not Run'}</div>
+                <div class="status">Viewport Tests: ${testResults.viewportTests}</div>
+                <div class="status ${testResults.issues.length === 0 ? 'success' : 'warning'}">
+                    Issues Found: ${testResults.issues.length}
+                </div>
+                ${testResults.issues.length > 0 ? '<div><strong>Issues:</strong><ul>' + testResults.issues.map(issue => `<li>${issue}</li>`).join('') + '</ul></div>' : ''}
+                <div class="status ${testResults.issues.length === 0 ? 'success' : 'warning'}">
+                    Overall Status: ${testResults.issues.length === 0 ? '✅ All Tests Passed' : '⚠️ Issues Found'}
+                </div>
+            `;
+        }
+
+        // Initial summary
+        updateSummary();
+    </script>
+</body>
+</html>

@@ -34,6 +34,20 @@ const nextConfig: NextConfig = {
       config.resolve.fallback = {
         ...config.resolve.fallback,
         fs: false,
+        path: false,
+        os: false,
+        crypto: false,
+        stream: false,
+        buffer: false,
+        util: false,
+        url: false,
+        querystring: false,
+        http: false,
+        https: false,
+        zlib: false,
+        net: false,
+        tls: false,
+        child_process: false,
         module: false,
         handlebars: false,
       };
@@ -45,6 +59,17 @@ const nextConfig: NextConfig = {
       config.externals.push({
         '@opentelemetry/exporter-jaeger': 'commonjs @opentelemetry/exporter-jaeger',
         'handlebars': 'commonjs handlebars',
+      });
+    }
+    
+    // Vercel-specific optimizations
+    if (process.env.VERCEL) {
+      config.externals = config.externals || [];
+      config.externals.push({
+        '@google/generative-ai': 'commonjs @google/generative-ai',
+        'genkit': 'commonjs genkit',
+        '@genkit-ai/googleai': 'commonjs @genkit-ai/googleai',
+        '@genkit-ai/next': 'commonjs @genkit-ai/next',
       });
     }
     
