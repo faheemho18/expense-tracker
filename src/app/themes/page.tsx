@@ -64,14 +64,19 @@ export default function ThemesPage() {
     })
   }
 
-  const handleRadiusChange = (value: number[]) => {
+  const handleRadiusChange = React.useCallback((value: number[]) => {
+    console.log('Radius slider changed to:', value[0])
     if (!draftTheme) return
     setDraftTheme({
       ...draftTheme,
       name: "Custom",
       radius: value[0],
     })
-  }
+  }, [draftTheme])
+
+  const handleRadiusCommit = React.useCallback((value: number[]) => {
+    console.log('Radius slider committed to:', value[0])
+  }, [])
 
   const handleSetPreset = (preset: Theme) => {
     setDraftTheme(preset)
@@ -105,19 +110,32 @@ export default function ThemesPage() {
     channel: "h" | "s" | "l"
     value: number
     max: number
-  }) => (
-    <div className="space-y-2">
-      <Label>
-        {label} ({value})
-      </Label>
-      <Slider
-        value={[value]}
-        max={max}
-        step={1}
-        onValueChange={(val) => handleColorChange(colorType, channel, val)}
-      />
-    </div>
-  )
+  }) => {
+    const handleValueChange = React.useCallback((val: number[]) => {
+      console.log(`Slider ${colorType}.${channel} changed to:`, val[0])
+      handleColorChange(colorType, channel, val)
+    }, [colorType, channel])
+
+    const handleValueCommit = React.useCallback((val: number[]) => {
+      console.log(`Slider ${colorType}.${channel} committed to:`, val[0])
+    }, [colorType, channel])
+
+    return (
+      <div className="space-y-2">
+        <Label>
+          {label} ({value})
+        </Label>
+        <Slider
+          value={[value]}
+          max={max}
+          step={1}
+          min={0}
+          onValueChange={handleValueChange}
+          onValueCommit={handleValueCommit}
+        />
+      </div>
+    )
+  }
 
   if (!draftTheme) {
     return (
@@ -255,7 +273,9 @@ export default function ThemesPage() {
                     value={[draftTheme.radius]}
                     max={2}
                     step={0.05}
+                    min={0}
                     onValueChange={handleRadiusChange}
+                    onValueCommit={handleRadiusCommit}
                   />
                 </div>
               </div>

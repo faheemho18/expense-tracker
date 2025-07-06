@@ -8,6 +8,7 @@ import { Responsive, WidthProvider, type Layout } from "react-grid-layout"
 
 import type { Account, Expense, WidgetConfig, WidgetFilters } from "@/lib/types"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 import { AccountPieChartWidget } from "./account-pie-chart-widget"
 import { CategoryPieChartWidget } from "./category-pie-chart-widget"
@@ -67,26 +68,54 @@ export function DashboardGrid({
   areGlobalFiltersActive,
   onLayoutChange,
 }: DashboardGridProps) {
+  const isMobile = useIsMobile()
+  
   const layouts = React.useMemo(() => {
-    if (!widgets) return { lg: [] }
-    return {
-      lg: widgets.map((widget) => {
+    if (!widgets) return { lg: [], md: [], sm: [], xs: [], xxs: [] }
+    
+    const createLayout = (cols: number, isMobileBreakpoint: boolean = false) => {
+      return widgets.map((widget, index) => {
         const isStats = widget.type === "stats"
-        const defaultW = isStats ? 12 : 6
-        const defaultH = isStats ? 4 : 6
+        
+        if (isMobileBreakpoint) {
+          // Mobile layouts: full width for all widgets, optimized heights
+          return {
+            i: widget.id,
+            x: 0,
+            y: index * (isStats ? 3 : 5), // Stacked vertically
+            w: cols, // Full width on mobile
+            h: isStats ? 3 : 5, // Smaller heights for mobile
+            minW: cols,
+            minH: isStats ? 3 : 4,
+            maxH: isStats ? 3 : 6,
+            isResizable: false, // Disable resizing on mobile for better UX
+          }
+        } else {
+          // Desktop layouts: original logic
+          const defaultW = isStats ? 12 : 6
+          const defaultH = isStats ? 4 : 6
 
-        return {
-          i: widget.id,
-          x: widget.x ?? 0,
-          y: widget.y ?? Infinity,
-          w: widget.w ?? defaultW,
-          h: widget.h ?? defaultH,
-          minW: 6,
-          minH: 4,
-          maxH: isStats ? 4 : 6,
-          isResizable: true,
+          return {
+            i: widget.id,
+            x: widget.x ?? 0,
+            y: widget.y ?? Infinity,
+            w: widget.w ?? defaultW,
+            h: widget.h ?? defaultH,
+            minW: 6,
+            minH: 4,
+            maxH: isStats ? 4 : 6,
+            isResizable: true,
+          }
         }
-      }),
+      })
+    }
+
+    return {
+      lg: createLayout(12, false),  // Desktop: 12 columns
+      md: createLayout(10, false),  // Tablet: 10 columns
+      sm: createLayout(6, true),    // Small tablet: 6 columns, mobile-like
+      xs: createLayout(4, true),    // Mobile: 4 columns
+      xxs: createLayout(2, true),   // Small mobile: 2 columns
     }
   }, [widgets])
 
@@ -136,11 +165,14 @@ export function DashboardGrid({
       layouts={layouts}
       breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
       cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
-      rowHeight={50}
-      draggableHandle=".drag-handle"
+      rowHeight={isMobile ? 40 : 50} // Shorter rows on mobile for better fit
+      draggableHandle={isMobile ? ".never-drag" : ".drag-handle"} // Disable dragging on mobile
+      isDraggable={!isMobile} // Completely disable dragging on mobile
+      isResizable={!isMobile} // Disable resizing on mobile
       onDragStop={handleLayoutChange}
       onResizeStop={handleResizeStop}
-      className="min-h-[500px]"
+      className={isMobile ? "min-h-[300px]" : "min-h-[500px]"}
+      margin={isMobile ? [8, 8] : [16, 16]} // Smaller margins on mobile
     >
       {widgets.map((widget) => {
         const widgetFilters = widget.filters

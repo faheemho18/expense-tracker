@@ -27,8 +27,10 @@ export function getThemeCssProperties(theme: Theme): CSSProperties {
       isDark ? background.l + 4 : 100
     }%`,
     "--card-foreground": `hsl(var(--foreground))`,
-    "--popover": `hsl(var(--card))`,
-    "--popover-foreground": `hsl(var(--card-foreground))`,
+    "--popover": `${background.h} ${background.s}% ${
+      isDark ? background.l + 4 : 98
+    }%`,
+    "--popover-foreground": `${background.h} 10% ${isDark ? 98 : 10}%`,
 
     "--secondary": `${background.h} ${background.s * 0.8}% ${
       isDark ? background.l + 8 : 96

@@ -34,17 +34,17 @@ export function StatsWidget({ expenses }: StatsWidgetProps) {
   }, [expenses])
 
   return (
-    <div className="h-full w-full p-5">
-      <div className="grid h-full grid-cols-2 grid-rows-2 gap-4">
-        <Card className="flex flex-col">
+    <div className="h-full w-full p-3 sm:p-5">
+      <div className="grid h-full grid-cols-1 gap-3 sm:grid-cols-2 sm:grid-rows-2 sm:gap-4 md:gap-4">
+        <Card className="flex flex-col min-h-[120px] sm:min-h-0">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-lg font-medium">
+            <CardTitle className="text-base sm:text-lg font-medium truncate">
               Total Expenses
             </CardTitle>
-            <ArrowDown className="h-4 w-4 text-destructive" />
+            <ArrowDown className="h-4 w-4 text-destructive flex-shrink-0" />
           </CardHeader>
           <CardContent className="flex flex-1 flex-col items-center justify-center">
-            <div className="text-3xl font-bold">
+            <div className="text-2xl sm:text-3xl font-bold truncate max-w-full">
               <CurrencyTicker 
                 value={stats.totalExpenses} 
                 delay={0.2}
@@ -52,15 +52,15 @@ export function StatsWidget({ expenses }: StatsWidgetProps) {
             </div>
           </CardContent>
         </Card>
-        <Card className="flex flex-col">
+        <Card className="flex flex-col min-h-[120px] sm:min-h-0">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-lg font-medium">
+            <CardTitle className="text-base sm:text-lg font-medium truncate">
               Total Refunds
             </CardTitle>
-            <ArrowUp className="h-4 w-4 text-emerald-500" />
+            <ArrowUp className="h-4 w-4 text-emerald-500 flex-shrink-0" />
           </CardHeader>
           <CardContent className="flex flex-1 flex-col items-center justify-center">
-            <div className="text-3xl font-bold">
+            <div className="text-2xl sm:text-3xl font-bold truncate max-w-full">
               <CurrencyTicker 
                 value={stats.totalRefunds} 
                 delay={0.4}
@@ -68,13 +68,13 @@ export function StatsWidget({ expenses }: StatsWidgetProps) {
             </div>
           </CardContent>
         </Card>
-        <Card className="flex flex-col">
+        <Card className="flex flex-col min-h-[120px] sm:min-h-0">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-lg font-medium">Net Total</CardTitle>
-            <Banknote className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-base sm:text-lg font-medium truncate">Net Total</CardTitle>
+            <Banknote className="h-4 w-4 text-muted-foreground flex-shrink-0" />
           </CardHeader>
           <CardContent className="flex flex-1 flex-col items-center justify-center">
-            <div className="text-3xl font-bold">
+            <div className="text-2xl sm:text-3xl font-bold truncate max-w-full">
               <CurrencyTicker 
                 value={stats.netTotal} 
                 delay={0.6}
@@ -82,13 +82,13 @@ export function StatsWidget({ expenses }: StatsWidgetProps) {
             </div>
           </CardContent>
         </Card>
-        <Card className="flex flex-col">
+        <Card className="flex flex-col min-h-[120px] sm:min-h-0">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-lg font-medium">Transactions</CardTitle>
-            <List className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-base sm:text-lg font-medium truncate">Transactions</CardTitle>
+            <List className="h-4 w-4 text-muted-foreground flex-shrink-0" />
           </CardHeader>
           <CardContent className="flex flex-1 flex-col items-center justify-center">
-            <div className="text-3xl font-bold">
+            <div className="text-2xl sm:text-3xl font-bold truncate max-w-full">
               <NumberTicker 
                 value={stats.transactionCount} 
                 delay={0.8}

@@ -30,6 +30,8 @@ import { useAuth } from "@/contexts/auth-context"
 import { UserMenu } from "@/components/auth/user-menu"
 import { AuthPage } from "@/components/auth/auth-page"
 import { MiniSyncStatus } from "@/components/sync/sync-status-indicator"
+import { BottomNav } from "@/components/navigation/bottom-nav"
+import { SwipeNavigation } from "@/components/navigation/swipe-navigation"
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -178,8 +180,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
           )}
         </header>
-        <main>{children}</main>
+        <main className={isMobile ? "pb-16" : ""}>
+          <SwipeNavigation>
+            {children}
+          </SwipeNavigation>
+        </main>
       </SidebarInset>
+      <BottomNav />
     </SidebarProvider>
   )
 }

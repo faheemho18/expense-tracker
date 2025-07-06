@@ -5,6 +5,8 @@ import * as React from "react"
 import { Edit, Filter, MoreVertical, Trash, GripVertical } from "lucide-react"
 
 import type { WidgetConfig, WidgetFilters } from "@/lib/types"
+import { useIsMobile } from "@/hooks/use-mobile"
+import { cn } from "@/lib/utils"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -42,23 +44,39 @@ export function WidgetWrapper({
   availableMonths,
   availableYears,
 }: WidgetWrapperProps) {
+  const isMobile = useIsMobile()
   const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false)
   const [isFilterSheetOpen, setIsFilterSheetOpen] = React.useState(false)
 
   return (
     <Card className="flex h-full w-full flex-col transition-shadow hover:shadow-md">
-      <CardHeader className="flex flex-row items-center border-b p-4">
-        <div className="drag-handle cursor-move pr-2 text-muted-foreground">
-          <GripVertical className="h-5 w-5" />
-        </div>
+      <CardHeader className={cn(
+        "flex flex-row items-center border-b",
+        isMobile ? "p-2" : "p-4" // Smaller padding on mobile
+      )}>
+        {/* Hide drag handle on mobile */}
+        {!isMobile && (
+          <div className="drag-handle cursor-move pr-2 text-muted-foreground">
+            <GripVertical className="h-5 w-5" />
+          </div>
+        )}
         <div className="flex flex-1 items-center gap-2">
-          <CardTitle className="text-base font-medium">
+          <CardTitle className={cn(
+            "font-medium",
+            isMobile ? "text-sm" : "text-base" // Smaller text on mobile
+          )}>
             {widget.title}
           </CardTitle>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className={cn(
+                isMobile ? "h-9 w-9 min-h-[44px] min-w-[44px]" : "h-8 w-8"
+              )}
+            >
               <MoreVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -82,7 +100,10 @@ export function WidgetWrapper({
           </DropdownMenuContent>
         </DropdownMenu>
       </CardHeader>
-      <CardContent className="min-h-0 flex-1 p-0">{children}</CardContent>
+      <CardContent className={cn(
+        "min-h-0 flex-1",
+        isMobile ? "p-2" : "p-0" // Add small padding on mobile for better spacing
+      )}>{children}</CardContent>
       <EditWidgetDialog
         isOpen={isEditDialogOpen}
         setIsOpen={setIsEditDialogOpen}

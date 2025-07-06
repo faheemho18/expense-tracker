@@ -16,6 +16,8 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useIsMobile } from "@/hooks/use-mobile"
+import { ChartZoomWrapper } from "@/components/ui/chart-zoom-wrapper"
 
 interface CategoryPieChartWidgetProps {
   expenses: Expense[]
@@ -25,6 +27,7 @@ export function CategoryPieChartWidget({
   expenses,
 }: CategoryPieChartWidgetProps) {
   const { categories } = useSettings()
+  const isMobile = useIsMobile()
   const [inactiveCategories, setInactiveCategories] = React.useState<string[]>([])
 
   const { data, chartConfig } = React.useMemo(() => {
@@ -94,47 +97,67 @@ export function CategoryPieChartWidget({
   }
 
   return (
-    <ChartContainer config={chartConfig} className="h-full w-full p-5">
-      <div className="flex h-full w-full flex-row gap-4">
-        <div className="min-h-0 flex-1">
-          <RechartsPrimitive.ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Tooltip
-                cursor={false}
-                content={<ChartTooltipContent hideLabel nameKey="category" />}
-              />
-              <Pie
-                data={data}
-                dataKey="total"
-                nameKey="category"
-                innerRadius="60%"
-                strokeWidth={5}
-              >
-                {data.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={entry.fill}
-                    className={cn(
-                      "transition-opacity",
-                      inactiveCategories.includes(entry.category)
-                        ? "opacity-30"
-                        : "opacity-100"
-                    )}
-                  />
-                ))}
-              </Pie>
-            </PieChart>
-          </RechartsPrimitive.ResponsiveContainer>
+    <ChartZoomWrapper className="h-full w-full">
+      <ChartContainer config={chartConfig} className={cn(
+        "h-full w-full",
+        isMobile ? "p-2" : "p-5" // Smaller padding on mobile
+      )}>
+        <div className={cn(
+          "flex h-full w-full gap-4",
+          isMobile ? "flex-col" : "flex-row" // Stack vertically on mobile
+        )}>
+          <div className={cn(
+            "min-h-0",
+            isMobile ? "h-2/3 w-full" : "flex-1" // Take 2/3 height on mobile
+          )}>
+            <RechartsPrimitive.ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Tooltip
+                  cursor={false}
+                  content={<ChartTooltipContent hideLabel nameKey="category" />}
+                />
+                <Pie
+                  data={data}
+                  dataKey="total"
+                  nameKey="category"
+                  innerRadius={isMobile ? "50%" : "60%"} // Smaller inner radius on mobile
+                  strokeWidth={isMobile ? 3 : 5} // Thinner stroke on mobile
+                >
+                  {data.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={entry.fill}
+                      className={cn(
+                        "transition-opacity",
+                        inactiveCategories.includes(entry.category)
+                          ? "opacity-30"
+                          : "opacity-100"
+                      )}
+                    />
+                  ))}
+                </Pie>
+              </PieChart>
+            </RechartsPrimitive.ResponsiveContainer>
+          </div>
+          <div className={cn(
+            "flex justify-center overflow-y-auto",
+            isMobile 
+              ? "h-1/3 w-full flex-row flex-wrap gap-2 pt-2" // Horizontal layout on mobile
+              : "h-full max-h-full w-40 flex-col border-l pl-4" // Vertical layout on desktop
+          )}>
+            <ChartLegendContent
+              payload={legendPayload as any}
+              onItemClick={handleLegendClick}
+              inactiveKeys={inactiveCategories}
+              className={cn(
+                isMobile 
+                  ? "flex-row flex-wrap items-center gap-2" // Horizontal wrap on mobile
+                  : "flex-col items-start" // Vertical stack on desktop
+              )}
+            />
+          </div>
         </div>
-        <div className="flex h-full max-h-full w-40 flex-col justify-center overflow-y-auto border-l pl-4">
-          <ChartLegendContent
-            payload={legendPayload as any}
-            onItemClick={handleLegendClick}
-            inactiveKeys={inactiveCategories}
-            className="flex-col items-start"
-          />
-        </div>
-      </div>
-    </ChartContainer>
+      </ChartContainer>
+    </ChartZoomWrapper>
   )
 }

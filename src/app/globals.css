@@ -106,3 +106,171 @@
     }
   }
 }
+
+/* Mobile-specific utilities */
+@layer utilities {
+  /* Touch target helpers */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+  
+  .touch-target-large {
+    @apply min-h-[48px] min-w-[48px];
+  }
+  
+  /* Touch feedback */
+  .touch-feedback {
+    @apply active:scale-95 transition-transform duration-100;
+  }
+  
+  .touch-highlight {
+    @apply select-none touch-manipulation;
+  }
+  
+  /* Mobile-friendly scrolling */
+  .scroll-mobile {
+    @apply scroll-smooth overscroll-y-contain;
+  }
+  
+  /* Hide scrollbars on mobile */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Mobile-safe text overflow */
+  .text-truncate-mobile {
+    @apply truncate max-w-full;
+  }
+  
+  /* Touch-friendly spacing */
+  .mobile-spacing {
+    @apply p-4 sm:p-6;
+  }
+  
+  /* Mobile-first responsive containers */
+  .mobile-container {
+    @apply w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl mx-auto;
+  }
+  
+  /* Mobile typography scale adjustments */
+  .mobile-text-xs {
+    @apply text-xs sm:text-sm;
+  }
+  
+  .mobile-text-sm {
+    @apply text-sm sm:text-base;
+  }
+  
+  .mobile-text-base {
+    @apply text-base sm:text-lg;
+  }
+  
+  .mobile-text-lg {
+    @apply text-lg sm:text-xl;
+  }
+  
+  .mobile-text-xl {
+    @apply text-xl sm:text-2xl;
+  }
+  
+  .mobile-text-2xl {
+    @apply text-2xl sm:text-3xl;
+  }
+  
+  .mobile-text-3xl {
+    @apply text-3xl sm:text-4xl;
+  }
+  
+  /* Mobile-optimized line heights */
+  .mobile-leading-tight {
+    @apply leading-tight sm:leading-snug;
+  }
+  
+  .mobile-leading-normal {
+    @apply leading-normal sm:leading-relaxed;
+  }
+  
+  /* Mobile-friendly letter spacing */
+  .mobile-tracking-tight {
+    @apply tracking-tight sm:tracking-normal;
+  }
+  
+  .mobile-tracking-normal {
+    @apply tracking-normal sm:tracking-wide;
+  }
+  
+  /* Mobile heading hierarchy */
+  .mobile-h1 {
+    @apply text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mobile-leading-tight;
+  }
+  
+  .mobile-h2 {
+    @apply text-xl sm:text-2xl md:text-3xl lg:text-4xl font-semibold mobile-leading-tight;
+  }
+  
+  .mobile-h3 {
+    @apply text-lg sm:text-xl md:text-2xl lg:text-3xl font-medium mobile-leading-tight;
+  }
+  
+  .mobile-h4 {
+    @apply text-base sm:text-lg md:text-xl lg:text-2xl font-medium mobile-leading-normal;
+  }
+  
+  .mobile-h5 {
+    @apply text-sm sm:text-base md:text-lg lg:text-xl font-medium mobile-leading-normal;
+  }
+  
+  .mobile-h6 {
+    @apply text-xs sm:text-sm md:text-base lg:text-lg font-medium mobile-leading-normal;
+  }
+  
+  /* Mobile body text */
+  .mobile-body {
+    @apply text-sm sm:text-base mobile-leading-normal;
+  }
+  
+  .mobile-body-small {
+    @apply text-xs sm:text-sm mobile-leading-normal;
+  }
+  
+  /* Mobile caption text */
+  .mobile-caption {
+    @apply text-xs sm:text-sm text-muted-foreground mobile-leading-normal;
+  }
+  
+  /* Mobile button text */
+  .mobile-button-text {
+    @apply text-sm sm:text-base font-medium mobile-leading-normal;
+  }
+  
+  /* Mobile label text */
+  .mobile-label {
+    @apply text-xs sm:text-sm font-medium mobile-leading-normal;
+  }
+  
+  /* Mobile accessibility - larger text when system preference is set */
+  @media (prefers-reduced-motion: no-preference) {
+    .mobile-text-responsive {
+      font-size: clamp(0.875rem, 2.5vw, 1.125rem);
+    }
+  }
+  
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    .mobile-text-high-contrast {
+      @apply font-semibold;
+    }
+  }
+  
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    .mobile-text-no-animation {
+      @apply transition-none;
+    }
+  }
+}

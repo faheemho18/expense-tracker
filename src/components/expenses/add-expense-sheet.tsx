@@ -13,6 +13,8 @@ import type { Expense } from "@/lib/types"
 import { cn, getIcon } from "@/lib/utils"
 import { useExpenseCategorization } from "@/hooks/use-expense-categorization"
 import { useReceiptOCR } from "@/hooks/use-receipt-ocr"
+import { useIsMobile, useHapticFeedback } from "@/hooks/use-mobile"
+import { TOUCH_CLASSES, MOBILE_SPACING } from "@/utils/mobile-utils"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { ShimmerButton } from "@/components/magicui/shimmer-button"
@@ -82,6 +84,8 @@ export function AddExpenseSheet({
   const { processReceipt, isProcessing: isOCRProcessing } = useReceiptOCR()
   const [aiSuggestions, setAiSuggestions] = React.useState<{category: string, confidence: number, reasoning: string}[]>([])
   const [showAiSuggestions, setShowAiSuggestions] = React.useState(false)
+  const isMobile = useIsMobile()
+  const { vibrate } = useHapticFeedback()
 
   const videoRef = React.useRef<HTMLVideoElement>(null)
   const [showCamera, setShowCamera] = React.useState(false)
@@ -167,6 +171,11 @@ export function AddExpenseSheet({
   }, [isOpen, showCamera])
 
   const onSubmit = (values: ExpenseFormValues) => {
+    // Haptic feedback for mobile
+    if (isMobile) {
+      vibrate(50)
+    }
+    
     startTransition(() => {
       try {
         if (!accounts) throw new Error("Accounts not loaded")
@@ -215,6 +224,11 @@ export function AddExpenseSheet({
   }
 
   const handleCapture = () => {
+    // Haptic feedback for mobile
+    if (isMobile) {
+      vibrate(100)
+    }
+    
     const video = videoRef.current
     if (video) {
       const canvas = document.createElement("canvas")
@@ -353,40 +367,86 @@ export function AddExpenseSheet({
         setIsOpen(open)
       }}
     >
-      <SheetContent className="overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>
+      <SheetContent className={cn(
+        "overflow-y-auto",
+        isMobile ? "w-full max-w-full" : "w-full max-w-sm"
+      )}>
+        <SheetHeader className={cn(
+          "pb-4",
+          isMobile ? "pb-6" : "pb-4"
+        )}>
+          <SheetTitle className={cn(
+            "text-left",
+            isMobile ? "text-xl" : "text-lg"
+          )}>
             {isEditMode ? "Edit Expense" : "Add New Expense"}
           </SheetTitle>
-          <SheetDescription>
+          <SheetDescription className={cn(
+            "text-left",
+            isMobile ? "text-base" : "text-sm"
+          )}>
             {isEditMode
               ? "Update the details of your expense."
               : "Enter the details of your expense. Click save when you're done."}
           </SheetDescription>
         </SheetHeader>
         {isLoading ? (
-          <div className="mt-4 space-y-4">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
+          <div className={cn(
+            "mt-4",
+            isMobile ? "space-y-6" : "space-y-4"
+          )}>
+            <Skeleton className={cn(
+              "w-full",
+              isMobile ? "h-12" : "h-10"
+            )} />
+            <Skeleton className={cn(
+              "w-full",
+              isMobile ? "h-12" : "h-10"
+            )} />
+            <Skeleton className={cn(
+              "w-full",
+              isMobile ? "h-12" : "h-10"
+            )} />
+            <Skeleton className={cn(
+              "w-full",
+              isMobile ? "h-12" : "h-10"
+            )} />
+            <Skeleton className={cn(
+              "w-full",
+              isMobile ? "h-12" : "h-10"
+            )} />
           </div>
         ) : (
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
-              className="mt-4 space-y-4"
+              className={cn(
+                "mt-4",
+                isMobile ? "space-y-6" : "space-y-4"
+              )}
             >
               <FormField
                 control={form.control}
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
+                    <FormLabel className={cn(
+                      "text-sm font-medium",
+                      isMobile ? "text-base" : "text-sm"
+                    )}>
+                      Description
+                    </FormLabel>
                     <FormControl>
                       <Input
                         placeholder="e.g., Coffee with friends"
+                        autoComplete="off"
+                        autoCapitalize="sentences"
+                        autoCorrect="on"
+                        className={cn(
+                          TOUCH_CLASSES.TOUCH_TARGET,
+                          TOUCH_CLASSES.TOUCH_FEEDBACK,
+                          isMobile ? "h-12 text-base" : "h-11 text-sm"
+                        )}
                         {...field}
                       />
                     </FormControl>
@@ -399,12 +459,24 @@ export function AddExpenseSheet({
                 name="amount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Amount</FormLabel>
+                    <FormLabel className={cn(
+                      "text-sm font-medium",
+                      isMobile ? "text-base" : "text-sm"
+                    )}>
+                      Amount
+                    </FormLabel>
                     <FormControl>
                       <Input
                         type="number"
+                        inputMode="decimal"
                         step="0.01"
                         placeholder="Enter amount (use negative for refunds)"
+                        autoComplete="transaction-amount"
+                        className={cn(
+                          TOUCH_CLASSES.TOUCH_TARGET,
+                          TOUCH_CLASSES.TOUCH_FEEDBACK,
+                          isMobile ? "h-12 text-base" : "h-11 text-sm"
+                        )}
                         {...field}
                       />
                     </FormControl>
@@ -417,7 +489,12 @@ export function AddExpenseSheet({
                 name="date"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>Date</FormLabel>
+                    <FormLabel className={cn(
+                      "text-sm font-medium",
+                      isMobile ? "text-base" : "text-sm"
+                    )}>
+                      Date
+                    </FormLabel>
                     <Popover
                       open={isDatePickerOpen}
                       onOpenChange={setIsDatePickerOpen}
@@ -427,8 +504,11 @@ export function AddExpenseSheet({
                           <Button
                             variant={"outline"}
                             className={cn(
-                              "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
+                              "w-full pl-3 text-left font-normal justify-start",
+                              !field.value && "text-muted-foreground",
+                              TOUCH_CLASSES.TOUCH_TARGET,
+                              TOUCH_CLASSES.TOUCH_FEEDBACK,
+                              isMobile ? "h-12 text-base" : "h-11 text-sm"
                             )}
                           >
                             {field.value ? (
@@ -436,19 +516,35 @@ export function AddExpenseSheet({
                             ) : (
                               <span>Pick a date</span>
                             )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            <CalendarIcon className={cn(
+                              "ml-auto opacity-50",
+                              isMobile ? "h-5 w-5" : "h-4 w-4"
+                            )} />
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
+                      <PopoverContent 
+                        className={cn(
+                          "w-auto p-0",
+                          isMobile ? "w-screen max-w-sm" : "w-auto"
+                        )} 
+                        align={isMobile ? "center" : "start"}
+                      >
                         <Calendar
                           mode="single"
                           selected={field.value}
                           onSelect={(date) => {
                             field.onChange(date)
                             setIsDatePickerOpen(false)
+                            // Haptic feedback for mobile
+                            if (isMobile) {
+                              vibrate(50)
+                            }
                           }}
                           initialFocus
+                          className={cn(
+                            isMobile ? "text-base" : "text-sm"
+                          )}
                         />
                       </PopoverContent>
                     </Popover>
@@ -462,19 +558,34 @@ export function AddExpenseSheet({
                 render={({ field }) => (
                   <FormItem>
                     <div className="flex items-center justify-between">
-                      <FormLabel>Category</FormLabel>
+                      <FormLabel className={cn(
+                        "text-sm font-medium",
+                        isMobile ? "text-base" : "text-sm"
+                      )}>
+                        Category
+                      </FormLabel>
                       <PulsatingButton
                         type="button"
                         onClick={handleAiCategorization}
                         disabled={isCategorizationLoading || isPending}
-                        className="h-auto px-2 py-1 text-xs"
+                        className={cn(
+                          "h-auto text-xs",
+                          isMobile ? "px-3 py-2 text-sm min-h-[44px]" : "px-2 py-1 text-xs",
+                          TOUCH_CLASSES.TOUCH_FEEDBACK
+                        )}
                         pulseColor="#8b5cf6"
                         duration="2s"
                       >
                         {isCategorizationLoading ? (
-                          <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                          <Loader2 className={cn(
+                            "mr-1 animate-spin",
+                            isMobile ? "h-4 w-4" : "h-3 w-3"
+                          )} />
                         ) : (
-                          <Sparkles className="mr-1 h-3 w-3" />
+                          <Sparkles className={cn(
+                            "mr-1",
+                            isMobile ? "h-4 w-4" : "h-3 w-3"
+                          )} />
                         )}
                         AI Suggest
                       </PulsatingButton>
@@ -483,25 +594,41 @@ export function AddExpenseSheet({
                       onValueChange={(value) => {
                         field.onChange(value)
                         setShowAiSuggestions(false)
+                        // Haptic feedback for mobile
+                        if (isMobile) {
+                          vibrate(50)
+                        }
                       }}
                       defaultValue={field.value}
                       value={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className={cn(
+                          TOUCH_CLASSES.TOUCH_TARGET,
+                          TOUCH_CLASSES.TOUCH_FEEDBACK,
+                          isMobile ? "h-12 text-base" : "h-11 text-sm"
+                        )}>
                           <SelectValue placeholder="Select a category" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent className={cn(
+                        isMobile ? "max-h-[300px]" : "max-h-[200px]"
+                      )}>
                         {categories.map((category) => {
                           const Icon = getIcon(category.icon)
                           return (
                             <SelectItem
                               key={category.value}
                               value={category.value}
+                              className={cn(
+                                TOUCH_CLASSES.TOUCH_TARGET,
+                                isMobile ? "py-3 text-base" : "py-2 text-sm"
+                              )}
                             >
                               <div className="flex items-center gap-2">
-                                <Icon className="h-4 w-4" />
+                                <Icon className={cn(
+                                  isMobile ? "h-5 w-5" : "h-4 w-4"
+                                )} />
                                 {category.label}
                               </div>
                             </SelectItem>
@@ -511,8 +638,16 @@ export function AddExpenseSheet({
                     </Select>
                     
                     {showAiSuggestions && aiSuggestions.length > 0 && (
-                      <div className="mt-2 space-y-2">
-                        <div className="text-sm text-muted-foreground">AI Suggestions:</div>
+                      <div className={cn(
+                        "mt-2",
+                        isMobile ? "space-y-3" : "space-y-2"
+                      )}>
+                        <div className={cn(
+                          "text-muted-foreground",
+                          isMobile ? "text-sm" : "text-sm"
+                        )}>
+                          AI Suggestions:
+                        </div>
                         {aiSuggestions.map((suggestion, index) => {
                           const category = categories.find(c => c.value === suggestion.category)
                           if (!category) return null
@@ -527,19 +662,43 @@ export function AddExpenseSheet({
                           return (
                             <div
                               key={index}
-                              className="flex items-center justify-between p-2 rounded-md border cursor-pointer hover:bg-muted/50"
-                              onClick={() => applySuggestion(suggestion.category)}
+                              className={cn(
+                                "flex items-center justify-between rounded-md border cursor-pointer hover:bg-muted/50",
+                                TOUCH_CLASSES.TOUCH_TARGET,
+                                TOUCH_CLASSES.TOUCH_FEEDBACK,
+                                isMobile ? "p-3" : "p-2"
+                              )}
+                              onClick={() => {
+                                applySuggestion(suggestion.category)
+                                if (isMobile) {
+                                  vibrate(50)
+                                }
+                              }}
                             >
                               <div className="flex items-center gap-2">
-                                <Icon className="h-4 w-4" />
-                                <span className="text-sm font-medium">{category.label}</span>
+                                <Icon className={cn(
+                                  isMobile ? "h-5 w-5" : "h-4 w-4"
+                                )} />
+                                <span className={cn(
+                                  "font-medium",
+                                  isMobile ? "text-base" : "text-sm"
+                                )}>
+                                  {category.label}
+                                </span>
                               </div>
                               <div className="flex items-center gap-2">
-                                <span className={cn("text-xs font-medium", confidenceColor)}>
+                                <span className={cn(
+                                  "font-medium",
+                                  confidenceColor,
+                                  isMobile ? "text-sm" : "text-xs"
+                                )}>
                                   {Math.round(suggestion.confidence * 100)}%
                                 </span>
                                 {suggestion.confidence > 0.8 && (
-                                  <CheckCircle className="h-3 w-3 text-green-600" />
+                                  <CheckCircle className={cn(
+                                    "text-green-600",
+                                    isMobile ? "h-4 w-4" : "h-3 w-3"
+                                  )} />
                                 )}
                               </div>
                             </div>
@@ -550,7 +709,12 @@ export function AddExpenseSheet({
                           variant="ghost"
                           size="sm"
                           onClick={() => setShowAiSuggestions(false)}
-                          className="w-full text-xs"
+                          className={cn(
+                            "w-full",
+                            TOUCH_CLASSES.TOUCH_TARGET,
+                            TOUCH_CLASSES.TOUCH_FEEDBACK,
+                            isMobile ? "h-12 text-sm" : "text-xs"
+                          )}
                         >
                           Hide suggestions
                         </Button>
@@ -566,27 +730,50 @@ export function AddExpenseSheet({
                 name="accountId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Account</FormLabel>
+                    <FormLabel className={cn(
+                      "text-sm font-medium",
+                      isMobile ? "text-base" : "text-sm"
+                    )}>
+                      Account
+                    </FormLabel>
                     <Select
-                      onValueChange={field.onChange}
+                      onValueChange={(value) => {
+                        field.onChange(value)
+                        // Haptic feedback for mobile
+                        if (isMobile) {
+                          vibrate(50)
+                        }
+                      }}
                       defaultValue={field.value}
                       value={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className={cn(
+                          TOUCH_CLASSES.TOUCH_TARGET,
+                          TOUCH_CLASSES.TOUCH_FEEDBACK,
+                          isMobile ? "h-12 text-base" : "h-11 text-sm"
+                        )}>
                           <SelectValue placeholder="Select an account" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent className={cn(
+                        isMobile ? "max-h-[300px]" : "max-h-[200px]"
+                      )}>
                         {accounts.map((account) => {
                           const Icon = getIcon(account.icon)
                           return (
                             <SelectItem
                               key={account.value}
                               value={account.value}
+                              className={cn(
+                                TOUCH_CLASSES.TOUCH_TARGET,
+                                isMobile ? "py-3 text-base" : "py-2 text-sm"
+                              )}
                             >
                               <div className="flex items-center gap-2">
-                                <Icon className="h-4 w-4" />
+                                <Icon className={cn(
+                                  isMobile ? "h-5 w-5" : "h-4 w-4"
+                                )} />
                                 {account.label} ({account.owner})
                               </div>
                             </SelectItem>
@@ -603,18 +790,38 @@ export function AddExpenseSheet({
                 name="receiptImage"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Receipt</FormLabel>
+                    <FormLabel className={cn(
+                      "text-sm font-medium",
+                      isMobile ? "text-base" : "text-sm"
+                    )}>
+                      Receipt
+                    </FormLabel>
                     <FormControl>
-                      <div className="space-y-2">
+                      <div className={cn(
+                        isMobile ? "space-y-4" : "space-y-2"
+                      )}>
                         {!showCamera && !field.value && (
                           <Button
                             type="button"
                             variant="outline"
-                            className="w-full"
-                            onClick={() => setShowCamera(true)}
+                            className={cn(
+                              "w-full",
+                              TOUCH_CLASSES.TOUCH_TARGET,
+                              TOUCH_CLASSES.TOUCH_FEEDBACK,
+                              isMobile ? "h-12 text-base" : "h-11 text-sm"
+                            )}
+                            onClick={() => {
+                              setShowCamera(true)
+                              if (isMobile) {
+                                vibrate(50)
+                              }
+                            }}
                             disabled={isPending}
                           >
-                            <Camera className="mr-2 h-4 w-4" />
+                            <Camera className={cn(
+                              "mr-2",
+                              isMobile ? "h-5 w-5" : "h-4 w-4"
+                            )} />
                             Add Receipt
                           </Button>
                         )}
@@ -623,52 +830,118 @@ export function AddExpenseSheet({
                           <>
                             <video
                               ref={videoRef}
-                              className="w-full aspect-video rounded-md bg-muted"
+                              className={cn(
+                                "w-full rounded-md bg-muted",
+                                isMobile ? "aspect-[4/3]" : "aspect-video"
+                              )}
                               autoPlay
                               muted
                               playsInline
                             />
                             {hasCameraPermission === false && (
-                              <Alert variant="destructive">
-                                <AlertTitle>Camera Access Required</AlertTitle>
-                                <AlertDescription>
-                                  Please allow camera access to use this
-                                  feature.
+                              <Alert variant="destructive" className={cn(
+                                isMobile ? "p-4" : "p-3"
+                              )}>
+                                <AlertTitle className={cn(
+                                  isMobile ? "text-base" : "text-sm"
+                                )}>
+                                  Camera Access Required
+                                </AlertTitle>
+                                <AlertDescription className={cn(
+                                  isMobile ? "text-sm" : "text-xs"
+                                )}>
+                                  Please allow camera access to use this feature.
                                 </AlertDescription>
                               </Alert>
                             )}
                             {hasCameraPermission && (
-                              <Button
-                                type="button"
-                                onClick={handleCapture}
-                                className="w-full"
-                                disabled={isPending || !hasCameraPermission}
-                              >
-                                <Camera className="mr-2 h-4 w-4" /> Take Picture
-                              </Button>
+                              <div className={cn(
+                                "flex gap-2",
+                                isMobile ? "flex-col space-y-2" : "flex-row"
+                              )}>
+                                <Button
+                                  type="button"
+                                  onClick={handleCapture}
+                                  className={cn(
+                                    "flex-1",
+                                    TOUCH_CLASSES.TOUCH_TARGET,
+                                    TOUCH_CLASSES.TOUCH_FEEDBACK,
+                                    isMobile ? "h-12 text-base" : "text-sm"
+                                  )}
+                                  disabled={isPending || !hasCameraPermission}
+                                >
+                                  <Camera className={cn(
+                                    "mr-2",
+                                    isMobile ? "h-5 w-5" : "h-4 w-4"
+                                  )} />
+                                  Take Picture
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setShowCamera(false)
+                                    if (isMobile) {
+                                      vibrate(50)
+                                    }
+                                  }}
+                                  className={cn(
+                                    isMobile ? "h-12 text-base" : "text-sm",
+                                    TOUCH_CLASSES.TOUCH_TARGET,
+                                    TOUCH_CLASSES.TOUCH_FEEDBACK
+                                  )}
+                                  disabled={isPending}
+                                >
+                                  Cancel
+                                </Button>
+                              </div>
                             )}
                           </>
                         )}
 
                         {field.value && !showCamera && (
-                          <div className="space-y-2">
+                          <div className={cn(
+                            isMobile ? "space-y-4" : "space-y-2"
+                          )}>
                             <img
                               src={field.value}
                               alt="Receipt preview"
-                              className="rounded-md max-h-48 w-auto border"
+                              className={cn(
+                                "rounded-md w-full border object-cover",
+                                isMobile ? "max-h-64" : "max-h-48"
+                              )}
                             />
-                            <div className="flex gap-2">
+                            <div className={cn(
+                              "flex gap-2",
+                              isMobile ? "flex-col space-y-2" : "flex-row"
+                            )}>
                               <Button
                                 type="button"
                                 variant="outline"
-                                onClick={() => handleReceiptProcessing(field.value)}
+                                onClick={() => {
+                                  handleReceiptProcessing(field.value)
+                                  if (isMobile) {
+                                    vibrate(100)
+                                  }
+                                }}
                                 disabled={isPending || isOCRProcessing}
-                                className="flex-1"
+                                className={cn(
+                                  "flex-1",
+                                  TOUCH_CLASSES.TOUCH_TARGET,
+                                  TOUCH_CLASSES.TOUCH_FEEDBACK,
+                                  isMobile ? "h-12 text-base" : "text-sm"
+                                )}
                               >
                                 {isOCRProcessing ? (
-                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  <Loader2 className={cn(
+                                    "mr-2 animate-spin",
+                                    isMobile ? "h-5 w-5" : "h-4 w-4"
+                                  )} />
                                 ) : (
-                                  <Scan className="mr-2 h-4 w-4" />
+                                  <Scan className={cn(
+                                    "mr-2",
+                                    isMobile ? "h-5 w-5" : "h-4 w-4"
+                                  )} />
                                 )}
                                 Process Receipt
                               </Button>
@@ -680,8 +953,16 @@ export function AddExpenseSheet({
                                     shouldValidate: true,
                                   })
                                   setShowCamera(true)
+                                  if (isMobile) {
+                                    vibrate(50)
+                                  }
                                 }}
                                 disabled={isPending || isOCRProcessing}
+                                className={cn(
+                                  TOUCH_CLASSES.TOUCH_TARGET,
+                                  TOUCH_CLASSES.TOUCH_FEEDBACK,
+                                  isMobile ? "h-12 text-base flex-1" : "text-sm"
+                                )}
                               >
                                 Retake
                               </Button>
@@ -692,8 +973,16 @@ export function AddExpenseSheet({
                                   form.setValue("receiptImage", "", {
                                     shouldValidate: true,
                                   })
+                                  if (isMobile) {
+                                    vibrate(50)
+                                  }
                                 }}
                                 disabled={isPending || isOCRProcessing}
+                                className={cn(
+                                  TOUCH_CLASSES.TOUCH_TARGET,
+                                  TOUCH_CLASSES.TOUCH_FEEDBACK,
+                                  isMobile ? "h-12 text-base flex-1" : "text-sm"
+                                )}
                               >
                                 Remove
                               </Button>
@@ -708,12 +997,22 @@ export function AddExpenseSheet({
               />
               <ShimmerButton 
                 type="submit" 
-                className="w-full" 
+                className={cn(
+                  "w-full",
+                  TOUCH_CLASSES.TOUCH_TARGET,
+                  TOUCH_CLASSES.TOUCH_FEEDBACK,
+                  isMobile ? "h-14 text-base font-semibold mt-6" : "h-11 text-sm mt-4"
+                )}
                 disabled={isPending}
                 shimmerColor="#ffffff40"
                 background="hsl(var(--primary))"
               >
-                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isPending && (
+                  <Loader2 className={cn(
+                    "mr-2 animate-spin",
+                    isMobile ? "h-5 w-5" : "h-4 w-4"
+                  )} />
+                )}
                 {isEditMode ? "Save Changes" : "Save Expense"}
               </ShimmerButton>
             </form>

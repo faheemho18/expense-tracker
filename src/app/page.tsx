@@ -21,6 +21,9 @@ import {
 import { useLocalStorage } from "@/hooks/use-local-storage"
 import type { Expense } from "@/lib/types"
 import { useSettings } from "@/contexts/settings-context"
+import { useIsMobile, useHapticFeedback } from "@/hooks/use-mobile"
+import { TOUCH_CLASSES } from "@/utils/mobile-utils"
+import { cn } from "@/lib/utils"
 
 import { AppLayout } from "@/components/app-layout"
 import { CategoryGaugesWidget } from "@/components/dashboard/category-gauges-widget"
@@ -45,6 +48,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { Skeleton } from "@/components/ui/skeleton"
+import { PullToRefresh } from "@/components/ui/pull-to-refresh"
 
 type SortableKey =
   | "date"
@@ -82,6 +86,8 @@ export default function HomePage() {
     "ascending" | "descending" | null
   >(null)
   // Remove isClient state - data should be available from hooks
+  const isMobile = useIsMobile()
+  const { vibrate } = useHapticFeedback()
 
   const ITEMS_PER_PAGE = 8
 
@@ -306,133 +312,163 @@ export default function HomePage() {
     }
   }
 
-  return (
-    <AppLayout>
-      <div className="flex-1 space-y-4 p-4 sm:p-8">
-        <div className="space-y-6">
-          <Card>
-            <CardHeader className="relative grid grid-cols-3 items-center">
-              <CardTitle>Monthly Report</CardTitle>
-              <div className="flex items-center justify-center gap-2">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={handlePreviousMonth}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  <span className="sr-only">Previous month</span>
-                </Button>
-                <span className="w-32 text-center font-medium">
-                  {format(gaugesMonth, "MMMM yyyy")}
-                </span>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={handleNextMonth}
-                  disabled={isAfter(
-                    startOfMonth(gaugesMonth),
-                    startOfMonth(new Date())
-                  )}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                  <span className="sr-only">Next month</span>
-                </Button>
-              </div>
-              <div />
-              <div className="absolute right-[calc(4rem+70px)] top-1/2 z-10 -translate-y-1/2">
-                <ProjectedSavingsWidget expenses={gaugesMonthExpenses} />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="mb-4 flex items-center">
-                <h3 className="text-lg font-semibold tracking-tight">
-                  Monthly Threshold Progress
-                </h3>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="ml-5 h-8 w-8"
-                        onClick={handleGaugeSort}
-                      >
-                        {getGaugeSortIcon()}
-                        <span className="sr-only">Sort by percentage</span>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Sort by Percentage</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              <CategoryGaugesWidget
-                expenses={gaugesMonthExpenses}
-                sortOrder={gaugeSortOrder}
-              />
-            </CardContent>
-          </Card>
+  const handleRefresh = React.useCallback(async () => {
+    // Simulate a refresh delay for better UX
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    
+    // Trigger a re-render by updating the state (in a real app, this would refetch data)
+    setExpenses(prev => [...prev])
+    
+    // Haptic feedback on successful refresh
+    if (isMobile) {
+      vibrate(50)
+    }
+  }, [setExpenses, isMobile])
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Transactions</CardTitle>
-              <div className="flex items-center gap-4">
-                {totalPages > 1 && (
-                  <div className="flex items-center justify-end space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={currentPage === 1}
-                    >
-                      Previous
-                    </Button>
-                    <span className="text-sm text-muted-foreground">
-                      Page {currentPage} of {totalPages}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={currentPage === totalPages}
-                    >
-                      Next
-                    </Button>
-                  </div>
-                )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsFilterSheetOpen(true)}
-                >
-                  <Filter className="mr-2 h-4 w-4" />
-                  Filters
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <ExpensesTable
-                expenses={paginatedExpenses}
-                deleteExpense={deleteExpense}
-                editExpense={handleEdit}
-                sortConfig={sortConfig}
-                requestSort={requestSort}
-              />
-            </CardContent>
-          </Card>
+  return (
+    <>
+      <AppLayout>
+        <div className="flex-1 space-y-4 p-4 sm:p-8">
+          <div className="space-y-6">
+            <Card>
+              <CardHeader className="relative grid grid-cols-3 items-center">
+                <CardTitle>Monthly Report</CardTitle>
+                <div className="flex items-center justify-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handlePreviousMonth}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    <span className="sr-only">Previous month</span>
+                  </Button>
+                  <span className="w-32 text-center font-medium">
+                    {format(gaugesMonth, "MMMM yyyy")}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleNextMonth}
+                    disabled={isAfter(
+                      startOfMonth(gaugesMonth),
+                      startOfMonth(new Date())
+                    )}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                    <span className="sr-only">Next month</span>
+                  </Button>
+                </div>
+                <div />
+                <div className="absolute right-[calc(4rem+70px)] top-1/2 z-10 -translate-y-1/2">
+                  <ProjectedSavingsWidget expenses={gaugesMonthExpenses} />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="mb-4 flex items-center">
+                  <h3 className="text-lg font-semibold tracking-tight">
+                    Monthly Threshold Progress
+                  </h3>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="ml-5 h-8 w-8"
+                          onClick={handleGaugeSort}
+                        >
+                          {getGaugeSortIcon()}
+                          <span className="sr-only">Sort by percentage</span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Sort by Percentage</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <CategoryGaugesWidget
+                  expenses={gaugesMonthExpenses}
+                  sortOrder={gaugeSortOrder}
+                />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Transactions</CardTitle>
+                <div className="flex items-center gap-4">
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-end space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                      >
+                        Previous
+                      </Button>
+                      <span className="text-sm text-muted-foreground">
+                        Page {currentPage} of {totalPages}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsFilterSheetOpen(true)}
+                  >
+                    <Filter className="mr-2 h-4 w-4" />
+                    Filters
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <PullToRefresh onRefresh={handleRefresh}>
+                  <ExpensesTable
+                    expenses={paginatedExpenses}
+                    deleteExpense={deleteExpense}
+                    editExpense={handleEdit}
+                    sortConfig={sortConfig}
+                    requestSort={requestSort}
+                  />
+                </PullToRefresh>
+              </CardContent>
+            </Card>
+          </div>
         </div>
-      </div>
+      </AppLayout>
+      
       <RainbowButton
         onClick={() => {
           setExpenseToEdit(null)
           setIsAddSheetOpen(true)
+          // Haptic feedback for mobile
+          if (isMobile) {
+            vibrate(100)
+          }
         }}
-        className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg"
+        className={cn(
+          "fixed z-[9999] rounded-full shadow-lg",
+          TOUCH_CLASSES.TOUCH_FEEDBACK,
+          isMobile 
+            ? "bottom-20 right-4 h-16 w-16" // Above bottom nav on mobile
+            : "bottom-6 right-6 h-14 w-14"
+        )}
         size="icon"
       >
         <span className="sr-only">Add Expense</span>
-        <Plus className="h-6 w-6" />
+        <Plus className={cn(
+          isMobile ? "h-7 w-7" : "h-6 w-6"
+        )} />
       </RainbowButton>
       <AddExpenseSheet
         isOpen={isAddSheetOpen}
@@ -461,6 +497,6 @@ export default function HomePage() {
           </div>
         </SheetContent>
       </Sheet>
-    </AppLayout>
+    </>
   )
 }

@@ -16,17 +16,14 @@ import {
 import { useSettings } from "@/contexts/settings-context"
 import type { Expense } from "@/lib/types"
 import { cn, formatCurrency, getIcon } from "@/lib/utils"
+import { useSwipeGesture, useLongPress } from "@/hooks/use-touch-gestures"
+import { useIsMobile, useHapticFeedback } from "@/hooks/use-mobile"
+import { TOUCH_CLASSES } from "@/utils/mobile-utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { BlurFade } from "@/components/magicui/blur-fade"
 import { CurrencyTicker } from "@/components/ui/currency-ticker"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+import { ImageViewer } from "@/components/ui/image-viewer"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -70,6 +67,10 @@ export function ExpensesTable({
   requestSort,
 }: ExpensesTableProps) {
   const { categories, accounts } = useSettings()
+  const isMobile = useIsMobile()
+  const { vibrate } = useHapticFeedback()
+  const [swipingExpenseId, setSwipingExpenseId] = React.useState<string | null>(null)
+  const [longPressMenuId, setLongPressMenuId] = React.useState<string | null>(null)
 
   const getCategory = React.useCallback(
     (value: string) => {
@@ -104,9 +105,267 @@ export function ExpensesTable({
 
   // Remove skeleton loading - components should render with default data
 
+  // Mobile card component with swipe gestures
+  const MobileExpenseCard = React.memo(({ expense, index }: { expense: Expense; index: number }) => {
+    const category = getCategory(expense.category)
+    const CategoryIcon = category ? getIcon(category.icon) : null
+    const account = getAccount(expense.accountTypeId)
+    const AccountIcon = account ? getIcon(account.icon) : null
+
+    const swipeGesture = useSwipeGesture((gesture) => {
+      if (gesture.direction === 'left') {
+        // Swipe left to delete
+        if (isMobile) {
+          vibrate(100)
+        }
+        deleteExpense(expense.id)
+      } else if (gesture.direction === 'right') {
+        // Swipe right to edit
+        if (isMobile) {
+          vibrate(50)
+        }
+        editExpense(expense)
+      }
+    }, {
+      swipeThreshold: 80,
+      velocityThreshold: 0.3,
+    })
+
+    const longPressGesture = useLongPress(() => {
+      if (isMobile) {
+        vibrate(75) // Haptic feedback for long press
+        setLongPressMenuId(expense.id)
+      }
+    }, {
+      longPressDelay: 500,
+      tapTolerance: 10,
+    })
+
+    return (
+      <BlurFade key={`mobile-${expense.id}`} delay={0.05 + index * 0.05} inView>
+        <div 
+          className={cn(
+            "rounded-lg border bg-card shadow-sm relative overflow-hidden",
+            TOUCH_CLASSES.TOUCH_MANIPULATION,
+            swipingExpenseId === expense.id ? "scale-95" : "scale-100",
+            "transition-transform duration-200"
+          )}
+          {...swipeGesture}
+          {...longPressGesture}
+          onTouchStart={(e) => {
+            setSwipingExpenseId(expense.id)
+            swipeGesture.onTouchStart(e.nativeEvent as any)
+            longPressGesture.onTouchStart(e.nativeEvent as any)
+          }}
+          onTouchMove={(e) => {
+            swipeGesture.onTouchMove(e.nativeEvent as any)
+            longPressGesture.onTouchMove(e.nativeEvent as any)
+          }}
+          onTouchEnd={(e) => {
+            setSwipingExpenseId(null)
+            swipeGesture.onTouchEnd(e.nativeEvent as any)
+            longPressGesture.onTouchEnd(e.nativeEvent as any)
+          }}
+        >
+          {/* Swipe hints */}
+          <div className="absolute inset-0 flex">
+            <div className="flex-1 flex items-center justify-start pl-4 bg-emerald-500/10">
+              <Edit className="h-5 w-5 text-emerald-600" />
+            </div>
+            <div className="flex-1 flex items-center justify-end pr-4 bg-destructive/10">
+              <Trash2 className="h-5 w-5 text-destructive" />
+            </div>
+          </div>
+          
+          {/* Card content */}
+          <div className="relative bg-card p-4">
+            <div className="flex items-start justify-between">
+              <div className="flex-1 space-y-2">
+                <div className="flex items-center justify-between">
+                  <p className="font-medium text-lg truncate pr-2">{expense.description}</p>
+                  <div className="text-right">
+                    <CurrencyTicker
+                      value={expense.amount}
+                      delay={0.1 + index * 0.05}
+                      className={cn(
+                        "text-lg font-bold tabular-nums",
+                        expense.amount >= 0
+                          ? "text-destructive"
+                          : "text-emerald-600"
+                      )}
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <span>{format(new Date(expense.date), "MMM dd, yyyy")}</span>
+                  {expense.receiptImage && (
+                    <ImageViewer
+                      src={expense.receiptImage}
+                      alt={`Receipt for ${expense.description}`}
+                      trigger={
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={cn(
+                            "h-8 w-8",
+                            TOUCH_CLASSES.TOUCH_TARGET,
+                            TOUCH_CLASSES.TOUCH_FEEDBACK
+                          )}
+                        >
+                          <FileImage className="h-4 w-4" />
+                          <span className="sr-only">View Receipt</span>
+                        </Button>
+                      }
+                    />
+                  )}
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    {CategoryIcon && (
+                      <div className="flex items-center gap-1">
+                        <CategoryIcon className="h-4 w-4" />
+                        <Badge variant="secondary" className="text-xs">
+                          {category?.label}
+                        </Badge>
+                      </div>
+                    )}
+                    {AccountIcon && (
+                      <div className="flex items-center gap-1">
+                        <AccountIcon className="h-4 w-4" />
+                        <Badge variant="outline" className="text-xs">
+                          {account?.label}
+                        </Badge>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className={cn(
+                          "h-9 w-9 p-0",
+                          TOUCH_CLASSES.TOUCH_TARGET,
+                          TOUCH_CLASSES.TOUCH_FEEDBACK
+                        )}
+                      >
+                        <MoreHorizontal className="h-4 w-4" />
+                        <span className="sr-only">Open menu</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem 
+                        onClick={() => {
+                          editExpense(expense)
+                          if (isMobile) {
+                            vibrate(50)
+                          }
+                        }}
+                        className={cn(
+                          TOUCH_CLASSES.TOUCH_TARGET,
+                          "cursor-pointer"
+                        )}
+                      >
+                        <Edit className="mr-2 h-4 w-4" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          deleteExpense(expense.id)
+                          if (isMobile) {
+                            vibrate(100)
+                          }
+                        }}
+                        className={cn(
+                          TOUCH_CLASSES.TOUCH_TARGET,
+                          "text-destructive cursor-pointer"
+                        )}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
+            </div>
+            
+            {/* Swipe instruction hint */}
+            {index === 0 && expenses.length === 1 && (
+              <div className="mt-3 pt-3 border-t border-border/50">
+                <p className="text-xs text-muted-foreground text-center">
+                  Swipe right to edit • Swipe left to delete • Long press for menu
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Long-press context menu */}
+          {longPressMenuId === expense.id && (
+            <div 
+              className="absolute inset-0 bg-black/50 flex items-center justify-center z-20 rounded-lg"
+              onClick={() => setLongPressMenuId(null)}
+            >
+              <div className="bg-card border rounded-lg shadow-lg p-2 space-y-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    editExpense(expense)
+                    setLongPressMenuId(null)
+                    if (isMobile) vibrate(50)
+                  }}
+                  className="w-full justify-start h-11"
+                >
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    deleteExpense(expense.id)
+                    setLongPressMenuId(null)
+                    if (isMobile) vibrate(100)
+                  }}
+                  className="w-full justify-start text-destructive hover:text-destructive h-11"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </BlurFade>
+    )
+  })
+
   return (
     <div className="w-full overflow-hidden rounded-md border">
-      <Table>
+      {/* Mobile view - hidden on sm and larger screens */}
+      <div className="sm:hidden">
+        <div className="space-y-3 p-4">
+          {expenses.length > 0 ? (
+            expenses.map((expense, index) => (
+              <MobileExpenseCard 
+                key={expense.id} 
+                expense={expense} 
+                index={index} 
+              />
+            ))
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              No expenses found.
+            </div>
+          )}
+        </div>
+      </div>
+      
+      {/* Desktop table view - hidden on mobile, shown on sm and larger */}
+      <Table className="hidden sm:table">
         <TableHeader>
           <TableRow>
             <TableHead className="p-0">
@@ -182,8 +441,10 @@ export function ExpensesTable({
                     <div className="flex items-center gap-1.5">
                       <span>{expense.description}</span>
                       {expense.receiptImage && (
-                        <Dialog>
-                          <DialogTrigger asChild>
+                        <ImageViewer
+                          src={expense.receiptImage}
+                          alt={`Receipt for ${expense.description}`}
+                          trigger={
                             <Button
                               variant="ghost"
                               size="icon"
@@ -192,20 +453,8 @@ export function ExpensesTable({
                               <FileImage className="h-4 w-4" />
                               <span className="sr-only">View Receipt</span>
                             </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-xl">
-                            <DialogHeader>
-                              <DialogTitle>
-                                Receipt for "{expense.description}"
-                              </DialogTitle>
-                            </DialogHeader>
-                            <img
-                              src={expense.receiptImage}
-                              alt={`Receipt for ${expense.description}`}
-                              className="h-auto w-full rounded-md object-contain"
-                            />
-                          </DialogContent>
-                        </Dialog>
+                          }
+                        />
                       )}
                     </div>
                   </TableCell>
