@@ -1,7 +1,12 @@
 /**
  * Mobile-first chart configurations for responsive design
  * Provides optimized settings for different chart types and screen sizes
+ * Enhanced with progressive complexity levels and performance optimization
  */
+
+import type { ViewportInfo } from "@/hooks/use-viewport"
+
+export type ChartComplexity = 'minimal' | 'standard' | 'enhanced'
 
 export interface ChartDimensions {
   width: string | number
@@ -347,4 +352,226 @@ export const ANIMATION_CONFIGS = {
 export function getAnimationConfig(containerWidth: number) {
   const deviceType = getDeviceType(containerWidth)
   return ANIMATION_CONFIGS[deviceType]
+}
+
+/**
+ * Progressive enhancement configuration based on device capabilities
+ */
+export interface ProgressiveFeatures {
+  animations: boolean
+  gradients: boolean
+  shadows: boolean
+  smoothing: boolean
+  highDPI: boolean
+  complexInteractions: boolean
+}
+
+/**
+ * Data processing utilities for chart complexity adjustment
+ */
+export class ChartDataProcessor {
+  /**
+   * Simplify data based on viewport capabilities
+   */
+  static simplifyDataForViewport<T extends Record<string, any>>(
+    data: T[], 
+    viewport: ViewportInfo,
+    maxPoints?: number
+  ): T[] {
+    const limits = {
+      mobile: maxPoints || 10,
+      tablet: maxPoints || 25,
+      desktop: maxPoints || 100
+    }
+    
+    const limit = viewport.isMobile 
+      ? limits.mobile 
+      : viewport.isTablet 
+      ? limits.tablet 
+      : limits.desktop
+    
+    if (data.length <= limit) {
+      return data
+    }
+    
+    // Use different strategies based on viewport
+    if (viewport.isMobile) {
+      return this.groupData(data, limit)
+    } else if (viewport.isTablet) {
+      return this.averageData(data, limit)
+    } else {
+      return data.slice(0, limit) // Desktop can handle more data
+    }
+  }
+  
+  private static groupData<T extends Record<string, any>>(data: T[], maxPoints: number): T[] {
+    const groupSize = Math.ceil(data.length / maxPoints)
+    const grouped: T[] = []
+    
+    for (let i = 0; i < data.length; i += groupSize) {
+      const group = data.slice(i, i + groupSize)
+      const representative = group[Math.floor(group.length / 2)] // Take middle item
+      grouped.push(representative)
+    }
+    
+    return grouped
+  }
+  
+  private static averageData<T extends Record<string, any>>(data: T[], maxPoints: number): T[] {
+    const groupSize = Math.ceil(data.length / maxPoints)
+    const averaged: T[] = []
+    
+    for (let i = 0; i < data.length; i += groupSize) {
+      const group = data.slice(i, i + groupSize)
+      
+      // Create averaged item by combining numeric fields
+      const avgItem = { ...group[0] } as T
+      
+      // Average all numeric fields
+      for (const key in avgItem) {
+        if (typeof avgItem[key] === 'number') {
+          const values = group.map(item => item[key] as number).filter(v => !isNaN(v))
+          if (values.length > 0) {
+            avgItem[key] = values.reduce((sum, val) => sum + val, 0) / values.length as T[typeof key]
+          }
+        }
+      }
+      
+      averaged.push(avgItem)
+    }
+    
+    return averaged
+  }
+  
+  /**
+   * Limit pie chart slices and group smaller ones into "Others"
+   */
+  static simplifyPieData<T extends { name: string; value: number }>(
+    data: T[], 
+    viewport: ViewportInfo
+  ): T[] {
+    const maxSlices = viewport.isMobile ? 5 : viewport.isTablet ? 8 : 12
+    
+    if (data.length <= maxSlices) {
+      return data
+    }
+    
+    // Sort by value descending
+    const sorted = [...data].sort((a, b) => b.value - a.value)
+    
+    // Take top slices
+    const topSlices = sorted.slice(0, maxSlices - 1)
+    
+    // Group remaining into "Others"
+    const remaining = sorted.slice(maxSlices - 1)
+    const othersValue = remaining.reduce((sum, item) => sum + item.value, 0)
+    
+    if (othersValue > 0) {
+      topSlices.push({
+        name: 'Others',
+        value: othersValue
+      } as T)
+    }
+    
+    return topSlices
+  }
+}
+
+/**
+ * Progressive enhancement utilities
+ */
+export class ChartProgressiveEnhancement {
+  /**
+   * Determine if advanced features should be enabled based on device capabilities
+   */
+  static getProgressiveFeatures(viewport: ViewportInfo): ProgressiveFeatures {
+    const isMobile = viewport.isMobile
+    const isLowEndDevice = this.isLowEndDevice()
+    const prefersReducedMotion = this.prefersReducedMotion()
+    
+    return {
+      animations: !isMobile && !isLowEndDevice && !prefersReducedMotion,
+      gradients: !isMobile && !isLowEndDevice,
+      shadows: viewport.isDesktop && !isLowEndDevice,
+      smoothing: !isMobile,
+      highDPI: viewport.isDesktop && typeof window !== 'undefined' && window.devicePixelRatio > 1,
+      complexInteractions: viewport.isDesktop && !viewport.isTouchDevice
+    }
+  }
+  
+  /**
+   * Get viewport-optimized chart complexity
+   */
+  static getOptimalComplexity(viewport: ViewportInfo): ChartComplexity {
+    if (viewport.isMobile || this.isLowEndDevice()) {
+      return 'minimal'
+    } else if (viewport.isTablet) {
+      return 'standard'
+    } else {
+      return 'enhanced'
+    }
+  }
+  
+  /**
+   * Detect potentially low-end devices for performance optimization
+   */
+  private static isLowEndDevice(): boolean {
+    if (typeof navigator === 'undefined') return false
+    
+    // Check for low memory devices
+    // @ts-ignore - Non-standard API
+    const memory = navigator.deviceMemory
+    if (memory && memory < 4) return true
+    
+    // Check for slow connection
+    // @ts-ignore - Non-standard API
+    const connection = navigator.connection
+    if (connection?.effectiveType && ['slow-2g', '2g'].includes(connection.effectiveType)) {
+      return true
+    }
+    
+    return false
+  }
+  
+  /**
+   * Check if user prefers reduced motion
+   */
+  private static prefersReducedMotion(): boolean {
+    if (typeof window === 'undefined') return false
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  }
+  
+  /**
+   * Get performance-optimized chart configuration
+   */
+  static getOptimizedChartConfig(viewport: ViewportInfo, containerWidth: number) {
+    const features = this.getProgressiveFeatures(viewport)
+    const complexity = this.getOptimalComplexity(viewport)
+    const deviceType = getDeviceType(containerWidth)
+    
+    return {
+      // Base configuration from existing system
+      deviceType,
+      complexity,
+      
+      // Animation settings
+      animationsEnabled: features.animations,
+      animationDuration: features.animations ? ANIMATION_CONFIGS[deviceType].animationDuration : 0,
+      
+      // Visual enhancements
+      gradients: features.gradients,
+      shadows: features.shadows,
+      smoothCurves: features.smoothing,
+      
+      // Performance settings
+      maxDataPoints: viewport.isMobile ? 10 : viewport.isTablet ? 25 : 100,
+      useHighDPI: features.highDPI,
+      enableComplexInteractions: features.complexInteractions,
+      
+      // Responsive settings
+      fontSize: getResponsiveFontSize(containerWidth),
+      spacing: getResponsiveSpacing(containerWidth),
+      tickCount: getOptimalTickCount(containerWidth),
+    }
+  }
 }
