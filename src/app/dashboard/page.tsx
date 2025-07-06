@@ -9,6 +9,9 @@ import dynamic from "next/dynamic"
 
 import { useLocalStorage } from "@/hooks/use-local-storage"
 import { useSettings } from "@/contexts/settings-context"
+import { useIsMobile, useHapticFeedback } from "@/hooks/use-mobile"
+import { TOUCH_CLASSES } from "@/utils/mobile-utils"
+import { cn } from "@/lib/utils"
 import type {
   Account,
   Expense,
@@ -18,6 +21,7 @@ import type {
 } from "@/lib/types"
 
 import { Button } from "@/components/ui/button"
+import { RainbowButton } from "@/components/magicui/rainbow-button"
 import { AppLayout } from "@/components/app-layout"
 import { AddWidgetDialog } from "@/components/dashboard/add-widget-dialog"
 import { ExpensesFilters } from "@/components/expenses/expenses-filters"
@@ -92,6 +96,8 @@ export default function DashboardPage() {
     category: [],
     accountId: [],
   })
+  const isMobile = useIsMobile()
+  const { vibrate } = useHapticFeedback()
 
   const getNewWidgetLayout = (type: WidgetType) => {
     switch (type) {
@@ -273,14 +279,28 @@ export default function DashboardPage() {
           onLayoutChange={handleLayoutChange}
         />
       </div>
-      <Button
-        onClick={() => setIsDialogOpen(true)}
-        className="fixed bottom-6 right-6 z-50 h-16 w-16 rounded-full shadow-lg"
+      <RainbowButton
+        onClick={() => {
+          setIsDialogOpen(true)
+          // Haptic feedback for mobile
+          if (isMobile) {
+            vibrate(100)
+          }
+        }}
+        className={cn(
+          "fixed z-[9999] rounded-full shadow-lg",
+          TOUCH_CLASSES.TOUCH_FEEDBACK,
+          isMobile 
+            ? "bottom-20 right-4 h-16 w-16" // Above bottom nav on mobile
+            : "bottom-6 right-6 h-14 w-14"
+        )}
         size="icon"
       >
-        <span className="sr-only">Add Widget</span>
-        <Plus className="h-6 w-6" />
-      </Button>
+        <span className="sr-only">Add Chart</span>
+        <Plus className={cn(
+          isMobile ? "h-7 w-7" : "h-6 w-6"
+        )} />
+      </RainbowButton>
       <AddWidgetDialog
         isOpen={isDialogOpen}
         setIsOpen={setIsDialogOpen}
