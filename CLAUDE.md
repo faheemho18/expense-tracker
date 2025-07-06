@@ -21,8 +21,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run test:accessibility` - WCAG compliance testing
 - `npm run test:performance` - Performance benchmarks with Lighthouse
 - `npm run test:visual` - Visual regression testing
-- `npm run test:all` - Complete test suite
+- `npm run test:all` - Complete test suite including UI glitch detection
 - `npm run test:coverage` - Coverage reporting
+
+**UI Glitch Detection & Testing:**
+- `npm run test:ui-glitch` - Complete UI glitch detection test suite (24 tests)
+- `npm run test:dashboard` - Dashboard widget overflow and responsiveness tests
+- `npm run test:dropdown` - Dropdown visibility testing across all themes
+- `npm run test:touch` - Touch interaction responsiveness and mobile testing
+- `npm run test:animations` - Animation performance and layout shift detection
+- `npm run test:mobile` - Mobile-specific UI and gesture testing
+- `npm run test:overflow` - Text overflow detection across viewports
+- `npm run test:responsive` - Responsive design validation
 
 **Deployment:**
 - `npm run deploy:vercel` - Deploy to Vercel with automated setup
@@ -209,10 +219,71 @@ src/lib/__tests__/ai-services.test.ts
 src/components/magicui/__tests__/number-ticker.test.tsx
 tests/e2e/authentication.test.ts
 tests/e2e/ai-integration.test.ts
+tests/e2e/ui-glitch/dashboard-overflow.test.ts
+tests/e2e/ui-glitch/dropdown-visibility.test.ts
+tests/e2e/ui-glitch/touch-interactions.test.ts
+tests/e2e/ui-glitch/animation-performance.test.ts
 tests/accessibility/accessibility.test.ts
 tests/performance/performance.test.ts
 docs/testing-guide.md (comprehensive documentation)
 ```
+
+## UI Glitch Detection & Testing Framework
+
+**Comprehensive UI Testing System (24 Total Tests):**
+- **Dashboard Overflow Tests** (4 tests): Text overflow detection across all viewport sizes (iPhone SE, iPhone 12, iPad, Desktop)
+- **Dropdown Visibility Tests** (4 tests): Theme compatibility testing across all 4 themes (light, dark, blue, green)
+- **Touch Interaction Tests** (8 tests): Mobile responsiveness, touch target validation (44px minimum), gesture support
+- **Animation Performance Tests** (8 tests): 60fps monitoring, layout shift detection (CLS < 0.1), smooth transitions
+
+**Manual Testing Tools:**
+- **Interactive Test Interface** (`test-ui-manual.html`): Browser-based testing with real-time analysis
+- **Console Analysis Script** (`ui-analysis.js`): Copy-paste script for immediate UI analysis in any browser
+- **50-Point Manual Checklist** (`manual-ui-checklist.md`): Systematic testing guide covering all critical UI aspects
+- **Verification Script** (`verify-ui-tests.js`): Implementation status checker and test runner
+- **Comprehensive Documentation** (`uitest.md`): Complete UI testing guide with solutions for common issues
+
+**UI Testing Coverage:**
+- ✅ **Text Overflow Detection**: Prevents content spilling outside containers across all viewport sizes
+- ✅ **Responsive Design Validation**: Mobile-first testing with touch target size verification (44px minimum)
+- ✅ **Theme Compatibility**: Dropdown visibility and contrast testing across all 4 application themes
+- ✅ **Animation Performance**: 60fps validation, layout shift monitoring, smooth transition verification
+- ✅ **Cross-Browser Testing**: Chrome, Firefox, Safari compatibility with specific mobile device simulation
+- ✅ **Accessibility Integration**: Touch accessibility, keyboard navigation, screen reader compatibility
+- ✅ **Performance Monitoring**: Core Web Vitals tracking, memory usage analysis, load time optimization
+
+**Testing Dependencies:**
+- **Playwright** (v1.53.2): Modern browser automation for comprehensive UI testing
+- **Puppeteer** (v24.11.2): Headless Chrome testing for performance analysis
+- **Jest Integration**: E2E configuration with TypeScript support and timeout handling
+- **System Requirements**: Linux dependencies for browser automation (libnspr4, libnss3, libasound2)
+
+**Test Execution Commands:**
+```bash
+# Complete UI glitch detection suite
+npm run test:ui-glitch
+
+# Specific test categories
+npm run test:dashboard    # Dashboard widget overflow testing
+npm run test:dropdown     # Theme-based dropdown visibility
+npm run test:touch        # Mobile touch interaction validation
+npm run test:animations   # Performance and layout shift detection
+npm run test:mobile       # Mobile-specific UI testing
+npm run test:overflow     # Text overflow detection
+npm run test:responsive   # Responsive design validation
+```
+
+**Manual Testing Workflow:**
+1. **Browser Console Testing**: Copy `ui-analysis.js` into DevTools console on any page
+2. **Interactive Testing**: Open `test-ui-manual.html` for guided testing interface
+3. **Systematic Validation**: Follow `manual-ui-checklist.md` for comprehensive 50-point verification
+4. **Issue Documentation**: Use built-in reporting tools for tracking and resolution
+
+**Automated Testing Status:**
+- ✅ **Framework Implemented**: 24 comprehensive tests covering all major UI glitch scenarios
+- ✅ **Manual Tools Ready**: Immediate testing capability without system dependencies
+- ⚠️ **System Dependencies**: Requires `sudo apt-get install libnspr4 libnss3 libasound2` for full automation
+- ✅ **Deployment Ready**: All testing tools deployed and accessible via Vercel production environment
 
 ## Development Notes
 
@@ -769,6 +840,38 @@ The application uses a comprehensive user-aware database schema with full authen
 - **Seamless migration** from localStorage to cloud storage
 - **Backward compatibility** for users without Supabase configuration
 - **User-scoped localStorage keys** for multi-user support on shared devices
+
+## Current Deployment Status
+
+**Production Environment (Vercel):**
+- ✅ **Live Application**: https://automationprojects-4df0h8yfc-faheems-projects-df0f8e74.vercel.app
+- ✅ **Build Status**: Successfully deployed with all features
+- ✅ **UI Testing Framework**: All manual testing tools accessible in production
+- ✅ **Performance**: Optimized bundle (168kB main page, 423kB total)
+- ✅ **PWA Features**: Service worker active for offline functionality
+
+**Recent Deployment (Latest Commit: bdb5559):**
+- **Date**: July 6, 2025
+- **Features Added**: Comprehensive UI glitch detection and testing framework
+- **Files Modified**: 15 files changed, 3,572 insertions
+- **New Capabilities**: 24 automated UI tests + 5 manual testing tools
+
+**Environment Configuration:**
+- **Google AI API Keys**: 3 keys configured for optimal performance and cost distribution
+- **Supabase**: Running in localStorage mode (cloud storage ready for configuration)
+- **Build Time**: ~14 seconds with Next.js 15.3.3 and Turbopack
+- **Deployment Time**: ~39 seconds total build and deploy cycle
+
+**Repository Branches:**
+- **main**: Production-ready with UI testing framework
+- **ui-testing-framework**: Dedicated branch for UI testing implementation
+- **feature/phase4-authentication**: Authentication and multi-user features
+
+**Testing Accessibility:**
+- **Manual Testing**: All tools immediately accessible in deployed environment
+- **Browser Console**: Copy `ui-analysis.js` from repository into any deployed page
+- **Interactive Testing**: Manual testing interface available via deployed URLs
+- **Systematic Validation**: 50-point checklist ready for comprehensive UI verification
 
 # important-instruction-reminders
 Do what has been asked; nothing more, nothing less.
