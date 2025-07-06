@@ -252,7 +252,8 @@ export default function DashboardPage() {
   }, [expenses, filters])
 
   return (
-    <AppLayout>
+    <>
+      <AppLayout>
       <div className="flex-1 space-y-4 p-4 sm:p-8">
         <div className="flex items-center justify-between space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
@@ -279,28 +280,7 @@ export default function DashboardPage() {
           onLayoutChange={handleLayoutChange}
         />
       </div>
-      <RainbowButton
-        onClick={() => {
-          setIsWidgetSheetOpen(true)
-          // Haptic feedback for mobile
-          if (isMobile) {
-            vibrate(100)
-          }
-        }}
-        className={cn(
-          "fixed z-[9999] rounded-full shadow-lg",
-          TOUCH_CLASSES.TOUCH_FEEDBACK,
-          isMobile 
-            ? "bottom-20 right-4 h-16 w-16" // Above bottom nav on mobile
-            : "bottom-6 right-6 h-14 w-14"
-        )}
-        size="icon"
-      >
-        <span className="sr-only">Add Chart</span>
-        <Plus className={cn(
-          isMobile ? "h-7 w-7" : "h-6 w-6"
-        )} />
-      </RainbowButton>
+      
       <AddWidgetSheet
         isOpen={isWidgetSheetOpen}
         setIsOpen={setIsWidgetSheetOpen}
@@ -326,6 +306,29 @@ export default function DashboardPage() {
           </div>
         </SheetContent>
       </Sheet>
-    </AppLayout>
+      </AppLayout>
+      <RainbowButton
+      onClick={() => {
+        setIsWidgetSheetOpen(true)
+        // Haptic feedback for mobile
+        if (isMobile) {
+          vibrate(100)
+        }
+      }}
+      className={cn(
+        "fixed z-[9999] rounded-full shadow-lg",
+        TOUCH_CLASSES.TOUCH_FEEDBACK,
+        isMobile 
+          ? "bottom-20 right-4 h-16 w-16" // Above bottom nav on mobile
+          : "bottom-6 right-6 h-14 w-14"
+      )}
+      size="icon"
+    >
+      <span className="sr-only">Add Chart</span>
+      <Plus className={cn(
+        isMobile ? "h-7 w-7" : "h-6 w-6"
+      )} />
+      </RainbowButton>
+    </>
   )
 }
