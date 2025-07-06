@@ -1,5 +1,5 @@
 -- Enable RLS (Row Level Security)
-ALTER DATABASE postgres SET "app.jwt_secret" TO 'super_secret_jwt_token';
+-- Note: Skip the JWT secret line - Supabase manages this automatically
 
 -- Create accounts table with user relationship
 CREATE TABLE accounts (

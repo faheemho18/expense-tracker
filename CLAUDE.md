@@ -45,7 +45,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is a Next.js 15 expense tracking application built with:
 - **Frontend**: React 18, TypeScript, Tailwind CSS
 - **UI Library**: Radix UI components with custom styling
-- **Data Storage**: Hybrid localStorage + Supabase with user authentication and real-time sync
+- **Data Storage**: Supabase cloud storage with user authentication and multi-user isolation
 - **Authentication**: Supabase Auth with email/password and user management
 - **Real-time Sync**: Cross-device synchronization with offline support
 - **AI Integration**: Firebase Genkit with Google AI
@@ -115,10 +115,10 @@ This is a Next.js 15 expense tracking application built with:
 - Grid-based layout with drag-and-drop support
 
 **Data Management**:
-- Hybrid data storage: localStorage with Supabase cloud sync capability
-- User-scoped data isolation with Row Level Security (RLS)
-- Migration system for Supabase transition with user authentication
-- Real-time cross-device synchronization with offline support
+- Supabase cloud storage as primary data layer with complete user isolation
+- User-scoped data isolation with Row Level Security (RLS) policies
+- Multi-user authentication system with automatic user provisioning
+- Cross-device synchronization with offline support (Realtime pending)
 - Automatic conflict resolution and data consistency
 - Real-time filtering and sorting with multi-user support
 
@@ -149,45 +149,54 @@ This is a Next.js 15 expense tracking application built with:
 
 ## Supabase Integration & Data Management
 
-**Hybrid Data Storage Architecture**:
-- Primary storage in localStorage for immediate development
-- Supabase integration layer with graceful fallback handling
-- Null-safety checks preventing crashes when Supabase is not configured
-- Migration system for transitioning from localStorage to cloud storage
+**Production Cloud Storage Architecture**:
+- Supabase as primary and sole data storage layer
+- Complete user authentication and multi-user isolation system
+- Comprehensive Row Level Security (RLS) policies ensuring data privacy
+- Automatic user provisioning with default categories, accounts, and themes
 
-**Configuration Handling**:
+**Active Configuration**:
 - Environment variables: `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- Automatic detection of placeholder values vs real configuration
-- Console warnings when running in localStorage-only mode
-- Data service automatically switches primary source based on availability
+- **Project URL**: `https://gmvbfqvqtxvplinciznf.supabase.co`
+- **Status**: ✅ ACTIVE - Fully configured and operational
+- **Authentication**: ✅ ACTIVE - Email/password login working
+- **Data Isolation**: ✅ ACTIVE - Users only see their own data
 
-**Recent Fixes Applied**:
-- Fixed Supabase client initialization errors that prevented server startup
-- Added null checks to all Supabase operations in data service layer
-- Updated data migration functions to handle missing Supabase configuration
-- Server now starts successfully regardless of Supabase configuration status
-
-**Phase 4 Complete Authentication & Multi-User System (COMPLETED)**:
+**Production Features Active**:
 - ✅ Complete Supabase authentication system with user management
 - ✅ Multi-user data isolation with Row Level Security (RLS) policies
-- ✅ Updated all data models to include user_id relationships
-- ✅ Enhanced data service layer with user-scoped operations
-- ✅ Created authentication UI components and user session management
-- ✅ Cloud deployment infrastructure (Vercel, Docker, Firebase, Netlify)
-- ✅ Real-time cross-device synchronization with automatic reconnection
-- ✅ Offline queue management with conflict resolution
-- ✅ Comprehensive sync status UI and manual controls
-- ✅ Maintained backward compatibility with localStorage-only mode
+- ✅ All data models include user_id relationships with foreign key constraints
+- ✅ User-scoped data operations in all CRUD functions
+- ✅ Authentication UI components with login/signup functionality
+- ✅ Automatic user registration with default data creation
+- ✅ Cross-device data access with secure user sessions
+- ✅ Database schema with proper indexes and constraints
+- ✅ User cleanup on account deletion with CASCADE policies
+
+**Database Schema (Production)**:
+- **accounts** - Financial accounts with user_id and RLS policies
+- **categories** - Expense categories with user_id and RLS policies  
+- **themes** - Custom themes with user_id and RLS policies
+- **expenses** - Transaction records with user_id and RLS policies
+- **widget_configs** - Dashboard widgets with user_id and RLS policies
+- **Automatic user registration trigger** creates default data for new users
 
 ## Testing Infrastructure
 
-**Comprehensive Test Suite for Phase 1-4 Features:**
+**Comprehensive Test Suite with 5 Testing Categories:**
 - **Unit Tests**: 15+ test files covering authentication, real-time sync, AI integration, and UI components
 - **Integration Tests**: Complete user workflow testing with multi-user scenarios  
 - **E2E Tests**: Full automation of user journeys including authentication, expense management, and AI features
 - **Accessibility Tests**: WCAG 2.1 Level AA compliance verification with axe-core
 - **Performance Tests**: Core Web Vitals, animation performance, and bundle analysis
 - **Visual Regression Tests**: UI consistency across themes and responsive breakpoints
+
+**NumberTicker Implementation Testing:**
+- ✅ **ExpensesTable**: Animated currency amounts with staggered delays
+- ✅ **StatsWidget**: Animated totals for expenses, refunds, net total, and transaction count
+- ✅ **ProjectedSavingsWidget**: Animated savings display with compact notation
+- ✅ **CurrencyTicker**: Custom component for currency-formatted animated numbers
+- Features: Smooth spring animations, PHP currency formatting, viewport-based triggering
 
 **Test Configuration:**
 - Jest with TypeScript support and Next.js integration (`jest.config.js`, `jest.setup.js`)
@@ -300,23 +309,23 @@ npm run test:responsive   # Responsive design validation
 
 ## Authentication & Security
 
-**Authentication System**:
-- Supabase Auth with email/password authentication
-- User session management with automatic token refresh
-- Graceful fallback to localStorage mode when Supabase is not configured
-- Authentication UI components with form validation and error handling
+**Authentication System** (ACTIVE):
+- ✅ Supabase Auth with email/password authentication
+- ✅ User session management with automatic token refresh
+- ✅ Production-ready login/signup UI with form validation
+- ✅ Secure user profile management and session handling
 
-**Data Security**:
-- Row Level Security (RLS) policies ensuring users only access their own data
-- User-scoped data operations in all CRUD functions
-- Secure data isolation with foreign key constraints to auth.users
-- Environment variable validation with placeholder detection
+**Data Security** (ACTIVE):
+- ✅ Row Level Security (RLS) policies ensuring users only access their own data
+- ✅ User-scoped data operations in all CRUD functions
+- ✅ Complete data isolation with foreign key constraints to auth.users
+- ✅ Production environment variables configured and validated
 
-**Multi-User Architecture**:
-- All data models include optional user_id fields for backward compatibility
-- Data service layer automatically scopes operations to authenticated user
-- localStorage keys scoped per user (e.g., 'expenses_user123')
-- Default data creation for new users (categories, accounts, themes)
+**Multi-User Architecture** (ACTIVE):
+- ✅ All data models include user_id fields with NOT NULL constraints
+- ✅ Data service layer automatically scopes operations to authenticated user
+- ✅ Cloud-based user data storage with cross-device access
+- ✅ Automatic default data creation for new users (categories, accounts, themes)
 
 **Provider Hierarchy**:
 ```
@@ -418,27 +427,33 @@ gh pr merge --merge  # or --squash or --rebase
 
 ## Real-time Synchronization
 
-The application features comprehensive real-time data synchronization across all devices for authenticated users.
+The application features cross-device data synchronization for authenticated users with cloud storage.
 
 ### Core Features
 
-**Real-time Data Sync**:
-- Instant synchronization of expenses, categories, accounts, and themes
-- Cross-device updates appear in real-time without page refresh
-- User-scoped data isolation with Row Level Security (RLS)
-- Automatic reconnection with exponential backoff on connection loss
+**Cloud Data Sync** (ACTIVE):
+- ✅ Instant data access across all devices through Supabase cloud storage
+- ✅ Cross-device updates through page refresh and navigation
+- ✅ User-scoped data isolation with Row Level Security (RLS)
+- ✅ Persistent data storage with automatic backup
 
-**Offline Support**:
-- Offline queue management for changes made without internet connection
-- Automatic sync when connection is restored
-- Conflict resolution with last-write-wins strategy
-- Visual indicators for offline mode and pending changes
+**Real-time Updates** (PENDING):
+- ⏳ Supabase Realtime currently shows "Coming Soon" in dashboard
+- ⏳ Live synchronization without page refresh (when Realtime is available)
+- ⏳ Automatic reconnection with exponential backoff on connection loss
+- ✅ Manual sync available through browser refresh
+
+**Offline Support** (ACTIVE):
+- ✅ Browser-based offline capabilities through service worker
+- ✅ Data persistence during network interruptions
+- ✅ Automatic sync when connection is restored
+- ✅ Progressive Web App (PWA) functionality
 
 **User Interface**:
-- Mini sync status indicator in app header showing connection status
-- Comprehensive sync controls in Settings → Data Migration
-- Real-time event monitoring and recent activity display
-- Manual sync triggers and pause/resume functionality
+- ✅ Authentication status indicator in app header
+- ✅ User profile management and logout functionality
+- ✅ Cross-device data access through cloud storage
+- ✅ Manual refresh capabilities for latest data
 
 ### Technical Implementation
 
@@ -461,10 +476,10 @@ import { SyncStatusIndicator } from '@/components/sync/sync-status-indicator'
 - `maxReconnectAttempts`: Connection retry limits
 
 **Data Flow**:
-1. User makes change → Update local state → Send to Supabase
-2. Supabase broadcasts change → Other devices receive event
-3. Local state updated → UI re-renders with new data
-4. Offline changes queued → Synced when connection restored
+1. User makes change → Send to Supabase cloud storage → Update local state
+2. Other devices → Page refresh/navigation → Load latest data from Supabase
+3. Local state updated → UI re-renders with cloud data
+4. Offline changes → Stored in service worker → Synced when connection restored
 
 ## Cloud Deployment
 
@@ -857,8 +872,10 @@ The application uses a comprehensive user-aware database schema with full authen
 - **New Capabilities**: 24 automated UI tests + 5 manual testing tools
 
 **Environment Configuration:**
-- **Google AI API Keys**: 3 keys configured for optimal performance and cost distribution
-- **Supabase**: Running in localStorage mode (cloud storage ready for configuration)
+- **Google AI API Keys**: 1 key configured and active for AI-powered expense categorization and OCR
+- **Supabase**: ✅ ACTIVE - Full cloud storage with authentication and multi-user support
+- **Database**: ✅ ACTIVE - Complete schema with RLS policies and user isolation
+- **Authentication**: ✅ ACTIVE - Email/password login with automatic user provisioning
 - **Build Time**: ~14 seconds with Next.js 15.3.3 and Turbopack
 - **Deployment Time**: ~39 seconds total build and deploy cycle
 
@@ -872,6 +889,25 @@ The application uses a comprehensive user-aware database schema with full authen
 - **Browser Console**: Copy `ui-analysis.js` from repository into any deployed page
 - **Interactive Testing**: Manual testing interface available via deployed URLs
 - **Systematic Validation**: 50-point checklist ready for comprehensive UI verification
+
+## Future Roadmap
+
+**Phase 5: Advanced Analytics** (High Priority)
+- [ ] **Financial Insights Dashboard Widget**: AI-generated spending analysis and recommendations
+- [ ] **Spending Pattern Analysis**: Predictive analytics and anomaly detection
+- [ ] **Custom Reports**: PDF generation and advanced reporting tools
+
+**Phase 6: Smart Notifications** (Medium Priority)
+- [ ] **Intelligent Alerts**: Budget overruns and unusual spending pattern notifications
+- [ ] **Proactive Insights**: Weekly/monthly AI-generated financial summaries
+
+**Phase 7: Enhanced Features** (Medium Priority)
+- [ ] **Add Notes Field to Expenses**: Enhanced expense tracking with additional context fields
+- [ ] **Advanced Data Filtering**: Date range, amount range, and multi-category filtering
+- [ ] **Recurring Expenses**: Automatic scheduling for rent, subscriptions, and recurring transactions
+- [ ] **Budgeting System**: Monthly budget setting and tracking for different categories
+- [ ] **Enhanced Chart Types**: Line charts for trends, treemaps for category breakdowns
+- [ ] **Real-time Synchronization**: When Supabase Realtime becomes available
 
 # important-instruction-reminders
 Do what has been asked; nothing more, nothing less.
