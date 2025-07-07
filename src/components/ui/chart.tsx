@@ -5,6 +5,7 @@ import * as React from "react"
 import * as RechartsPrimitive from "recharts"
 
 import { cn } from "@/lib/utils"
+import { useViewport, getResponsiveChartConfig, type ViewportInfo } from "@/hooks/use-viewport"
 
 // Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: "", dark: ".dark" } as const
@@ -19,8 +20,22 @@ export type ChartConfig = {
   )
 }
 
+export type ChartComplexity = 'minimal' | 'standard' | 'enhanced'
+
+export interface ResponsiveChartConfig {
+  complexity: ChartComplexity
+  showLegend: boolean
+  showGrid: boolean
+  fontSize: number
+  margin: { top: number; right: number; bottom: number; left: number }
+  maxDataPoints: number
+  animationDuration: number
+}
+
 type ChartContextProps = {
   config: ChartConfig
+  viewport: ViewportInfo
+  responsiveConfig: ResponsiveChartConfig
 }
 
 const ChartContext = React.createContext<ChartContextProps | null>(null)
@@ -35,24 +50,141 @@ function useChart() {
   return context
 }
 
+/**
+ * Hook to get viewport-aware chart configuration
+ * Provides responsive settings for chart components
+ */
+function useChartResponsiveInternal() {
+  const { viewport, responsiveConfig } = useChart()
+  
+  return {
+    viewport,
+    responsiveConfig,
+    // Helper methods for common responsive patterns
+    shouldShowLegend: responsiveConfig.showLegend,
+    shouldShowGrid: responsiveConfig.showGrid,
+    getMargin: () => responsiveConfig.margin,
+    getFontSize: () => responsiveConfig.fontSize,
+    getAnimationDuration: () => responsiveConfig.animationDuration,
+    getMaxDataPoints: () => responsiveConfig.maxDataPoints,
+    // Viewport checks
+    isMobile: viewport.isMobile,
+    isTablet: viewport.isTablet,
+    isDesktop: viewport.isDesktop,
+    isTouchDevice: viewport.isTouchDevice,
+  }
+}
+
 const ChartContainer = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<"div"> & {
     config: ChartConfig
+    aspectRatio?: number
+    minHeight?: number
+    maxHeight?: number
+    complexity?: ChartComplexity
   }
->(({ id, className, children, config, ...props }, ref) => {
+>(({ id, className, children, config, aspectRatio, minHeight = 200, maxHeight, complexity, ...props }, ref) => {
   const uniqueId = React.useId()
   const chartId = `chart-${id || uniqueId.replace(/:/g, "")}`
+  const containerRef = React.useRef<HTMLDivElement>(null)
+  const [containerSize, setContainerSize] = React.useState({ width: 0, height: 0 })
+  
+  // Get viewport information for responsive chart rendering
+  const viewport = useViewport()
+  const baseResponsiveConfig = getResponsiveChartConfig(viewport)
+  
+  // Create responsive configuration based on viewport and complexity override
+  const responsiveConfig: ResponsiveChartConfig = React.useMemo(() => {
+    // Determine complexity based on viewport and explicit prop
+    const autoComplexity: ChartComplexity = viewport.isMobile 
+      ? 'minimal' 
+      : viewport.isTablet 
+      ? 'standard' 
+      : 'enhanced'
+    
+    const finalComplexity = complexity || autoComplexity
+    
+    return {
+      complexity: finalComplexity,
+      showLegend: finalComplexity !== 'minimal',
+      showGrid: finalComplexity === 'enhanced' || (finalComplexity === 'standard' && !viewport.isMobile),
+      fontSize: baseResponsiveConfig.fontSize,
+      margin: baseResponsiveConfig.margin,
+      maxDataPoints: baseResponsiveConfig.maxDataPoints,
+      animationDuration: baseResponsiveConfig.animationDuration,
+    }
+  }, [viewport, complexity, baseResponsiveConfig])
+
+  // Use ResizeObserver to track container size changes
+  React.useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
+    const updateSize = () => {
+      const { width, height } = container.getBoundingClientRect()
+      setContainerSize({ width, height })
+    }
+
+    const resizeObserver = new ResizeObserver(updateSize)
+    resizeObserver.observe(container)
+    updateSize() // Initial size
+
+    return () => resizeObserver.disconnect()
+  }, [])
+
+  // Calculate responsive height based on aspect ratio and constraints
+  const responsiveHeight = React.useMemo(() => {
+    if (!containerSize.width) return minHeight
+
+    let calculatedHeight = minHeight
+
+    // Apply aspect ratio if specified
+    if (aspectRatio) {
+      calculatedHeight = containerSize.width / aspectRatio
+    }
+
+    // Apply min/max constraints
+    calculatedHeight = Math.max(calculatedHeight, minHeight)
+    if (maxHeight) {
+      calculatedHeight = Math.min(calculatedHeight, maxHeight)
+    }
+
+    return calculatedHeight
+  }, [containerSize.width, aspectRatio, minHeight, maxHeight])
+
+  // Combine refs to track both container size and forward ref
+  const combinedRef = React.useCallback((node: HTMLDivElement) => {
+    // Update our internal ref for ResizeObserver
+    ;(containerRef as React.MutableRefObject<HTMLDivElement | null>).current = node
+    
+    // Forward to the external ref if provided
+    if (ref) {
+      if (typeof ref === 'function') ref(node)
+      else if (ref.current !== undefined) ref.current = node
+    }
+  }, [ref])
 
   return (
-    <ChartContext.Provider value={{ config }}>
+    <ChartContext.Provider value={{ config, viewport, responsiveConfig }}>
       <div
         data-chart={chartId}
-        ref={ref}
+        ref={combinedRef}
         className={cn(
+          "w-full overflow-hidden", // Ensure proper containment
           "[&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-none [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border [&_.recharts-radial-bar-background-sector]:fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted [&_.recharts-reference-line_[stroke='#ccc']]:stroke-border [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-sector]:outline-none [&_.recharts-surface]:outline-none",
+          // Viewport-aware responsive text sizing
+          viewport.isMobile && "[&_.recharts-text]:text-xs [&_.recharts-cartesian-axis-tick_text]:text-xs",
+          viewport.isTablet && "[&_.recharts-text]:text-sm [&_.recharts-cartesian-axis-tick_text]:text-sm",
+          viewport.isDesktop && "[&_.recharts-text]:text-sm [&_.recharts-cartesian-axis-tick_text]:text-sm",
           className
         )}
+        style={{
+          height: aspectRatio ? responsiveHeight : undefined,
+          minHeight: minHeight,
+          maxHeight: maxHeight,
+          ...props.style
+        }}
         {...props}
       >
         <ChartStyle id={chartId} config={config} />
@@ -107,6 +239,7 @@ const ChartTooltipContent = React.forwardRef<
       indicator?: "line" | "dot" | "dashed"
       nameKey?: string
       labelKey?: string
+      touchFriendly?: boolean
     }
 >(
   (
@@ -124,10 +257,11 @@ const ChartTooltipContent = React.forwardRef<
       color,
       nameKey,
       labelKey,
+      touchFriendly = false,
     },
     ref
   ) => {
-    const { config } = useChart()
+    const { config, viewport } = useChart()
 
     const tooltipLabel = React.useMemo(() => {
       if (hideLabel || !payload?.length) {
@@ -175,9 +309,22 @@ const ChartTooltipContent = React.forwardRef<
       <div
         ref={ref}
         className={cn(
-          "grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl",
+          "grid items-start gap-1.5 rounded-lg border border-border/50 bg-background shadow-xl",
+          // Touch-friendly sizing
+          touchFriendly || viewport.isTouchDevice
+            ? "min-w-[10rem] px-3 py-2 text-sm" 
+            : "min-w-[8rem] px-2.5 py-1.5 text-xs",
+          // Enhanced shadow for touch visibility
+          viewport.isTouchDevice && "shadow-2xl ring-1 ring-black/5",
           className
         )}
+        style={{
+          // Prevent tooltip from being too close to finger on touch devices
+          ...(viewport.isTouchDevice && {
+            zIndex: 9999,
+            pointerEvents: 'none', // Prevent interference with touch events
+          })
+        }}
       >
         {!nestLabel ? tooltipLabel : null}
         <div className="grid gap-1.5">
@@ -276,9 +423,12 @@ const ChartLegendContent = React.forwardRef<
     },
     ref
   ) => {
-    const { config } = useChart()
+    const { config, viewport, responsiveConfig } = useChart()
+    
+    // Auto-hide legend on mobile for minimal complexity
+    const shouldShowLegend = responsiveConfig.showLegend
 
-    if (!payload?.length) {
+    if (!payload?.length || !shouldShowLegend) {
       return null
     }
 
@@ -286,7 +436,9 @@ const ChartLegendContent = React.forwardRef<
       <div
         ref={ref}
         className={cn(
-          "flex flex-wrap items-center justify-center gap-x-4 gap-y-2",
+          "flex flex-wrap items-center justify-center",
+          // Responsive gap sizing
+          viewport.isMobile ? "gap-x-2 gap-y-1" : "gap-x-4 gap-y-2",
           verticalAlign === "top" ? "pb-3" : "pt-3",
           className
         )}
@@ -309,7 +461,11 @@ const ChartLegendContent = React.forwardRef<
                 }
               }}
               className={cn(
-                "flex items-center gap-1.5 text-xs transition-opacity [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-muted-foreground",
+                "flex items-center transition-opacity [&>svg]:text-muted-foreground",
+                // Responsive sizing
+                viewport.isMobile 
+                  ? "gap-1 text-xs [&>svg]:h-2.5 [&>svg]:w-2.5" 
+                  : "gap-1.5 text-xs [&>svg]:h-3 [&>svg]:w-3",
                 onItemClick ? "cursor-pointer" : "",
                 isInactive ? "opacity-50" : "opacity-100"
               )}
@@ -318,7 +474,10 @@ const ChartLegendContent = React.forwardRef<
                 <itemConfig.icon />
               ) : (
                 <div
-                  className="h-2 w-2 shrink-0 rounded-[2px]"
+                  className={cn(
+                    "shrink-0 rounded-[2px]",
+                    viewport.isMobile ? "h-1.5 w-1.5" : "h-2 w-2"
+                  )}
                   style={{
                     backgroundColor: item.color,
                   }}
@@ -380,4 +539,5 @@ export {
   ChartLegend,
   ChartLegendContent,
   ChartStyle,
+  useChartResponsiveInternal as useChartResponsive,
 }

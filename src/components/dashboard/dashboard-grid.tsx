@@ -7,8 +7,10 @@ import { BarChart } from "lucide-react"
 import { Responsive, WidthProvider, type Layout } from "react-grid-layout"
 
 import type { Account, Expense, WidgetConfig, WidgetFilters } from "@/lib/types"
+import { cn } from "@/lib/utils"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { useSwipeGestures } from "@/hooks/use-touch-gestures"
 
 import { AccountPieChartWidget } from "./account-pie-chart-widget"
 import { CategoryPieChartWidget } from "./category-pie-chart-widget"
@@ -31,6 +33,7 @@ interface DashboardGridProps {
   availableYears: { value: string; label: string }[]
   areGlobalFiltersActive: boolean
   onLayoutChange: (layout: Layout[]) => void
+  onWidgetSwipe?: (direction: 'left' | 'right', widgetId: string) => void
 }
 
 const renderWidget = (
@@ -67,43 +70,81 @@ export function DashboardGrid({
   availableYears,
   areGlobalFiltersActive,
   onLayoutChange,
+  onWidgetSwipe,
 }: DashboardGridProps) {
   const isMobile = useIsMobile()
+  
+  // Handle swipe gestures for widget navigation on mobile
+  const { ref: swipeRef } = useSwipeGestures(
+    React.useCallback((direction: 'left' | 'right' | 'up' | 'down') => {
+      if ((direction === 'left' || direction === 'right') && isMobile && onWidgetSwipe) {
+        // For now, we'll implement basic swipe detection
+        // In a more advanced implementation, we could detect which widget is being swiped
+        // and pass its ID to the callback
+        const currentWidget = widgets[0] // Simplified for demo
+        if (currentWidget) {
+          onWidgetSwipe(direction as 'left' | 'right', currentWidget.id)
+        }
+      }
+    }, [isMobile, onWidgetSwipe, widgets]),
+    {
+      enableSwipe: isMobile,
+      swipeThreshold: 80, // Require longer swipe on mobile
+      swipeVelocityThreshold: 0.3,
+    }
+  )
   
   const layouts = React.useMemo(() => {
     if (!widgets) return { lg: [], md: [], sm: [], xs: [], xxs: [] }
     
     const createLayout = (cols: number, isMobileBreakpoint: boolean = false) => {
+      let cumulativeY = 0 // Track vertical position for mobile stacking
+      
       return widgets.map((widget, index) => {
         const isStats = widget.type === "stats"
+        const isPieChart = widget.type === "category-pie" || widget.type === "account-pie"
         
         if (isMobileBreakpoint) {
-          // Mobile layouts: full width for all widgets, optimized heights
-          return {
+          // Mobile layouts: full width, optimized heights based on widget type
+          let widgetHeight: number
+          
+          if (isStats) {
+            widgetHeight = 3 // Compact stats
+          } else if (isPieChart) {
+            widgetHeight = 6 // Pie charts need more height for legend
+          } else {
+            widgetHeight = 5 // Default height for other charts
+          }
+
+          const layout = {
             i: widget.id,
             x: 0,
-            y: index * (isStats ? 3 : 5), // Stacked vertically
+            y: cumulativeY,
             w: cols, // Full width on mobile
-            h: isStats ? 3 : 5, // Smaller heights for mobile
+            h: widgetHeight,
             minW: cols,
             minH: isStats ? 3 : 4,
-            maxH: isStats ? 3 : 6,
+            maxH: isStats ? 3 : 8, // Allow more height for complex charts
             isResizable: false, // Disable resizing on mobile for better UX
+            static: isMobile, // Make widgets static on mobile to prevent accidental moves
           }
+          
+          cumulativeY += widgetHeight + 1 // Add spacing between widgets
+          return layout
         } else {
-          // Desktop layouts: original logic
+          // Desktop layouts: original logic with improvements
           const defaultW = isStats ? 12 : 6
           const defaultH = isStats ? 4 : 6
 
           return {
             i: widget.id,
-            x: widget.x ?? 0,
-            y: widget.y ?? Infinity,
+            x: widget.x ?? (index % 2) * 6, // Better default positioning
+            y: widget.y ?? Math.floor(index / 2) * 6,
             w: widget.w ?? defaultW,
             h: widget.h ?? defaultH,
-            minW: 6,
-            minH: 4,
-            maxH: isStats ? 4 : 6,
+            minW: isStats ? 12 : 6, // Stats always full width
+            minH: isStats ? 3 : 4,
+            maxH: isStats ? 4 : 8,
             isResizable: true,
           }
         }
@@ -112,12 +153,12 @@ export function DashboardGrid({
 
     return {
       lg: createLayout(12, false),  // Desktop: 12 columns
-      md: createLayout(10, false),  // Tablet: 10 columns
+      md: createLayout(10, false),  // Large tablet: 10 columns
       sm: createLayout(6, true),    // Small tablet: 6 columns, mobile-like
       xs: createLayout(4, true),    // Mobile: 4 columns
       xxs: createLayout(2, true),   // Small mobile: 2 columns
     }
-  }, [widgets])
+  }, [widgets, isMobile])
 
   if (widgets.length === 0) {
     return (
@@ -160,19 +201,34 @@ export function DashboardGrid({
     onLayoutChange(newLayout)
   }
 
+  // Combine refs for swipe detection
+  const combinedRef = React.useCallback((node: HTMLDivElement) => {
+    if (swipeRef.current !== node) {
+      ;(swipeRef as React.MutableRefObject<HTMLDivElement | null>).current = node
+    }
+  }, [swipeRef])
+
   return (
-    <ResponsiveGridLayout
+    <div ref={combinedRef} className="w-full h-full">
+      <ResponsiveGridLayout
       layouts={layouts}
       breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
       cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
-      rowHeight={isMobile ? 40 : 50} // Shorter rows on mobile for better fit
+      rowHeight={isMobile ? 45 : 50} // Optimized row height for mobile
       draggableHandle={isMobile ? ".never-drag" : ".drag-handle"} // Disable dragging on mobile
       isDraggable={!isMobile} // Completely disable dragging on mobile
       isResizable={!isMobile} // Disable resizing on mobile
       onDragStop={handleLayoutChange}
       onResizeStop={handleResizeStop}
-      className={isMobile ? "min-h-[300px]" : "min-h-[500px]"}
-      margin={isMobile ? [8, 8] : [16, 16]} // Smaller margins on mobile
+      className={cn(
+        "w-full", 
+        isMobile ? "min-h-[300px] gap-y-2" : "min-h-[500px]"
+      )}
+      margin={isMobile ? [12, 12] : [16, 16]} // Better spacing on mobile
+      containerPadding={isMobile ? [8, 8] : [16, 16]} // Add container padding
+      compactType={isMobile ? "vertical" : "vertical"} // Always compact vertically
+      preventCollision={false} // Allow items to move around each other
+      autoSize={true} // Automatically size container to fit content
     >
       {widgets.map((widget) => {
         const widgetFilters = widget.filters
@@ -234,6 +290,7 @@ export function DashboardGrid({
           </div>
         )
       })}
-    </ResponsiveGridLayout>
+      </ResponsiveGridLayout>
+    </div>
   )
 }
