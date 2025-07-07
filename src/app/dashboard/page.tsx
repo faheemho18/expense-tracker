@@ -23,6 +23,7 @@ import type {
 import { Button } from "@/components/ui/button"
 import { RainbowButton } from "@/components/magicui/rainbow-button"
 import { AppLayout } from "@/components/app-layout"
+import ErrorBoundary from "@/components/error-boundary"
 import { AddWidgetSheet } from "@/components/dashboard/add-widget-sheet"
 import { ExpensesFilters } from "@/components/expenses/expenses-filters"
 import {
@@ -70,10 +71,11 @@ const DashboardGridSkeleton = () => (
   </div>
 )
 
+// Temporarily use simple dashboard grid for debugging
 const DynamicDashboardGrid = dynamic(
   () =>
-    import("@/components/dashboard/dashboard-grid").then(
-      (mod) => mod.DashboardGrid
+    import("@/components/dashboard/simple-dashboard-grid").then(
+      (mod) => mod.SimpleDashboardGrid
     ),
   {
     ssr: false,
@@ -81,13 +83,32 @@ const DynamicDashboardGrid = dynamic(
   }
 )
 
+// Original complex grid with touch gestures (temporarily disabled)
+// const DynamicDashboardGrid = dynamic(
+//   () =>
+//     import("@/components/dashboard/dashboard-grid").then(
+//       (mod) => mod.DashboardGrid
+//     ),
+//   {
+//     ssr: false,
+//     loading: () => <DashboardGridSkeleton />,
+//   }
+// )
+
 export default function DashboardPage() {
+  console.log('🔍 DashboardPage: Component mounting')
+  
   const [expenses] = useLocalStorage<Expense[]>("expenses", [])
+  console.log('🔍 DashboardPage: Expenses loaded:', expenses?.length)
+  
   const { accounts } = useSettings()
+  console.log('🔍 DashboardPage: Accounts from settings:', accounts?.length)
+  
   const [widgets, setWidgets] = useLocalStorage<WidgetConfig[]>(
     "widgets",
     DEFAULT_WIDGETS
   )
+  console.log('🔍 DashboardPage: Widgets loaded:', widgets?.length)
   const [isWidgetSheetOpen, setIsWidgetSheetOpen] = React.useState(false)
   const [isFilterSheetOpen, setIsFilterSheetOpen] = React.useState(false)
   const [filters, setFilters] = React.useState<WidgetFilters>({
@@ -251,61 +272,80 @@ export default function DashboardPage() {
     })
   }, [expenses, filters])
 
+  console.log('🔍 DashboardPage: About to render, filteredExpenses:', filteredExpenses?.length)
+
   return (
     <>
       <AppLayout>
-      <div className="flex-1 space-y-4 p-4 sm:p-8">
-        <div className="flex items-center justify-between space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsFilterSheetOpen(true)}
-          >
-            <Filter className="mr-2 h-4 w-4" />
-            Filters
-          </Button>
-        </div>
+        <ErrorBoundary onError={(error, errorInfo) => {
+          console.error('🚨 Dashboard Error Boundary caught:', error, errorInfo)
+        }}>
+          <div className="flex-1 space-y-4 p-4 sm:p-8">
+            <div className="flex items-center justify-between space-y-2">
+              <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsFilterSheetOpen(true)}
+              >
+                <Filter className="mr-2 h-4 w-4" />
+                Filters
+              </Button>
+            </div>
 
-        <DynamicDashboardGrid
-          expenses={filteredExpenses || []}
-          widgets={widgets || []}
-          accounts={accounts || []}
-          removeWidget={removeWidget}
-          updateWidgetTitle={updateWidgetTitle}
-          updateWidgetFilters={updateWidgetFilters}
-          availableMonths={availableMonths}
-          availableYears={availableYears}
-          areGlobalFiltersActive={areGlobalFiltersActive}
-          onLayoutChange={handleLayoutChange}
-        />
-      </div>
-      
-      <AddWidgetSheet
-        isOpen={isWidgetSheetOpen}
-        setIsOpen={setIsWidgetSheetOpen}
-        addWidget={addWidget}
-      />
-      <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
-        <SheetContent>
-          <SheetHeader>
-            <SheetTitle>Global Dashboard Filters</SheetTitle>
-            <SheetDescription>
-              Apply filters to all widgets on the dashboard.
-            </SheetDescription>
-          </SheetHeader>
-          <div className="space-y-4 py-4">
-            <h4 className="text-sm font-medium">Filter by</h4>
-            <ExpensesFilters
-              filters={filters}
-              onFilterChange={handleFilterChange}
-              onClearFilters={clearFilters}
-              months={availableMonths}
-              years={availableYears}
-            />
+            <ErrorBoundary onError={(error, errorInfo) => {
+              console.error('🚨 DashboardGrid Error Boundary caught:', error, errorInfo)
+            }}>
+              <DynamicDashboardGrid
+                expenses={filteredExpenses || []}
+                widgets={widgets || []}
+                accounts={accounts || []}
+                removeWidget={removeWidget}
+                updateWidgetTitle={updateWidgetTitle}
+                updateWidgetFilters={updateWidgetFilters}
+                availableMonths={availableMonths}
+                availableYears={availableYears}
+                areGlobalFiltersActive={areGlobalFiltersActive}
+                onLayoutChange={handleLayoutChange}
+              />
+            </ErrorBoundary>
           </div>
-        </SheetContent>
-      </Sheet>
+        </ErrorBoundary>
+      
+      <ErrorBoundary onError={(error, errorInfo) => {
+        console.error('🚨 AddWidgetSheet Error Boundary caught:', error, errorInfo)
+      }}>
+        <AddWidgetSheet
+          isOpen={isWidgetSheetOpen}
+          setIsOpen={setIsWidgetSheetOpen}
+          addWidget={addWidget}
+        />
+      </ErrorBoundary>
+      
+      <ErrorBoundary onError={(error, errorInfo) => {
+        console.error('🚨 FilterSheet Error Boundary caught:', error, errorInfo)
+      }}>
+        <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
+          <SheetContent>
+            <SheetHeader>
+              <SheetTitle>Global Dashboard Filters</SheetTitle>
+              <SheetDescription>
+                Apply filters to all widgets on the dashboard.
+              </SheetDescription>
+            </SheetHeader>
+            <div className="space-y-4 py-4">
+              <h4 className="text-sm font-medium">Filter by</h4>
+              <ExpensesFilters
+                filters={filters}
+                onFilterChange={handleFilterChange}
+                onClearFilters={clearFilters}
+                months={availableMonths}
+                years={availableYears}
+              />
+            </div>
+          </SheetContent>
+        </Sheet>
+      </ErrorBoundary>
       </AppLayout>
       <RainbowButton
       onClick={() => {
