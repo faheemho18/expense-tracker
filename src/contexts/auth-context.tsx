@@ -43,21 +43,71 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return
     }
 
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ? convertUser(session.user) : null)
-      setLoading(false)
-    })
+    let mounted = true
+
+    // Get initial session with error handling
+    const getInitialSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession()
+        
+        if (error) {
+          console.warn('Session recovery error:', error.message)
+          // Try to refresh the session
+          const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession()
+          if (!refreshError && refreshedSession && mounted) {
+            setUser(convertUser(refreshedSession.user))
+          } else if (mounted) {
+            setUser(null)
+          }
+        } else if (mounted) {
+          setUser(session?.user ? convertUser(session.user) : null)
+        }
+      } catch (err) {
+        console.warn('Failed to get initial session:', err)
+        if (mounted) {
+          setUser(null)
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false)
+        }
+      }
+    }
+
+    getInitialSession()
 
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ? convertUser(session.user) : null)
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return
+
+      if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+        setUser(session?.user ? convertUser(session.user) : null)
+      } else if (event === 'SIGNED_IN') {
+        setUser(session?.user ? convertUser(session.user) : null)
+      } else if (event === 'SESSION_EXPIRED') {
+        // Try to refresh the session
+        try {
+          const { data: { session: refreshedSession }, error } = await supabase.auth.refreshSession()
+          if (!error && refreshedSession) {
+            setUser(convertUser(refreshedSession.user))
+          } else {
+            setUser(null)
+          }
+        } catch (err) {
+          console.warn('Failed to refresh expired session:', err)
+          setUser(null)
+        }
+      }
+      
       setLoading(false)
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
+    }
   }, [supabase])
 
   const signIn = async (email: string, password: string) => {

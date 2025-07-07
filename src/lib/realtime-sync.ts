@@ -274,21 +274,41 @@ export class RealtimeSyncService {
    */
   private scheduleReconnect(): void {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.error('Max reconnection attempts reached')
+      console.error('Max reconnection attempts reached - will retry on next user action')
       this.isConnected = false
       this.updateStatus()
+      
+      // Set a longer timer to reset attempts (5 minutes)
+      setTimeout(() => {
+        if (!this.isConnected) {
+          this.reconnectAttempts = 0
+          console.log('Reset reconnection attempts - ready to retry')
+        }
+      }, 5 * 60 * 1000)
       return
     }
 
     this.reconnectAttempts++
-    const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1)
+    const delay = Math.min(this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1), 30000) // Cap at 30 seconds
     
     console.log(`Scheduling reconnect attempt ${this.reconnectAttempts} in ${delay}ms`)
     
     setTimeout(async () => {
+      // Check if network is available before attempting reconnect
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        console.log('Network offline - delaying reconnect')
+        this.scheduleReconnect()
+        return
+      }
+      
       if (this.userId) {
-        const success = await this.initialize(this.userId)
-        if (!success) {
+        try {
+          const success = await this.initialize(this.userId)
+          if (!success) {
+            this.scheduleReconnect()
+          }
+        } catch (error) {
+          console.error('Reconnection failed:', error)
           this.scheduleReconnect()
         }
       }
@@ -342,6 +362,58 @@ export class RealtimeSyncService {
       return await this.initialize(this.userId)
     }
     return false
+  }
+
+  /**
+   * Force a manual reconnection attempt (reset failed attempts)
+   */
+  async forceReconnect(): Promise<boolean> {
+    if (!this.userId) return false
+    
+    this.reconnectAttempts = 0
+    console.log('Forcing manual reconnection...')
+    
+    try {
+      this.cleanup()
+      const success = await this.initialize(this.userId)
+      if (success) {
+        console.log('Manual reconnection successful')
+      }
+      return success
+    } catch (error) {
+      console.error('Manual reconnection failed:', error)
+      return false
+    }
+  }
+
+  /**
+   * Check network status and attempt reconnection if needed
+   */
+  async checkNetworkAndReconnect(): Promise<void> {
+    if (typeof navigator === 'undefined') return
+    
+    // Listen for network status changes
+    const handleOnline = async () => {
+      console.log('Network back online - attempting reconnection')
+      if (!this.isConnected && this.userId) {
+        await this.forceReconnect()
+      }
+    }
+
+    const handleOffline = () => {
+      console.log('Network offline - pausing sync')
+      this.isConnected = false
+      this.updateStatus()
+    }
+
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+
+    // Return cleanup function
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
   }
 }
 

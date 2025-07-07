@@ -344,9 +344,10 @@ export function ExpensesTable({
   })
 
   return (
-    <div className="w-full overflow-hidden rounded-md border">
-      {/* Mobile view - hidden on sm and larger screens */}
-      <div className="sm:hidden">
+    <div className="w-full overflow-x-auto">
+      <div className="w-full overflow-hidden rounded-md border">
+        {/* Mobile view - hidden on sm and larger screens */}
+        <div className="sm:hidden">
         <div className="space-y-3 p-4">
           {expenses.length > 0 ? (
             expenses.map((expense, index) => (
@@ -540,6 +541,7 @@ export function ExpensesTable({
           )}
         </TableBody>
       </Table>
+      </div>
     </div>
   )
 }

@@ -98,6 +98,47 @@ export class APIKeyManager {
   }
 
   /**
+   * Enhanced error pattern detection
+   */
+  private isQuotaError(error: string): boolean {
+    const quotaPatterns = [
+      'quota exceeded',
+      'billing not enabled',
+      'credits exhausted',
+      'usage limit exceeded',
+      'monthly quota',
+      'daily quota',
+      'rate limit exceeded',
+      'too many requests'
+    ];
+    return quotaPatterns.some(pattern => error.toLowerCase().includes(pattern));
+  }
+
+  private isAuthError(error: string): boolean {
+    const authPatterns = [
+      'invalid api key',
+      'unauthorized',
+      'permission denied',
+      'authentication failed',
+      'invalid key',
+      'api key not found'
+    ];
+    return authPatterns.some(pattern => error.toLowerCase().includes(pattern));
+  }
+
+  private isTemporaryError(error: string): boolean {
+    const temporaryPatterns = [
+      'service unavailable',
+      'internal server error',
+      'timeout',
+      'network error',
+      'connection reset',
+      'temporary failure'
+    ];
+    return temporaryPatterns.some(pattern => error.toLowerCase().includes(pattern));
+  }
+
+  /**
    * Mark current key as failed and rotate to next
    */
   public markCurrentKeyAsFailed(error: string): void {
@@ -105,14 +146,32 @@ export class APIKeyManager {
     if (activeKeys.length === 0) return;
 
     const currentKey = activeKeys[this.currentKeyIndex % activeKeys.length];
-    currentKey.failureCount++;
     currentKey.lastError = error;
     currentKey.lastErrorTime = Date.now();
 
-    console.warn(`API key failed (${currentKey.failureCount}/${this.config.maxFailures}): ${this.maskKey(currentKey.key)} - ${error}`);
+    // Different handling based on error type
+    if (this.isQuotaError(error)) {
+      // Quota errors should immediately deactivate the key
+      currentKey.failureCount = this.config.maxFailures;
+      currentKey.isActive = false;
+      console.warn(`API key immediately deactivated due to quota error: ${this.maskKey(currentKey.key)} - ${error}`);
+    } else if (this.isAuthError(error)) {
+      // Auth errors should immediately deactivate the key
+      currentKey.failureCount = this.config.maxFailures;
+      currentKey.isActive = false;
+      console.warn(`API key immediately deactivated due to auth error: ${this.maskKey(currentKey.key)} - ${error}`);
+    } else if (this.isTemporaryError(error)) {
+      // Temporary errors should not count as much against the key
+      currentKey.failureCount += 0.5;
+      console.warn(`API key temporary failure (${currentKey.failureCount}/${this.config.maxFailures}): ${this.maskKey(currentKey.key)} - ${error}`);
+    } else {
+      // Unknown errors count as normal failures
+      currentKey.failureCount++;
+      console.warn(`API key failed (${currentKey.failureCount}/${this.config.maxFailures}): ${this.maskKey(currentKey.key)} - ${error}`);
+    }
 
     // Deactivate key if it has reached max failures
-    if (currentKey.failureCount >= this.config.maxFailures) {
+    if (currentKey.failureCount >= this.config.maxFailures && currentKey.isActive) {
       currentKey.isActive = false;
       console.warn(`API key deactivated due to repeated failures: ${this.maskKey(currentKey.key)}`);
     }
