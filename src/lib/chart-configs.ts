@@ -575,3 +575,232 @@ export class ChartProgressiveEnhancement {
     }
   }
 }
+
+/**
+ * Performance optimization utilities for mobile chart rendering
+ */
+export class ChartPerformanceOptimizer {
+  /**
+   * Get optimal data sampling rate based on device capabilities
+   */
+  static getOptimalSamplingRate(viewport: ViewportInfo, dataLength: number): number {
+    const maxPoints = viewport.isMobile ? 20 : viewport.isTablet ? 50 : 100
+    
+    if (dataLength <= maxPoints) {
+      return 1 // No sampling needed
+    }
+    
+    return Math.ceil(dataLength / maxPoints)
+  }
+  
+  /**
+   * Sample data for optimal performance while preserving important points
+   */
+  static sampleDataForPerformance<T extends Record<string, any>>(
+    data: T[],
+    viewport: ViewportInfo,
+    keyField: keyof T = 'value'
+  ): T[] {
+    const samplingRate = this.getOptimalSamplingRate(viewport, data.length)
+    
+    if (samplingRate === 1) {
+      return data
+    }
+    
+    // Always include first and last points
+    const sampled: T[] = [data[0]]
+    
+    // Find peaks and troughs to preserve important data points
+    const importantIndices = this.findImportantDataPoints(data, keyField)
+    
+    // Sample at regular intervals but include important points
+    for (let i = samplingRate; i < data.length - 1; i += samplingRate) {
+      sampled.push(data[i])
+    }
+    
+    // Add important points if not already included
+    for (const index of importantIndices) {
+      if (!sampled.some((_, i) => i === index)) {
+        sampled.push(data[index])
+      }
+    }
+    
+    // Always include last point
+    if (data.length > 1) {
+      sampled.push(data[data.length - 1])
+    }
+    
+    // Sort by original index to maintain order
+    return sampled.sort((a, b) => data.indexOf(a) - data.indexOf(b))
+  }
+  
+  /**
+   * Find peaks, troughs, and significant changes in data
+   */
+  private static findImportantDataPoints<T extends Record<string, any>>(
+    data: T[],
+    keyField: keyof T
+  ): number[] {
+    const important: number[] = []
+    
+    if (data.length < 3) return important
+    
+    // Find local maxima and minima
+    for (let i = 1; i < data.length - 1; i++) {
+      const prev = Number(data[i - 1][keyField])
+      const curr = Number(data[i][keyField])
+      const next = Number(data[i + 1][keyField])
+      
+      // Local maximum
+      if (curr > prev && curr > next) {
+        important.push(i)
+      }
+      
+      // Local minimum
+      if (curr < prev && curr < next) {
+        important.push(i)
+      }
+      
+      // Significant change (> 20% difference)
+      const changeFromPrev = Math.abs((curr - prev) / prev)
+      const changeToNext = Math.abs((next - curr) / curr)
+      
+      if (changeFromPrev > 0.2 || changeToNext > 0.2) {
+        important.push(i)
+      }
+    }
+    
+    return important
+  }
+  
+  /**
+   * Get performance-optimized chart rendering options
+   */
+  static getPerformanceRenderOptions(viewport: ViewportInfo) {
+    return {
+      // Reduce rendering complexity on mobile
+      useSimplifiedRendering: viewport.isMobile || this.isLowEndDevice(),
+      
+      // Disable expensive features on constrained devices
+      enableAnimations: !viewport.isMobile && !this.isLowEndDevice() && !this.prefersReducedMotion(),
+      enableGradients: !viewport.isMobile && !this.isLowEndDevice(),
+      enableShadows: viewport.isDesktop && !this.isLowEndDevice(),
+      
+      // Optimize redraw frequency
+      throttleRedraws: viewport.isMobile,
+      redrawDelay: viewport.isMobile ? 100 : 50,
+      
+      // Memory optimization
+      clearOffscreenCanvases: viewport.isMobile,
+      maxCachedFrames: viewport.isMobile ? 2 : 5,
+      
+      // Interaction optimization
+      touchOptimized: viewport.isTouchDevice,
+      hoverEffects: !viewport.isTouchDevice,
+    }
+  }
+  
+  /**
+   * Check if device should use simplified rendering
+   */
+  private static isLowEndDevice(): boolean {
+    if (typeof navigator === 'undefined') return false
+    
+    // Check device memory
+    // @ts-ignore - Non-standard API
+    const memory = navigator.deviceMemory
+    if (memory && memory < 4) return true
+    
+    // Check CPU cores as proxy for performance
+    if (navigator.hardwareConcurrency && navigator.hardwareConcurrency < 4) {
+      return true
+    }
+    
+    // Check connection speed
+    // @ts-ignore - Non-standard API
+    const connection = navigator.connection
+    if (connection?.effectiveType && ['slow-2g', '2g'].includes(connection.effectiveType)) {
+      return true
+    }
+    
+    return false
+  }
+  
+  /**
+   * Check user preference for reduced motion
+   */
+  private static prefersReducedMotion(): boolean {
+    if (typeof window === 'undefined') return false
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  }
+  
+  /**
+   * Optimize chart configuration for mobile performance
+   */
+  static optimizeForMobile<T extends ChartDimensions>(config: T): T {
+    return {
+      ...config,
+      // Reduce chart height for faster rendering
+      height: typeof config.height === 'number' 
+        ? Math.min(config.height, 250) 
+        : config.height,
+      
+      // Reduce margins to save space and rendering time
+      margin: {
+        top: Math.min(config.margin.top, 10),
+        right: Math.min(config.margin.right, 10),
+        bottom: Math.min(config.margin.bottom, 20),
+        left: Math.min(config.margin.left, 10),
+      },
+    }
+  }
+  
+  /**
+   * Get debounced resize handler for performance
+   */
+  static getDebouncedResizeHandler(
+    callback: () => void,
+    delay: number = 150
+  ): () => void {
+    let timeoutId: NodeJS.Timeout
+    
+    return () => {
+      clearTimeout(timeoutId)
+      timeoutId = setTimeout(callback, delay)
+    }
+  }
+  
+  /**
+   * Create performance monitoring for chart rendering
+   */
+  static createPerformanceMonitor(chartId: string) {
+    if (typeof performance === 'undefined') {
+      return {
+        startRender: () => {},
+        endRender: () => {},
+        getMetrics: () => ({}),
+      }
+    }
+    
+    let renderStart: number
+    const metrics: Record<string, number> = {}
+    
+    return {
+      startRender: () => {
+        renderStart = performance.now()
+      },
+      
+      endRender: () => {
+        const renderTime = performance.now() - renderStart
+        metrics[`${chartId}_render_time`] = renderTime
+        
+        // Log performance warnings for slow renders
+        if (renderTime > 100) {
+          console.warn(`Chart ${chartId} render took ${renderTime.toFixed(2)}ms`)
+        }
+      },
+      
+      getMetrics: () => ({ ...metrics }),
+    }
+  }
+}

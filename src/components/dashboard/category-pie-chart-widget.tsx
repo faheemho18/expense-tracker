@@ -18,8 +18,16 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useResizeObserver } from "@/hooks/use-resize-observer"
+import { useViewport } from "@/hooks/use-viewport"
+import { useChartWidgetLazyLoad } from "@/hooks/use-lazy-chart"
 import { ChartZoomWrapper } from "./chart-zoom-wrapper"
-import { getPieChartConfig, getAnimationConfig } from "@/lib/chart-configs"
+import { 
+  getPieChartConfig, 
+  getAnimationConfig,
+  ChartPerformanceOptimizer,
+  ChartDataProcessor,
+  ChartProgressiveEnhancement
+} from "@/lib/chart-configs"
 
 interface CategoryPieChartWidgetProps {
   expenses: Expense[]
@@ -30,16 +38,31 @@ export function CategoryPieChartWidget({
 }: CategoryPieChartWidgetProps) {
   const { categories } = useSettings()
   const isMobile = useIsMobile()
+  const viewport = useViewport()
   const [inactiveCategories, setInactiveCategories] = React.useState<string[]>([])
+  
+  // Lazy loading for performance optimization
+  const { ref: lazyRef, shouldLoad } = useChartWidgetLazyLoad<HTMLDivElement>('medium')
   
   // Use ResizeObserver for responsive chart sizing
   const { ref: containerRef, width: containerWidth, height: containerHeight } = useResizeObserver<HTMLDivElement>({
-    debounceMs: 100, // Debounce to avoid excessive re-renders
+    debounceMs: ChartPerformanceOptimizer.getDebouncedResizeHandler(() => {}, 150)?.length || 150,
     triggerOnMount: true,
   })
+  
+  // Performance monitoring
+  const performanceMonitor = React.useMemo(
+    () => ChartPerformanceOptimizer.createPerformanceMonitor('category-pie-chart'),
+    []
+  )
 
   const { data, chartConfig } = React.useMemo(() => {
-    if (!categories) return { data: [], chartConfig: {} }
+    performanceMonitor.startRender()
+    
+    if (!categories) {
+      performanceMonitor.endRender()
+      return { data: [], chartConfig: {} }
+    }
 
     const categoryTotals = expenses.reduce(
       (acc, expense) => {
@@ -52,16 +75,23 @@ export function CategoryPieChartWidget({
       {} as Record<string, number>
     )
 
-    const chartData = Object.entries(categoryTotals)
+    let chartData = Object.entries(categoryTotals)
       .map(([categoryValue, total]) => {
         const category = categories.find((c) => c.value === categoryValue)
         return {
           category: category?.label || "Unknown",
+          name: category?.label || "Unknown", // Add name field for data processing
           total,
+          value: total, // Add value field for data processing
           fill: category?.color || "#8884d8", // Fallback color
         }
       })
       .sort((a, b) => b.total - a.total)
+
+    // Apply performance optimizations for mobile
+    if (viewport.isMobile || viewport.isTablet) {
+      chartData = ChartDataProcessor.simplifyPieData(chartData, viewport)
+    }
 
     const config = chartData.reduce((acc, item) => {
       acc[item.category] = {
@@ -71,8 +101,9 @@ export function CategoryPieChartWidget({
       return acc
     }, {} as ChartConfig)
 
+    performanceMonitor.endRender()
     return { data: chartData, chartConfig: config }
-  }, [expenses, categories])
+  }, [expenses, categories, viewport, performanceMonitor])
 
   const handleLegendClick = (item: any) => {
     const category = item.value
@@ -92,10 +123,17 @@ export function CategoryPieChartWidget({
     }))
   }, [data])
 
-  // Get responsive chart configuration
+  // Get responsive chart configuration with performance optimizations
   const responsiveConfig = React.useMemo(() => {
     const baseConfig = getPieChartConfig(containerWidth || (isMobile ? 400 : 800))
     const animationConfig = getAnimationConfig(containerWidth || (isMobile ? 400 : 800))
+    const performanceOptions = ChartPerformanceOptimizer.getPerformanceRenderOptions(viewport)
+    const progressiveFeatures = ChartProgressiveEnhancement.getProgressiveFeatures(viewport)
+    
+    // Apply mobile optimizations if needed
+    const optimizedConfig = viewport.isMobile 
+      ? ChartPerformanceOptimizer.optimizeForMobile(baseConfig)
+      : baseConfig
     
     // Calculate layout based on container dimensions
     const aspectRatio = containerWidth && containerHeight ? containerWidth / containerHeight : 1
@@ -105,16 +143,31 @@ export function CategoryPieChartWidget({
     const legendStyle = (isMobile || isWideContainer) ? "horizontal" : "vertical"
     
     return {
-      ...baseConfig,
+      ...optimizedConfig,
       ...animationConfig,
       legendStyle,
       containerWidth: containerWidth || 0,
       containerHeight: containerHeight || 0,
+      // Performance optimizations
+      animationDuration: performanceOptions.enableAnimations ? animationConfig.animationDuration : 0,
+      enableAnimations: performanceOptions.enableAnimations,
+      enableGradients: progressiveFeatures.gradients,
+      enableShadows: progressiveFeatures.shadows,
+      touchOptimized: performanceOptions.touchOptimized,
     }
-  }, [containerWidth, containerHeight, isMobile])
+  }, [containerWidth, containerHeight, isMobile, viewport])
 
   if (!categories) {
     return <Skeleton className="h-full w-full" />
+  }
+
+  // Early return for loading state
+  if (!shouldLoad) {
+    return (
+      <div ref={lazyRef} className="h-full w-full flex items-center justify-center">
+        <Skeleton className="h-full w-full" />
+      </div>
+    )
   }
 
   if (data.length === 0) {
@@ -127,7 +180,17 @@ export function CategoryPieChartWidget({
 
   return (
     <ChartZoomWrapper className="h-full w-full">
-      <div ref={containerRef} className="h-full w-full">
+      <div 
+        ref={(el) => {
+          // Combine refs for lazy loading and resize observer
+          if (el) {
+            // Use type assertion to work around readonly ref issue
+            (lazyRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+            (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+          }
+        }} 
+        className="h-full w-full"
+      >
         <ChartContainer 
           config={chartConfig} 
           aspectRatio={responsiveConfig.legendStyle === "horizontal" ? 1.5 : 1.2}
@@ -158,8 +221,9 @@ export function CategoryPieChartWidget({
                     innerRadius={responsiveConfig.innerRadius}
                     outerRadius={responsiveConfig.outerRadius}
                     strokeWidth={responsiveConfig.strokeWidth}
-                    animationBegin={responsiveConfig.animationBegin}
+                    animationBegin={responsiveConfig.enableAnimations ? responsiveConfig.animationBegin : 0}
                     animationDuration={responsiveConfig.animationDuration}
+                    isAnimationActive={responsiveConfig.animationDuration > 0}
                   >
                     {data.map((entry, index) => (
                       <Cell
