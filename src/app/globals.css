@@ -198,9 +198,38 @@
 @layer base {
   * {
     @apply border-border;
+    box-sizing: border-box;
   }
-  body {
+  html, body {
     @apply bg-background text-foreground;
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+  
+  /* Prevent horizontal overflow globally */
+  .container, .card, .widget {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  
+  /* Make tables responsive */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Button positioning fix */
+  .fixed-button {
+    position: fixed;
+    right: 1rem;
+    bottom: 1.5rem;
+    z-index: 9999;
+  }
+  
+  @media (max-width: 768px) {
+    .fixed-button {
+      bottom: 5rem; /* Above mobile navigation */
+    }
   }
 }
 

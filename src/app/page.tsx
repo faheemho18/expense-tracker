@@ -328,7 +328,7 @@ export default function HomePage() {
   return (
     <>
       <AppLayout>
-        <div className="flex-1 space-y-4 p-4 sm:p-8">
+        <div className="flex-1 space-y-4 p-4 sm:p-8 max-w-screen-xl mx-auto overflow-x-hidden">
           <div className="space-y-6">
             <Card>
               <CardHeader className="relative grid grid-cols-3 items-center">
