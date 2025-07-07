@@ -3,11 +3,8 @@
  * Tests for widget content overflow and text truncation issues
  */
 
-import { chromium, Browser, Page } from 'playwright';
-
 describe('Dashboard Text Overflow', () => {
-  let browser: Browser;
-  let page: Page;
+  let page: any;
 
   const viewports = [
     { width: 320, height: 568, name: 'iPhone SE' },
@@ -17,27 +14,14 @@ describe('Dashboard Text Overflow', () => {
     { width: 1440, height: 900, name: 'Desktop Large' }
   ];
 
-  beforeAll(async () => {
-    browser = await chromium.launch();
-  });
-
-  afterAll(async () => {
-    await browser.close();
-  });
-
   beforeEach(async () => {
     page = await browser.newPage();
-  });
-
-  afterEach(async () => {
-    await page.close();
   });
 
   viewports.forEach(viewport => {
     test(`No text overflow on ${viewport.name}`, async () => {
       await page.setViewport(viewport);
-      await page.goto('http://localhost:3000/dashboard');
-      await page.waitForLoadState('networkidle');
+      await page.goto('http://localhost:3000/dashboard', { waitUntil: 'networkidle0' });
       
       // Check for horizontally overflowing elements
       const overflowingElements = await page.evaluate(() => {
@@ -63,8 +47,7 @@ describe('Dashboard Text Overflow', () => {
 
     test(`Widget content fits containers on ${viewport.name}`, async () => {
       await page.setViewport(viewport);
-      await page.goto('http://localhost:3000/dashboard');
-      await page.waitForLoadState('networkidle');
+      await page.goto('http://localhost:3000/dashboard', { waitUntil: 'networkidle0' });
       
       // Check specific widget containers
       const widgets = await page.$$('[data-testid*="widget"], .widget, [class*="widget"]');
@@ -96,8 +79,7 @@ describe('Dashboard Text Overflow', () => {
   });
 
   test('Number ticker fits in stats widget', async () => {
-    await page.goto('http://localhost:3000/dashboard');
-    await page.waitForLoadState('networkidle');
+    await page.goto('http://localhost:3000/dashboard', { waitUntil: 'networkidle0' });
     
     const numberTickers = await page.$$('[data-testid="number-ticker"], .number-ticker, [class*="ticker"]');
     
@@ -127,8 +109,7 @@ describe('Dashboard Text Overflow', () => {
   }, 30000);
 
   test('Long text content truncates properly', async () => {
-    await page.goto('http://localhost:3000/dashboard');
-    await page.waitForLoadState('networkidle');
+    await page.goto('http://localhost:3000/dashboard', { waitUntil: 'networkidle0' });
     
     // Test with mock long text data
     await page.evaluate(() => {
@@ -149,7 +130,7 @@ describe('Dashboard Text Overflow', () => {
       window.dispatchEvent(new CustomEvent('test-long-text', { detail: mockData }));
     });
     
-    await page.waitForTimeout(1000);
+    await page.waitFor(1000);
     
     // Check that text elements have proper truncation
     const textElements = await page.$$('p, span, div, h1, h2, h3, h4, h5, h6');

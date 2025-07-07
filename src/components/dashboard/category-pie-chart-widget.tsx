@@ -20,7 +20,8 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { useResizeObserver } from "@/hooks/use-resize-observer"
 import { useViewport } from "@/hooks/use-viewport"
 import { useChartWidgetLazyLoad } from "@/hooks/use-lazy-chart"
-import { ChartZoomWrapper } from "./chart-zoom-wrapper"
+// Temporarily disabled for debugging
+// import { ChartZoomWrapper } from "./chart-zoom-wrapper"
 import { 
   getPieChartConfig, 
   getAnimationConfig,
@@ -179,7 +180,9 @@ export function CategoryPieChartWidget({
   }
 
   return (
-    <ChartZoomWrapper className="h-full w-full">
+    // Temporarily disabled ChartZoomWrapper for debugging
+    // <ChartZoomWrapper className="h-full w-full">
+    <div className="h-full w-full">
       <div 
         ref={(el) => {
           // Combine refs for lazy loading and resize observer
@@ -264,6 +267,8 @@ export function CategoryPieChartWidget({
           </div>
         </ChartContainer>
       </div>
-    </ChartZoomWrapper>
+      {/* Temporarily disabled ChartZoomWrapper for debugging */}
+      {/* </ChartZoomWrapper> */}
+    </div>
   )
 }
