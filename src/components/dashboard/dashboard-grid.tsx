@@ -10,6 +10,7 @@ import type { Account, Expense, WidgetConfig, WidgetFilters } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { useSwipeGestures } from "@/hooks/use-touch-gestures"
 
 import { AccountPieChartWidget } from "./account-pie-chart-widget"
 import { CategoryPieChartWidget } from "./category-pie-chart-widget"
@@ -32,6 +33,7 @@ interface DashboardGridProps {
   availableYears: { value: string; label: string }[]
   areGlobalFiltersActive: boolean
   onLayoutChange: (layout: Layout[]) => void
+  onWidgetSwipe?: (direction: 'left' | 'right', widgetId: string) => void
 }
 
 const renderWidget = (
@@ -68,8 +70,29 @@ export function DashboardGrid({
   availableYears,
   areGlobalFiltersActive,
   onLayoutChange,
+  onWidgetSwipe,
 }: DashboardGridProps) {
   const isMobile = useIsMobile()
+  
+  // Handle swipe gestures for widget navigation on mobile
+  const { ref: swipeRef } = useSwipeGestures(
+    React.useCallback((direction: 'left' | 'right' | 'up' | 'down') => {
+      if ((direction === 'left' || direction === 'right') && isMobile && onWidgetSwipe) {
+        // For now, we'll implement basic swipe detection
+        // In a more advanced implementation, we could detect which widget is being swiped
+        // and pass its ID to the callback
+        const currentWidget = widgets[0] // Simplified for demo
+        if (currentWidget) {
+          onWidgetSwipe(direction as 'left' | 'right', currentWidget.id)
+        }
+      }
+    }, [isMobile, onWidgetSwipe, widgets]),
+    {
+      enableSwipe: isMobile,
+      swipeThreshold: 80, // Require longer swipe on mobile
+      swipeVelocityThreshold: 0.3,
+    }
+  )
   
   const layouts = React.useMemo(() => {
     if (!widgets) return { lg: [], md: [], sm: [], xs: [], xxs: [] }
@@ -178,8 +201,16 @@ export function DashboardGrid({
     onLayoutChange(newLayout)
   }
 
+  // Combine refs for swipe detection
+  const combinedRef = React.useCallback((node: HTMLDivElement) => {
+    if (swipeRef.current !== node) {
+      ;(swipeRef as React.MutableRefObject<HTMLDivElement | null>).current = node
+    }
+  }, [swipeRef])
+
   return (
-    <ResponsiveGridLayout
+    <div ref={combinedRef} className="w-full h-full">
+      <ResponsiveGridLayout
       layouts={layouts}
       breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
       cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
@@ -259,6 +290,7 @@ export function DashboardGrid({
           </div>
         )
       })}
-    </ResponsiveGridLayout>
+      </ResponsiveGridLayout>
+    </div>
   )
 }

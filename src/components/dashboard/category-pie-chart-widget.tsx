@@ -18,7 +18,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useResizeObserver } from "@/hooks/use-resize-observer"
-import { ChartZoomWrapper } from "@/components/ui/chart-zoom-wrapper"
+import { ChartZoomWrapper } from "./chart-zoom-wrapper"
 import { getPieChartConfig, getAnimationConfig } from "@/lib/chart-configs"
 
 interface CategoryPieChartWidgetProps {

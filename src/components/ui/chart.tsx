@@ -54,7 +54,7 @@ function useChart() {
  * Hook to get viewport-aware chart configuration
  * Provides responsive settings for chart components
  */
-export function useChartResponsive() {
+function useChartResponsiveInternal() {
   const { viewport, responsiveConfig } = useChart()
   
   return {
@@ -239,6 +239,7 @@ const ChartTooltipContent = React.forwardRef<
       indicator?: "line" | "dot" | "dashed"
       nameKey?: string
       labelKey?: string
+      touchFriendly?: boolean
     }
 >(
   (
@@ -256,10 +257,11 @@ const ChartTooltipContent = React.forwardRef<
       color,
       nameKey,
       labelKey,
+      touchFriendly = false,
     },
     ref
   ) => {
-    const { config } = useChart()
+    const { config, viewport } = useChart()
 
     const tooltipLabel = React.useMemo(() => {
       if (hideLabel || !payload?.length) {
@@ -307,9 +309,22 @@ const ChartTooltipContent = React.forwardRef<
       <div
         ref={ref}
         className={cn(
-          "grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl",
+          "grid items-start gap-1.5 rounded-lg border border-border/50 bg-background shadow-xl",
+          // Touch-friendly sizing
+          touchFriendly || viewport.isTouchDevice
+            ? "min-w-[10rem] px-3 py-2 text-sm" 
+            : "min-w-[8rem] px-2.5 py-1.5 text-xs",
+          // Enhanced shadow for touch visibility
+          viewport.isTouchDevice && "shadow-2xl ring-1 ring-black/5",
           className
         )}
+        style={{
+          // Prevent tooltip from being too close to finger on touch devices
+          ...(viewport.isTouchDevice && {
+            zIndex: 9999,
+            pointerEvents: 'none', // Prevent interference with touch events
+          })
+        }}
       >
         {!nestLabel ? tooltipLabel : null}
         <div className="grid gap-1.5">
@@ -524,5 +539,5 @@ export {
   ChartLegend,
   ChartLegendContent,
   ChartStyle,
-  useChartResponsive,
+  useChartResponsiveInternal as useChartResponsive,
 }
