@@ -64,6 +64,15 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     )
   }
 
+  // Show loading state while determining mobile layout (prevents hydration mismatch)
+  if (isMobile === undefined) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
+
   // Show auth page if user is not authenticated and Supabase is configured
   if (!user && typeof window !== 'undefined') {
     // Check if Supabase is properly configured (not in localStorage mode)
