@@ -20,17 +20,21 @@ export function MobileShortcuts({ children }: MobileShortcutsProps) {
       if (gesture.direction === 'up' && gesture.distance > 100) {
         triggerHaptic('light')
         // Scroll to top shortcut
-        window.scrollTo({ top: 0, behavior: 'smooth' })
+        if (typeof window !== 'undefined') {
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+        }
       } else if (gesture.direction === 'down' && gesture.distance > 100) {
         triggerHaptic('light')
         // Scroll to bottom shortcut
-        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
+        if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+          window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
+        }
       }
     },
     onDoubleTap: () => {
       // Double tap to go back
       triggerHaptic('medium')
-      if (window.history.length > 1) {
+      if (typeof window !== 'undefined' && window.history.length > 1) {
         router.back()
       }
     },
@@ -47,9 +51,11 @@ export function MobileShortcuts({ children }: MobileShortcutsProps) {
       ]
       
       // Simple alert for now - could be replaced with proper modal
-      const action = window.confirm('Quick Actions:\n1. Add Expense\n2. Dashboard\n3. Settings\n\nTap OK for Add Expense')
-      if (action) {
-        router.push('/?add=true')
+      if (typeof window !== 'undefined') {
+        const action = window.confirm('Quick Actions:\n1. Add Expense\n2. Dashboard\n3. Settings\n\nTap OK for Add Expense')
+        if (action) {
+          router.push('/?add=true')
+        }
       }
       
       setGestureActive(false)
@@ -77,6 +83,8 @@ export function useMobileKeyboardShortcuts() {
   const { triggerHaptic } = useHapticFeedback()
 
   React.useEffect(() => {
+    if (typeof window === 'undefined') return
+
     const handleKeyDown = (e: KeyboardEvent) => {
       // Only handle shortcuts if we're on mobile with external keyboard
       if (window.innerWidth > 768) return
@@ -134,7 +142,9 @@ export function MobileGestureHints() {
   const [showHints, setShowHints] = React.useState(false)
 
   React.useEffect(() => {
-    // Show hints for first-time users
+    // Show hints for first-time users (only in browser)
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') return
+    
     const hasSeenHints = localStorage.getItem('mobile-gesture-hints-seen')
     if (!hasSeenHints && window.innerWidth <= 768) {
       setShowHints(true)

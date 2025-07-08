@@ -126,7 +126,10 @@ export function MobileProgressBar({
 
 // Mobile connection status indicator
 export function MobileConnectionStatus() {
-  const [isOnline, setIsOnline] = React.useState(navigator.onLine)
+  const [isOnline, setIsOnline] = React.useState<boolean>(() => {
+    // Avoid SSR/hydration mismatch by checking if navigator exists
+    return typeof window !== 'undefined' ? navigator.onLine : true
+  })
   const [connectionType, setConnectionType] = React.useState<string>('unknown')
   const isMobile = useIsMobile()
 
@@ -134,10 +137,12 @@ export function MobileConnectionStatus() {
     const handleOnline = () => setIsOnline(true)
     const handleOffline = () => setIsOnline(false)
 
-    // Get connection type if available
-    const connection = (navigator as any).connection || 
-                      (navigator as any).mozConnection || 
-                      (navigator as any).webkitConnection
+    // Get connection type if available (only in browser)
+    const connection = typeof window !== 'undefined' ? (
+      (navigator as any).connection || 
+      (navigator as any).mozConnection || 
+      (navigator as any).webkitConnection
+    ) : null
 
     if (connection) {
       setConnectionType(connection.effectiveType || connection.type || 'unknown')
@@ -153,12 +158,16 @@ export function MobileConnectionStatus() {
       }
     }
 
-    window.addEventListener('online', handleOnline)
-    window.addEventListener('offline', handleOffline)
+    if (typeof window !== 'undefined') {
+      window.addEventListener('online', handleOnline)
+      window.addEventListener('offline', handleOffline)
+    }
 
     return () => {
-      window.removeEventListener('online', handleOnline)
-      window.removeEventListener('offline', handleOffline)
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('online', handleOnline)
+        window.removeEventListener('offline', handleOffline)
+      }
     }
   }, [])
 

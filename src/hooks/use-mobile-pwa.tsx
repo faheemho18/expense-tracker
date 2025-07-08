@@ -13,7 +13,7 @@ export function usePWAInstall() {
   React.useEffect(() => {
     // Check if already installed
     const checkInstalled = () => {
-      if (window.matchMedia('(display-mode: standalone)').matches) {
+      if (typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches) {
         setIsInstalled(true)
       }
     }
@@ -72,7 +72,10 @@ export function usePWAInstall() {
 
 // Hook for mobile-specific offline support
 export function useMobileOfflineSupport() {
-  const [isOnline, setIsOnline] = React.useState(navigator.onLine)
+  const [isOnline, setIsOnline] = React.useState<boolean>(() => {
+    // Avoid SSR/hydration mismatch by checking if navigator exists
+    return typeof window !== 'undefined' ? navigator.onLine : true
+  })
   const [offlineQueue, setOfflineQueue] = React.useState<any[]>([])
   const isMobile = useIsMobile()
 
