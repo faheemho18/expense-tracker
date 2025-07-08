@@ -1,8 +1,8 @@
-# Database Schema & Authentication Documentation
+# Database Schema & Shared Usage Documentation
 
 ## Overview
 
-Comprehensive user-aware database schema with full authentication, multi-user isolation, and real-time capabilities using Supabase as the backend infrastructure.
+Simplified shared database schema for 2-user expense tracking with persistent cloud storage and real-time capabilities using Supabase as the backend infrastructure.
 
 ## Supabase Configuration
 
@@ -10,44 +10,82 @@ Comprehensive user-aware database schema with full authentication, multi-user is
 - **Environment Variables**: `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - **Project URL**: `https://gmvbfqvqtxvplinciznf.supabase.co`
 - **Status**: ✅ ACTIVE - Fully configured and operational
-- **Authentication**: ✅ ACTIVE - Email/password login working
-- **Data Isolation**: ✅ ACTIVE - Users only see their own data
+- **Access Model**: ✅ SHARED - No authentication required for 2 users
+- **Data Storage**: ✅ SHARED - Common database for both users
 
 ### Production Features Active
-- ✅ Complete Supabase authentication system with user management
-- ✅ Multi-user data isolation with Row Level Security (RLS) policies
-- ✅ All data models include user_id relationships with foreign key constraints
-- ✅ User-scoped data operations in all CRUD functions
-- ✅ Authentication UI components with login/signup functionality
-- ✅ Automatic user registration with default data creation
-- ✅ Cross-device data access with secure user sessions
-- ✅ Database schema with proper indexes and constraints
-- ✅ User cleanup on account deletion with CASCADE policies
+- ✅ Shared Supabase database with persistent cloud storage
+- ✅ No authentication required - direct access for 2 users
+- ✅ All data models use shared tables without user isolation
+- ✅ Real-time synchronization between users
+- ✅ Simplified data operations without user_id constraints
+- ✅ Cloud storage with automatic data persistence
+- ✅ Cross-device data access with shared sessions
+- ✅ Database schema optimized for shared usage
+- ✅ No user management or account creation required
 
 ## Core Tables
 
-### Schema Structure (schema.sql)
+### Schema Structure (Shared Usage)
 
-**accounts** - Financial accounts with user isolation
+**accounts** - Financial accounts shared between 2 users
 ```sql
 CREATE TABLE accounts (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  name TEXT NOT NULL,
-  type TEXT NOT NULL,
-  balance DECIMAL(10,2) DEFAULT 0,
+  value TEXT NOT NULL UNIQUE,
+  label TEXT NOT NULL,
+  icon TEXT NOT NULL,
+  owner TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+**categories** - Expense categories shared between 2 users
+```sql
+CREATE TABLE categories (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  value TEXT NOT NULL UNIQUE,
+  label TEXT NOT NULL,
+  icon TEXT NOT NULL,
+  color TEXT NOT NULL,
+  threshold DECIMAL(10,2),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+**expenses** - Expense transactions shared between 2 users
+```sql
+CREATE TABLE expenses (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  description TEXT NOT NULL,
+  amount DECIMAL(10,2) NOT NULL,
+  date DATE NOT NULL,
+  category_value TEXT NOT NULL,
+  account_value TEXT NOT NULL,
+  receipt_image TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 ```
 
-**categories** - Expense categories with user isolation
+**themes** - UI themes shared between 2 users
 ```sql
-CREATE TABLE categories (
+CREATE TABLE themes (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
-  icon TEXT DEFAULT 'folder',
+  primary_hue INTEGER NOT NULL,
+  primary_saturation INTEGER NOT NULL,
+  primary_lightness INTEGER NOT NULL,
+  background_hue INTEGER NOT NULL,
+  background_saturation INTEGER NOT NULL,
+  background_lightness INTEGER NOT NULL,
+  accent_hue INTEGER NOT NULL,
+  accent_saturation INTEGER NOT NULL,
+  accent_lightness INTEGER NOT NULL,
+  radius TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
   color TEXT DEFAULT '#6b7280',
   budget_limit DECIMAL(10,2),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

@@ -33,22 +33,23 @@ This file provides essential guidance to Claude Code (claude.ai/code) when worki
 ### Application Overview
 Next.js 15 expense tracking application with:
 - **Frontend**: React 18, TypeScript, Tailwind CSS, Radix UI
-- **Backend**: Supabase (auth + database), Firebase Genkit (AI)
-- **Features**: Multi-user authentication, AI categorization, PWA support
+- **Backend**: Supabase (shared database), Firebase Genkit (AI)
+- **Features**: Shared usage for 2 users, AI categorization, PWA support
 - **Deployment**: Vercel (production), Docker, Firebase, Netlify
 
 ### Current Status
 - ✅ **Production**: https://automationprojects-4df0h8yfc-faheems-projects-df0f8e74.vercel.app
 - ✅ **Mobile Navigation**: Optimized with sidebar redundancy removed
 - ✅ **Mobile Responsiveness**: Settings tables optimized for mobile viewport
-- ✅ **Authentication**: Supabase Auth with RLS data isolation
+- ✅ **Shared Usage**: No authentication required - direct access for 2 users
+- ✅ **Cloud Storage**: Supabase shared database with persistent data
 - ✅ **AI Features**: Google AI with multi-key rotation system
 - ✅ **Testing**: 24-test UI framework with comprehensive coverage
 
 ### Key Architecture
 - **Navigation**: Desktop sidebar + Mobile bottom nav (768px breakpoint)
-- **Authentication**: Supabase Auth with automatic user provisioning
-- **Data Storage**: Supabase cloud with Row Level Security (RLS)
+- **Access Model**: No authentication - direct shared access for 2 users
+- **Data Storage**: Supabase cloud with shared database (no user isolation)
 - **AI Integration**: Server-side processing with automatic failover
 - **Testing**: Jest + Puppeteer + axe-core + Lighthouse integration
 
@@ -131,13 +132,13 @@ Multi-platform deployment, production optimization, environment configuration, a
 
 **📐 For complete navigation system details, see [Architecture Documentation](docs/architecture.md)**
 
-### Authentication & Security
-- **Supabase Auth**: Email/password with automatic token refresh
-- **Data Isolation**: Row Level Security (RLS) policies on all tables
-- **Multi-User**: Complete user-scoped data operations
+### Shared Usage Model
+- **Access**: No authentication required - direct app access
+- **Data Sharing**: Shared Supabase database for 2 users
+- **Storage**: Persistent cloud storage with real-time synchronization
 - **Environment**: `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
-**🗄️ For database schema and security implementation, see [Database Schema Documentation](docs/database-schema.md)**
+**🗄️ For database schema and shared usage implementation, see [Database Schema Documentation](docs/database-schema.md)**
 
 ### AI Features (Active)
 - **1 Google AI API Key**: Currently configured and operational
