@@ -128,7 +128,7 @@ export function useRealtimeSync(options: UseRealtimeSyncOptions = {}): UseRealti
   const start = useCallback(async (): Promise<boolean> => {
     try {
       // Initialize without user ID for shared usage
-      const success = await realtimeSync.initialize(null)
+      const success = await realtimeSync.initialize(null as any)
       
       if (success) {
         // Clean up previous subscriptions
