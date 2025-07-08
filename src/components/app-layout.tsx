@@ -103,7 +103,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
           )}
         </header>
-        <main className="pb-16">
+        <main className="pb-16" role="main">
           <SwipeNavigation>
             {children}
           </SwipeNavigation>
@@ -215,7 +215,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
           )}
         </header>
-        <main>
+        <main role="main">
           <SwipeNavigation>
             {children}
           </SwipeNavigation>
