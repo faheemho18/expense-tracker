@@ -32,11 +32,14 @@ import { AuthPage } from "@/components/auth/auth-page"
 import { MiniSyncStatus } from "@/components/sync/sync-status-indicator"
 import { BottomNav } from "@/components/navigation/bottom-nav"
 import { SwipeNavigation } from "@/components/navigation/swipe-navigation"
+import { isDatabaseReady } from "@/lib/supabase-test"
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const isMobile = useIsMobile()
   const { user, loading, signIn } = useAuth()
+  const [dbReady, setDbReady] = React.useState<boolean | null>(null)
+  const [dbCheckLoading, setDbCheckLoading] = React.useState(false)
 
   const isActive = React.useCallback(
     (path: string) => {
@@ -55,8 +58,32 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const settingsTooltip = React.useMemo(() => ({ children: "Settings" }), [])
   const themesTooltip = React.useMemo(() => ({ children: "Themes" }), [])
 
-  // Show loading state while checking authentication
-  if (loading) {
+  // Check database readiness when not authenticated
+  React.useEffect(() => {
+    if (!user && !loading && typeof window !== 'undefined') {
+      // Check if Supabase environment is configured
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      const isSupabaseConfigured = supabaseUrl && 
+        supabaseKey && 
+        !supabaseUrl.includes('your_supabase_project_url_here') &&
+        !supabaseKey.includes('your_supabase_anon_key_here')
+      
+      if (isSupabaseConfigured) {
+        setDbCheckLoading(true)
+        isDatabaseReady()
+          .then(setDbReady)
+          .catch(() => setDbReady(false))
+          .finally(() => setDbCheckLoading(false))
+      } else {
+        // Environment not configured, fall back to localStorage
+        setDbReady(false)
+      }
+    }
+  }, [user, loading])
+
+  // Show loading state while checking authentication or database
+  if (loading || dbCheckLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
@@ -64,20 +91,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     )
   }
 
-  // Show auth page if user is not authenticated and Supabase is configured
-  if (!user && typeof window !== 'undefined') {
-    // Check if Supabase is properly configured (not in localStorage mode)
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    const isSupabaseConfigured = supabaseUrl && 
-      supabaseKey && 
-      !supabaseUrl.includes('your_supabase_project_url_here') &&
-      !supabaseKey.includes('your_supabase_anon_key_here')
-    
-    if (isSupabaseConfigured) {
-      return <AuthPage />
-    }
+  // Show auth page if user is not authenticated and database is ready
+  if (!user && dbReady === true) {
+    return <AuthPage />
   }
+  
+  // If database is not ready (dbReady === false), continue to localStorage mode
+  // If database check is still pending (dbReady === null), show loading above
 
   return (
     <SidebarProvider>

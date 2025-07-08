@@ -258,6 +258,74 @@ function getDeploymentGuide(environment: string): string {
 }
 
 /**
+ * Test database triggers by attempting to create a test user
+ */
+export async function testDatabaseTriggers(): Promise<ConnectionTestResult> {
+  try {
+    if (!supabase) {
+      return {
+        success: false,
+        message: 'Supabase client is not initialized',
+        details: { error: 'Client not available' }
+      }
+    }
+
+    // Create a test user signup to verify triggers work
+    const testEmail = `test-${Date.now()}@example.com`
+    const testPassword = 'testpassword123'
+    
+    const { data, error } = await supabase.auth.signUp({
+      email: testEmail,
+      password: testPassword,
+      options: {
+        data: { name: 'Test User' }
+      }
+    })
+
+    if (error) {
+      return {
+        success: false,
+        message: `Database trigger test failed: ${error.message}`,
+        details: { 
+          error: error.message,
+          code: error.status,
+          context: 'User signup failed - likely trigger/function issues'
+        }
+      }
+    }
+
+    // If we get here, the trigger worked (user was created)
+    // Clean up the test user if possible
+    if (data.user) {
+      try {
+        await supabase.auth.admin.deleteUser(data.user.id)
+      } catch (cleanupError) {
+        // Cleanup failure is not critical for the test
+        console.warn('Failed to clean up test user:', cleanupError)
+      }
+    }
+
+    return {
+      success: true,
+      message: 'Database triggers are working correctly',
+      details: { 
+        testUser: data.user?.id,
+        context: 'User signup and trigger execution successful'
+      }
+    }
+  } catch (error) {
+    return {
+      success: false,
+      message: `Database trigger test error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      details: { 
+        error,
+        context: 'Unexpected error during trigger test'
+      }
+    }
+  }
+}
+
+/**
  * Run complete Supabase health check
  */
 export async function runHealthCheck(): Promise<{
@@ -265,6 +333,7 @@ export async function runHealthCheck(): Promise<{
   client: ConnectionTestResult
   connection: ConnectionTestResult
   schema: ConnectionTestResult
+  triggers: ConnectionTestResult
   overall: boolean
   deploymentContext?: string
 }> {
@@ -281,6 +350,7 @@ export async function runHealthCheck(): Promise<{
   
   let connection: ConnectionTestResult = { success: false, message: 'Skipped due to environment/client issues' }
   let schema: ConnectionTestResult = { success: false, message: 'Skipped due to connection issues' }
+  let triggers: ConnectionTestResult = { success: false, message: 'Skipped due to schema issues' }
   
   // If either validation method passes, try connection
   if (environment.success || client.success) {
@@ -296,6 +366,11 @@ export async function runHealthCheck(): Promise<{
           console.log(`  - ${table}: ${result.exists ? '✅' : '❌'} ${result.exists ? 'exists' : result.error}`)
         })
       }
+      
+      if (schema.success) {
+        triggers = await testDatabaseTriggers()
+        console.log(`Triggers: ${triggers.success ? '✅' : '❌'} ${triggers.message}`)
+      }
     }
   } else {
     if (deploymentEnv === 'vercel') {
@@ -307,8 +382,49 @@ export async function runHealthCheck(): Promise<{
     }
   }
   
-  const overall = (environment.success || client.success) && connection.success && schema.success
+  const overall = (environment.success || client.success) && connection.success && schema.success && triggers.success
   console.log(`Overall Status: ${overall ? '✅ All systems operational' : '❌ Issues detected'}`)
   
-  return { environment, client, connection, schema, overall, deploymentContext: deploymentEnv }
+  return { environment, client, connection, schema, triggers, overall, deploymentContext: deploymentEnv }
+}
+
+/**
+ * Quick database health check for authentication decisions
+ * Returns true if database is ready for authentication, false if should fall back to localStorage
+ */
+export async function isDatabaseReady(): Promise<boolean> {
+  try {
+    // Quick environment check
+    const envResult = validateEnvironment()
+    if (!envResult.success) {
+      console.warn('Environment not configured, falling back to localStorage mode')
+      return false
+    }
+
+    // Quick client check
+    const clientResult = validateSupabaseClient()
+    if (!clientResult.success) {
+      console.warn('Supabase client not available, falling back to localStorage mode')
+      return false
+    }
+
+    // Quick connection test
+    const connectionResult = await testConnection()
+    if (!connectionResult.success) {
+      console.warn('Database connection failed, falling back to localStorage mode')
+      return false
+    }
+
+    // Quick trigger test (most important for signup)
+    const triggerResult = await testDatabaseTriggers()
+    if (!triggerResult.success) {
+      console.warn('Database triggers failed, falling back to localStorage mode')
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.warn('Database health check failed, falling back to localStorage mode:', error)
+    return false
+  }
 }
