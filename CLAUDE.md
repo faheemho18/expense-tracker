@@ -121,17 +121,23 @@ Multi-platform deployment, production optimization, environment configuration, a
 - **Implementation**: `{!isMobile && <Sidebar>}` conditional rendering
 - **UserMenu**: Header-only on mobile, dual placement on desktop
 
+**📐 For complete navigation system details, see [Architecture Documentation](docs/architecture.md)**
+
 ### Authentication & Security
 - **Supabase Auth**: Email/password with automatic token refresh
 - **Data Isolation**: Row Level Security (RLS) policies on all tables
 - **Multi-User**: Complete user-scoped data operations
 - **Environment**: `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
+**🗄️ For database schema and security implementation, see [Database Schema Documentation](docs/database-schema.md)**
+
 ### AI Features (Active)
 - **1 Google AI API Key**: Currently configured and operational
 - **Smart Categorization**: AI-powered expense category suggestions
 - **Receipt OCR**: Automatic receipt data extraction
 - **Multi-Key Rotation**: Ready for additional keys (GOOGLE_AI_API_KEY_1, _2, _3)
+
+**🤖 For AI integration details and cost optimization, see [AI Integration Documentation](docs/ai-integration.md)**
 
 ### Testing Infrastructure
 - **Unit**: Jest + React Testing Library
@@ -140,11 +146,15 @@ Multi-platform deployment, production optimization, environment configuration, a
 - **Performance**: Lighthouse integration
 - **UI Glitch**: 24 specialized tests for comprehensive validation
 
+**🧪 For complete testing framework and commands, see [Testing Framework Documentation](docs/testing-framework.md)**
+
 ### Current Deployment
 - **Live**: Vercel production deployment
 - **Status**: ✅ All features operational
 - **Performance**: 168kB main page, PWA enabled
 - **Build**: ~14s with Next.js 15.3.3 + Turbopack
+
+**🚀 For deployment configuration and multi-platform setup, see [Deployment Documentation](docs/deployment.md)**
 
 ## Development Workflow
 
@@ -153,11 +163,28 @@ Multi-platform deployment, production optimization, environment configuration, a
 3. **Deployment**: Push branch → Create PR → Merge → Auto-deploy
 4. **Monitoring**: Vercel analytics + real-time error tracking
 
+**📚 For complete development timeline and phase details, see [Development History Documentation](docs/development-history.md)**
+
 ## GitHub Integration
 
 Uses GitHub CLI (`gh`) for all operations:
 - **Workflow**: `gh pr create` → `gh pr merge` → Auto-deploy
 - **Branches**: main (production), feature branches for development
+
+**🚀 For GitHub Actions and CI/CD setup, see [Deployment Documentation](docs/deployment.md)**
+
+## For Comprehensive Understanding
+
+This CLAUDE.md provides essential quick reference information. For thorough understanding of any system component, always refer to the detailed documentation files:
+
+- **📐 [Architecture](docs/architecture.md)** - Complete system design, components, and navigation
+- **🤖 [AI Integration](docs/ai-integration.md)** - AI features, multi-key rotation, and optimization  
+- **🧪 [Testing Framework](docs/testing-framework.md)** - 24-test UI framework and comprehensive testing
+- **🗄️ [Database Schema](docs/database-schema.md)** - Supabase integration, RLS policies, and security
+- **📚 [Development History](docs/development-history.md)** - 6-phase timeline and commit analysis
+- **🚀 [Deployment](docs/deployment.md)** - Multi-platform deployment and production setup
+
+These documents contain the complete technical implementation details, troubleshooting guides, and comprehensive context needed for effective development and maintenance.
 
 # important-instruction-reminders
 Do what has been asked; nothing more, nothing less.
