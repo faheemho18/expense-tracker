@@ -135,7 +135,7 @@ export function useMobileImageOptimization() {
   const isMobile = useIsMobile()
   
   const getOptimizedImageSrc = React.useCallback((src: string, width?: number, height?: number) => {
-    if (!isMobile) return src
+    if (isMobile === false) return src
     
     // For mobile, prefer smaller images
     const mobileWidth = width ? Math.min(width, 800) : 800

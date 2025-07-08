@@ -187,7 +187,7 @@ export function MobileAccessibilityInstructions() {
 export function MobileSkipLinks() {
   const { isMobile } = useMobileAccessibility()
 
-  if (!isMobile) return null
+  if (isMobile === false) return null
 
   return (
     <div className="sr-only focus-within:not-sr-only">
@@ -213,7 +213,7 @@ export function useMobileKeyboardNavigation() {
   const [keyboardVisible, setKeyboardVisible] = React.useState(false)
 
   React.useEffect(() => {
-    if (!isMobile) return
+    if (isMobile === false) return
 
     const handleFocusIn = (e: FocusEvent) => {
       const target = e.target as HTMLElement

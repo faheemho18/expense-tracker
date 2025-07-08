@@ -45,8 +45,8 @@ export function SwipeNavigation({ children }: SwipeNavigationProps) {
     velocityThreshold: 0.3,
   })
 
-  // Only enable swipe navigation on mobile
-  if (!isMobile) {
+  // Only enable swipe navigation on mobile (explicitly check for false, not undefined)
+  if (isMobile === false) {
     return <>{children}</>
   }
 

@@ -162,7 +162,7 @@ export function MobileConnectionStatus() {
     }
   }, [])
 
-  if (!isMobile) return null
+  if (isMobile === false) return null
 
   return (
     <div className={`flex items-center gap-2 ${isMobile ? 'p-2' : 'p-1'}`}>
