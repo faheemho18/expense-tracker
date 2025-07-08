@@ -106,8 +106,26 @@ This is a Next.js 15 expense tracking application built with:
 ### Component Architecture
 
 **Layout**: 
-- `AppLayout` - Main application shell with navigation
-- Sidebar navigation with responsive design
+- `AppLayout` - Main application shell with adaptive navigation
+- **Desktop**: Sidebar navigation with collapsible icon behavior
+- **Mobile**: Header + bottom navigation (sidebar removed for cleaner UX)
+- Responsive design with 768px breakpoint for navigation transition
+
+**Navigation Architecture**:
+- **Mobile Navigation (< 768px)**:
+  - Header: Logo + MiniSyncStatus + UserMenu
+  - Bottom Navigation: 5 primary routes (Expenses, Dashboard, Data, Themes, Settings)
+  - Touch-optimized with 44px minimum target sizes
+  - No sidebar elements for cleaner mobile UX
+- **Desktop Navigation (≥ 768px)**:
+  - Collapsible sidebar with icon/expanded states
+  - SidebarTrigger for manual collapse/expand
+  - UserMenu in both sidebar footer and header
+  - All 5 navigation routes accessible via sidebar
+- **UserMenu Placement**:
+  - Mobile: Header only (accessible via top-right)
+  - Desktop: Dual placement (sidebar footer + header)
+  - Consistent functionality across all placements
 
 **Dashboard Widgets**:
 - `CategoryGaugesWidget` - Monthly spending progress
@@ -198,9 +216,11 @@ This is a Next.js 15 expense tracking application built with:
 
 **24-Test UI System**: Dashboard overflow (4), dropdown visibility (4), touch interactions (8), animation performance (8)
 
-**Testing Tools**: Interactive browser interface, console analysis script, 50-point manual checklist
+**Navigation Testing Framework**: Mobile sidebar redundancy removal validation, cross-platform navigation testing, responsive breakpoint testing, UserMenu accessibility validation
 
-**Coverage**: Text overflow detection, responsive design validation, theme compatibility, animation performance (60fps), cross-browser testing, accessibility integration
+**Testing Tools**: Interactive browser interface, console analysis script, 50-point manual checklist, automated touch target validation
+
+**Coverage**: Text overflow detection, responsive design validation, theme compatibility, animation performance (60fps), cross-browser testing, accessibility integration, navigation behavior validation
 
 **Dependencies**: Playwright (v1.53.2), Puppeteer (v24.11.2), Jest integration
 

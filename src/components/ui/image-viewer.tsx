@@ -62,7 +62,7 @@ export function ImageViewer({ src, alt, trigger, className }: ImageViewerProps) 
 
   // Touch/mouse event handlers for panning
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (!isMobile) {
+    if (isMobile === false) {
       setIsDragging(true)
       setDragStart({
         x: e.clientX,

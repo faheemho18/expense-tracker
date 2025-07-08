@@ -86,20 +86,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setUser(session?.user ? convertUser(session.user) : null)
       } else if (event === 'SIGNED_IN') {
         setUser(session?.user ? convertUser(session.user) : null)
-      } else if (event === 'SESSION_EXPIRED') {
-        // Try to refresh the session
-        try {
-          const { data: { session: refreshedSession }, error } = await supabase.auth.refreshSession()
-          if (!error && refreshedSession) {
-            setUser(convertUser(refreshedSession.user))
-          } else {
-            setUser(null)
-          }
-        } catch (err) {
-          console.warn('Failed to refresh expired session:', err)
-          setUser(null)
-        }
       }
+      // Note: SESSION_EXPIRED is not a valid AuthChangeEvent type in Supabase
+      // Token refresh is handled automatically by the Supabase client
       
       setLoading(false)
     })

@@ -39,9 +39,10 @@
   - Test add expense button
   - ✅/❌ Result: ________________
 
-- [ ] **Sidebar becomes offcanvas menu**
-  - Check if sidebar collapses on mobile
-  - Test menu accessibility
+- [ ] **Bottom navigation appears (no sidebar)**
+  - Check that sidebar is completely hidden
+  - Verify bottom navigation shows all 5 routes
+  - Test navigation accessibility
   - ✅/❌ Result: ________________
 
 - [ ] **Widgets stack vertically**
