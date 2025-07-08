@@ -14,6 +14,7 @@ import { useSettings } from "@/contexts/settings-context"
 import { ICONS, type IconName } from "@/lib/constants"
 import type { Category } from "@/lib/types"
 import { getIcon } from "@/lib/utils"
+import { useIsMobile } from "@/hooks/use-mobile"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,6 +48,7 @@ import { toast } from "@/hooks/use-toast"
 
 export function ManageCategories() {
   const { categories, setCategories } = useSettings()
+  const isMobile = useIsMobile()
   const [localCategories, setLocalCategories] = React.useState<
     Category[] | null
   >(null)
@@ -200,8 +202,8 @@ export function ManageCategories() {
         <DragDropContext onDragEnd={onDragEnd}>
           <Droppable droppableId="categories">
             {(provided) => (
-              <ul
-                className="divide-y divide-border"
+              <div
+                className="space-y-0 md:space-y-0"
                 {...provided.droppableProps}
                 ref={provided.innerRef}
               >
@@ -217,96 +219,193 @@ export function ManageCategories() {
                       index={index}
                     >
                       {(provided) => (
-                        <li
+                        <div
                           ref={provided.innerRef}
                           {...provided.draggableProps}
-                          className="flex items-center gap-4 bg-card p-4"
+                          className={`border-b last:border-b-0 bg-card ${
+                            isMobile ? "p-4" : "p-4"
+                          }`}
                         >
-                          <div
-                            {...provided.dragHandleProps}
-                            className="cursor-grab"
-                          >
-                            <GripVertical className="h-5 w-5 text-muted-foreground" />
-                          </div>
-                          <Icon
-                            className="h-5 w-5 flex-shrink-0"
-                            color={originalCategory?.color || category.color}
-                          />
-                          <div className="flex-1 font-medium">
-                            {category.label}
-                          </div>
+                          {isMobile ? (
+                            // Mobile layout: vertical stacking
+                            <div className="space-y-3">
+                              {/* Header with drag handle, icon, label and actions */}
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3 flex-1">
+                                  <div
+                                    {...provided.dragHandleProps}
+                                    className="cursor-grab touch-manipulation"
+                                  >
+                                    <GripVertical className="h-5 w-5 text-muted-foreground" />
+                                  </div>
+                                  <Icon
+                                    className="h-5 w-5 flex-shrink-0"
+                                    color={originalCategory?.color || category.color}
+                                  />
+                                  <div className="flex-1 font-medium text-base">
+                                    {category.label}
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleEditClick(category)}
+                                    className="h-9 w-9 p-0"
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                    <span className="sr-only">
+                                      Edit name and icon
+                                    </span>
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleDeleteClick(category)}
+                                    className="h-9 w-9 p-0"
+                                  >
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                    <span className="sr-only">Delete category</span>
+                                  </Button>
+                                </div>
+                              </div>
+                              
+                              {/* Controls: threshold and color */}
+                              <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-2">
+                                  <Label
+                                    htmlFor={`threshold-${category.value}`}
+                                    className="text-sm font-medium"
+                                  >
+                                    Threshold
+                                  </Label>
+                                  <Input
+                                    id={`threshold-${category.value}`}
+                                    type="number"
+                                    min="0"
+                                    value={(category.threshold ?? "").toString()}
+                                    onChange={(e) =>
+                                      handleThresholdChange(
+                                        category.value,
+                                        e.target.value
+                                      )
+                                    }
+                                    placeholder="Amount"
+                                    className="w-full text-sm h-11"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label
+                                    htmlFor={`color-${category.value}`}
+                                    className="text-sm font-medium"
+                                  >
+                                    Color
+                                  </Label>
+                                  <Input
+                                    id={`color-${category.value}`}
+                                    type="color"
+                                    value={category.color}
+                                    onChange={(e) =>
+                                      handleColorChange(
+                                        category.value,
+                                        e.target.value
+                                      )
+                                    }
+                                    className="w-full h-11 cursor-pointer p-1"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            // Desktop layout: horizontal table-like layout
+                            <div className="flex items-center gap-4">
+                              <div
+                                {...provided.dragHandleProps}
+                                className="cursor-grab"
+                              >
+                                <GripVertical className="h-5 w-5 text-muted-foreground" />
+                              </div>
+                              <Icon
+                                className="h-5 w-5 flex-shrink-0"
+                                color={originalCategory?.color || category.color}
+                              />
+                              <div className="flex-1 font-medium">
+                                {category.label}
+                              </div>
 
-                          <div className="flex items-center gap-2">
-                            <Label
-                              htmlFor={`threshold-${category.value}`}
-                              className="sr-only"
-                            >
-                              Threshold
-                            </Label>
-                            <Input
-                              id={`threshold-${category.value}`}
-                              type="number"
-                              min="0"
-                              value={(category.threshold ?? "").toString()}
-                              onChange={(e) =>
-                                handleThresholdChange(
-                                  category.value,
-                                  e.target.value
-                                )
-                              }
-                              placeholder="Threshold"
-                              className="w-32 text-sm"
-                            />
-                          </div>
+                              <div className="flex items-center gap-2">
+                                <Label
+                                  htmlFor={`threshold-${category.value}`}
+                                  className="sr-only"
+                                >
+                                  Threshold
+                                </Label>
+                                <Input
+                                  id={`threshold-${category.value}`}
+                                  type="number"
+                                  min="0"
+                                  value={(category.threshold ?? "").toString()}
+                                  onChange={(e) =>
+                                    handleThresholdChange(
+                                      category.value,
+                                      e.target.value
+                                    )
+                                  }
+                                  placeholder="Threshold"
+                                  className="w-32 text-sm"
+                                />
+                              </div>
 
-                          <div className="flex items-center gap-2">
-                            <Label
-                              htmlFor={`color-${category.value}`}
-                              className="sr-only"
-                            >
-                              Color
-                            </Label>
-                            <Input
-                              id={`color-${category.value}`}
-                              type="color"
-                              value={category.color}
-                              onChange={(e) =>
-                                handleColorChange(
-                                  category.value,
-                                  e.target.value
-                                )
-                              }
-                              className="h-10 w-10 cursor-pointer p-1"
-                            />
-                          </div>
+                              <div className="flex items-center gap-2">
+                                <Label
+                                  htmlFor={`color-${category.value}`}
+                                  className="sr-only"
+                                >
+                                  Color
+                                </Label>
+                                <Input
+                                  id={`color-${category.value}`}
+                                  type="color"
+                                  value={category.color}
+                                  onChange={(e) =>
+                                    handleColorChange(
+                                      category.value,
+                                      e.target.value
+                                    )
+                                  }
+                                  className="h-10 w-10 cursor-pointer p-1"
+                                />
+                              </div>
 
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleEditClick(category)}
-                            >
-                              <Edit className="h-4 w-4" />
-                              <span className="sr-only">
-                                Edit name and icon
-                              </span>
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDeleteClick(category)}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                              <span className="sr-only">Delete category</span>
-                            </Button>
-                          </div>
-                        </li>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleEditClick(category)}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                  <span className="sr-only">
+                                    Edit name and icon
+                                  </span>
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleDeleteClick(category)}
+                                >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                  <span className="sr-only">Delete category</span>
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       )}
                     </Draggable>
                   )
                 })}
                 {provided.placeholder}
-              </ul>
+              </div>
             )}
           </Droppable>
         </DragDropContext>

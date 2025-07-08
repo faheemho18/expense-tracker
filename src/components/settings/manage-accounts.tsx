@@ -8,6 +8,7 @@ import { useSettings } from "@/contexts/settings-context"
 import { ACCOUNT_OWNERS, type IconName } from "@/lib/constants"
 import type { Account, AccountOwner } from "@/lib/types"
 import { getIcon } from "@/lib/utils"
+import { useIsMobile } from "@/hooks/use-mobile"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,6 +43,7 @@ const ACCOUNT_ICONS: IconName[] = ["Wallet", "CreditCard", "Landmark", "Banknote
 
 export function ManageAccounts() {
   const { accounts, setAccounts } = useSettings()
+  const isMobile = useIsMobile()
   const [isFormDialogOpen, setIsFormDialogOpen] = React.useState(false)
   const [editingAccount, setEditingAccount] =
     React.useState<Account | null>(null)
@@ -121,52 +123,103 @@ export function ManageAccounts() {
         </Button>
       </div>
       <div className="rounded-md border">
-        <div className="flex items-center justify-between border-b p-4 text-sm font-medium text-muted-foreground">
-          <div className="flex items-center gap-x-12">
-            <div className="w-64">Account</div>
-            <div>Owner</div>
+        {!isMobile && (
+          // Desktop header - only show on desktop
+          <div className="flex items-center justify-between border-b p-4 text-sm font-medium text-muted-foreground">
+            <div className="flex items-center gap-x-12">
+              <div className="w-64">Account</div>
+              <div>Owner</div>
+            </div>
+            <div className="w-[88px] text-right">Actions</div>
           </div>
-          <div className="w-[88px] text-right">Actions</div>
-        </div>
-        <ul className="divide-y divide-border">
+        )}
+        <div className="space-y-0">
           {accounts.map((account) => {
             const Icon = getIcon(account.icon)
             return (
-              <li
+              <div
                 key={account.value}
-                className="flex items-center justify-between p-4"
+                className="border-b last:border-b-0 bg-card p-4"
               >
-                <div className="flex items-center gap-x-12">
-                  <div className="flex w-64 items-center">
-                    <Icon className="mr-3 h-5 w-5 flex-shrink-0" />
-                    <span className="truncate font-medium">
-                      {account.label}
-                    </span>
+                {isMobile ? (
+                  // Mobile layout: vertical stacking
+                  <div className="space-y-3">
+                    {/* Header with icon, account name, and actions */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3 flex-1">
+                        <Icon className="h-5 w-5 flex-shrink-0" />
+                        <div className="flex-1">
+                          <div className="font-medium text-base">
+                            {account.label}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditClick(account)}
+                          className="h-9 w-9 p-0"
+                        >
+                          <Edit className="h-4 w-4" />
+                          <span className="sr-only">Edit account</span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteClick(account)}
+                          className="h-9 w-9 p-0"
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                          <span className="sr-only">Delete account</span>
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    {/* Owner information */}
+                    <div className="pl-8">
+                      <div className="text-sm text-muted-foreground">Owner</div>
+                      <div className="text-sm font-medium">{account.owner}</div>
+                    </div>
                   </div>
-                  <div className="text-muted-foreground">
-                    <span>{account.owner}</span>
+                ) : (
+                  // Desktop layout: horizontal table-like layout
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-x-12">
+                      <div className="flex w-64 items-center">
+                        <Icon className="mr-3 h-5 w-5 flex-shrink-0" />
+                        <span className="truncate font-medium">
+                          {account.label}
+                        </span>
+                      </div>
+                      <div className="text-muted-foreground">
+                        <span>{account.owner}</span>
+                      </div>
+                    </div>
+                    <div className="flex w-[88px] items-center justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEditClick(account)}
+                      >
+                        <Edit className="h-4 w-4" />
+                        <span className="sr-only">Edit account</span>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteClick(account)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                        <span className="sr-only">Delete account</span>
+                      </Button>
+                    </div>
                   </div>
-                </div>
-                <div className="flex w-[88px] items-center justify-end gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleEditClick(account)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDeleteClick(account)}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              </li>
+                )}
+              </div>
             )
           })}
-        </ul>
+        </div>
       </div>
 
       <Dialog open={isFormDialogOpen} onOpenChange={setIsFormDialogOpen}>
