@@ -337,9 +337,40 @@ export function DataMigration() {
             <Alert variant="destructive">
               <X className="h-4 w-4" />
               <AlertTitle>Configuration Issues</AlertTitle>
-              <AlertDescription>
+              <AlertDescription className="space-y-2">
                 {!healthStatus.environment.success && !healthStatus.client.success && (
-                  <div>• Missing environment variables: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY</div>
+                  <div className="space-y-1">
+                    <div>• {healthStatus.environment.message}</div>
+                    {healthStatus.environment.details?.instructions && (
+                      <div className="text-xs bg-destructive/10 p-2 rounded border">
+                        <strong>Solution:</strong> {healthStatus.environment.details.instructions}
+                      </div>
+                    )}
+                    {healthStatus.environment.details?.environment === 'vercel' && (
+                      <div className="text-xs text-muted-foreground">
+                        <strong>Steps for Vercel:</strong>
+                        <ol className="list-decimal list-inside mt-1 space-y-0.5">
+                          <li>Go to Vercel Dashboard → Your Project → Settings</li>
+                          <li>Click "Environment Variables"</li>
+                          <li>Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY</li>
+                          <li>Set scope to Production, Preview, and Development</li>
+                          <li>Redeploy this branch</li>
+                        </ol>
+                      </div>
+                    )}
+                    {healthStatus.environment.details?.deploymentGuide && (
+                      <div className="text-xs">
+                        <a 
+                          href={healthStatus.environment.details.deploymentGuide} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-500 hover:underline"
+                        >
+                          📖 Deployment Guide →
+                        </a>
+                      </div>
+                    )}
+                  </div>
                 )}
                 {!healthStatus.environment.success && healthStatus.client.success && (
                   <div>• Environment validation failed, but client is working (this is normal in browser context)</div>
@@ -349,9 +380,6 @@ export function DataMigration() {
                 )}
                 {!healthStatus.schema.success && healthStatus.connection.success && (
                   <div>• {healthStatus.schema.message}</div>
-                )}
-                {!healthStatus.environment.success && !healthStatus.client.success && (
-                  <div>• Check your .env.local file and restart your development server</div>
                 )}
               </AlertDescription>
             </Alert>

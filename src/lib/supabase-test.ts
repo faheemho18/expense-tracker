@@ -8,6 +8,30 @@
 import { supabase } from './supabase'
 
 /**
+ * Detect the current deployment environment
+ */
+export function detectEnvironment() {
+  if (typeof window === 'undefined') {
+    return 'server'
+  }
+  
+  const hostname = window.location.hostname
+  const isVercel = hostname.includes('vercel.app') || hostname.includes('vercel.dev')
+  const isNetlify = hostname.includes('netlify.app') || hostname.includes('netlify.com')
+  const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.')
+  
+  if (isLocalhost) {
+    return 'local'
+  } else if (isVercel) {
+    return 'vercel'
+  } else if (isNetlify) {
+    return 'netlify'
+  } else {
+    return 'production'
+  }
+}
+
+/**
  * Alternative client-side validation using Supabase client instance
  */
 export function validateSupabaseClient(): ConnectionTestResult {
@@ -129,19 +153,13 @@ export async function validateSchema(): Promise<ConnectionTestResult> {
 }
 
 /**
- * Check environment variables configuration
+ * Check environment variables configuration with deployment-aware messaging
  */
 export function validateEnvironment(): ConnectionTestResult {
-  // Check if we're in a client-side environment
   const isClient = typeof window !== 'undefined'
+  const environment = isClient ? detectEnvironment() : 'server'
   
   if (isClient) {
-    // In client-side, check if Supabase client was successfully created
-    // If the client exists, it means environment variables are configured
-    import('./supabase').then(({ supabase }) => {
-      // This is handled by the fallback validation below
-    })
-    
     // For client-side, check the actual values directly
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -160,12 +178,32 @@ export function validateEnvironment(): ConnectionTestResult {
         missing.push('NEXT_PUBLIC_SUPABASE_ANON_KEY')
       }
       
+      // Deployment-specific error messages
+      let message = `Missing environment variables: ${missing.join(', ')}`
+      let instructions = ''
+      
+      switch (environment) {
+        case 'local':
+          instructions = 'Check your .env.local file and restart your development server'
+          break
+        case 'vercel':
+          instructions = 'Configure environment variables in Vercel Dashboard → Project Settings → Environment Variables'
+          break
+        case 'netlify':
+          instructions = 'Configure environment variables in Netlify Dashboard → Site Settings → Environment Variables'
+          break
+        default:
+          instructions = 'Configure environment variables in your deployment platform'
+      }
+      
       return {
         success: false,
-        message: `Environment configuration issues: ${missing.join(', ')}`,
+        message,
         details: { 
           missing, 
-          note: 'Check your .env.local file and restart your development server',
+          environment,
+          instructions,
+          deploymentGuide: getDeploymentGuide(environment),
           context: 'client-side'
         }
       }
@@ -176,6 +214,7 @@ export function validateEnvironment(): ConnectionTestResult {
       message: 'Environment variables are properly configured',
       details: { 
         variables: ['NEXT_PUBLIC_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_ANON_KEY'],
+        environment,
         context: 'client-side'
       }
     }
@@ -205,6 +244,20 @@ export function validateEnvironment(): ConnectionTestResult {
 }
 
 /**
+ * Get deployment-specific configuration guide
+ */
+function getDeploymentGuide(environment: string): string {
+  switch (environment) {
+    case 'vercel':
+      return 'https://vercel.com/docs/concepts/projects/environment-variables'
+    case 'netlify':
+      return 'https://docs.netlify.com/configure-builds/environment-variables/'
+    default:
+      return 'https://nextjs.org/docs/basic-features/environment-variables'
+  }
+}
+
+/**
  * Run complete Supabase health check
  */
 export async function runHealthCheck(): Promise<{
@@ -213,8 +266,10 @@ export async function runHealthCheck(): Promise<{
   connection: ConnectionTestResult
   schema: ConnectionTestResult
   overall: boolean
+  deploymentContext?: string
 }> {
-  console.log('🔍 Running Supabase health check...')
+  const deploymentEnv = typeof window !== 'undefined' ? detectEnvironment() : 'server'
+  console.log(`🔍 Running Supabase health check in ${deploymentEnv} environment...`)
   
   // Primary environment validation
   const environment = validateEnvironment()
@@ -243,11 +298,17 @@ export async function runHealthCheck(): Promise<{
       }
     }
   } else {
-    console.log('❌ Skipping connection test due to environment configuration issues')
+    if (deploymentEnv === 'vercel') {
+      console.log('❌ Vercel deployment detected - environment variables need to be configured in Vercel Dashboard')
+    } else if (deploymentEnv === 'netlify') {
+      console.log('❌ Netlify deployment detected - environment variables need to be configured in Netlify Dashboard')
+    } else {
+      console.log('❌ Skipping connection test due to environment configuration issues')
+    }
   }
   
   const overall = (environment.success || client.success) && connection.success && schema.success
   console.log(`Overall Status: ${overall ? '✅ All systems operational' : '❌ Issues detected'}`)
   
-  return { environment, client, connection, schema, overall }
+  return { environment, client, connection, schema, overall, deploymentContext: deploymentEnv }
 }
