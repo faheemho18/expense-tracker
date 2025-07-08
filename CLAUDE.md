@@ -40,6 +40,7 @@ Next.js 15 expense tracking application with:
 ### Current Status
 - ✅ **Production**: https://automationprojects-4df0h8yfc-faheems-projects-df0f8e74.vercel.app
 - ✅ **Mobile Navigation**: Optimized with sidebar redundancy removed
+- ✅ **Mobile Responsiveness**: Settings tables optimized for mobile viewport
 - ✅ **Authentication**: Supabase Auth with RLS data isolation
 - ✅ **AI Features**: Google AI with multi-key rotation system
 - ✅ **Testing**: 24-test UI framework with comprehensive coverage
@@ -120,6 +121,13 @@ Multi-platform deployment, production optimization, environment configuration, a
 - **Mobile (<768px)**: Header + bottom navigation only (sidebar hidden)
 - **Implementation**: `{!isMobile && <Sidebar>}` conditional rendering
 - **UserMenu**: Header-only on mobile, dual placement on desktop
+
+### Mobile Responsiveness
+- **Settings Tables**: Categories and Accounts tabs use responsive card layouts
+- **Mobile Layout**: Vertical stacking with touch-friendly controls (h-11 inputs, h-9 buttons)  
+- **Desktop Layout**: Preserved original table structure and functionality
+- **Touch Optimization**: Larger touch targets and mobile-specific interactions
+- **Implementation**: Conditional rendering using `useIsMobile()` hook
 
 **📐 For complete navigation system details, see [Architecture Documentation](docs/architecture.md)**
 
