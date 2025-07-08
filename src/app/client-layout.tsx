@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect } from "react"
-import { AuthProvider } from "@/contexts/auth-context"
 
 export function ClientLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -14,8 +13,8 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
   }, [])
 
   return (
-    <AuthProvider>
+    <>
       {children}
-    </AuthProvider>
+    </>
   )
 }

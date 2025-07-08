@@ -7,7 +7,6 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { realtimeSync, SyncEvent, SyncStatus } from '@/lib/realtime-sync'
-import { useAuth } from '@/contexts/auth-context'
 
 export interface UseRealtimeSyncOptions {
   /**
@@ -87,7 +86,6 @@ export function useRealtimeSync(options: UseRealtimeSyncOptions = {}): UseRealti
     onStatusChange
   } = options
 
-  const { user } = useAuth()
   const [status, setStatus] = useState<SyncStatus>(realtimeSync.getStatus())
   const [isActive, setIsActive] = useState(false)
   const [recentEvents, setRecentEvents] = useState<SyncEvent[]>([])
@@ -128,13 +126,9 @@ export function useRealtimeSync(options: UseRealtimeSyncOptions = {}): UseRealti
    * Start real-time sync
    */
   const start = useCallback(async (): Promise<boolean> => {
-    if (!user?.id) {
-      console.warn('Cannot start sync: user not authenticated')
-      return false
-    }
-
     try {
-      const success = await realtimeSync.initialize(user.id)
+      // Initialize without user ID for shared usage
+      const success = await realtimeSync.initialize(null)
       
       if (success) {
         // Clean up previous subscriptions
@@ -207,22 +201,20 @@ export function useRealtimeSync(options: UseRealtimeSyncOptions = {}): UseRealti
    * Resume sync
    */
   const resume = useCallback(async (): Promise<boolean> => {
-    if (!user?.id) return false
-    
     const success = await realtimeSync.resume()
     if (success) {
       setIsActive(true)
       setStatus(realtimeSync.getStatus())
     }
     return success
-  }, [user?.id])
+  }, [])
 
-  // Auto-initialize when user becomes available
+  // Auto-initialize when component mounts
   useEffect(() => {
-    if (autoInit && user?.id && !isInitializedRef.current) {
+    if (autoInit && !isInitializedRef.current) {
       start()
     }
-  }, [autoInit, user?.id, start])
+  }, [autoInit, start])
 
   // Handle visibility change for battery saving
   useEffect(() => {
@@ -231,7 +223,7 @@ export function useRealtimeSync(options: UseRealtimeSyncOptions = {}): UseRealti
     const handleVisibilityChange = () => {
       if (document.hidden && isActive) {
         pause()
-      } else if (!document.hidden && user?.id && !isActive) {
+      } else if (!document.hidden && !isActive) {
         resume()
       }
     }

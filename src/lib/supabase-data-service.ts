@@ -5,7 +5,7 @@
  * Handles CRUD operations for all data types with proper error handling and caching.
  */
 
-import { supabase, createAuthClient } from './supabase'
+import { supabase } from './supabase'
 import { Account, Category, Expense, Theme, HSLColor, User } from './types'
 
 export type DataSource = 'localStorage' | 'supabase'
