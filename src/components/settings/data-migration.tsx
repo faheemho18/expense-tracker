@@ -338,9 +338,21 @@ export function DataMigration() {
               <X className="h-4 w-4" />
               <AlertTitle>Configuration Issues</AlertTitle>
               <AlertDescription>
-                {!healthStatus.environment.success && <div>• {healthStatus.environment.message}</div>}
-                {!healthStatus.connection.success && <div>• {healthStatus.connection.message}</div>}
-                {!healthStatus.schema.success && <div>• {healthStatus.schema.message}</div>}
+                {!healthStatus.environment.success && !healthStatus.client.success && (
+                  <div>• Missing environment variables: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY</div>
+                )}
+                {!healthStatus.environment.success && healthStatus.client.success && (
+                  <div>• Environment validation failed, but client is working (this is normal in browser context)</div>
+                )}
+                {!healthStatus.connection.success && (healthStatus.environment.success || healthStatus.client.success) && (
+                  <div>• {healthStatus.connection.message}</div>
+                )}
+                {!healthStatus.schema.success && healthStatus.connection.success && (
+                  <div>• {healthStatus.schema.message}</div>
+                )}
+                {!healthStatus.environment.success && !healthStatus.client.success && (
+                  <div>• Check your .env.local file and restart your development server</div>
+                )}
               </AlertDescription>
             </Alert>
           )}
