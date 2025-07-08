@@ -15,7 +15,7 @@ export interface UseRealtimeSyncOptions {
   tables?: string[]
   
   /**
-   * Whether to automatically initialize sync when user is available
+   * Whether to automatically initialize sync when component mounts
    */
   autoInit?: boolean
   
@@ -157,7 +157,7 @@ export function useRealtimeSync(options: UseRealtimeSyncOptions = {}): UseRealti
       console.error('Failed to start real-time sync:', error)
       return false
     }
-  }, [user?.id, tables, handleSyncEvent, handleStatusChange])
+  }, [tables, handleSyncEvent, handleStatusChange])
 
   /**
    * Stop real-time sync
@@ -233,14 +233,9 @@ export function useRealtimeSync(options: UseRealtimeSyncOptions = {}): UseRealti
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
-  }, [pauseOnHidden, isActive, user?.id, pause, resume])
+  }, [pauseOnHidden, isActive, pause, resume])
 
-  // Handle user logout
-  useEffect(() => {
-    if (!user?.id && isInitializedRef.current) {
-      stop()
-    }
-  }, [user?.id, stop])
+  // No user logout to handle since we don't use authentication
 
   // Cleanup on unmount
   useEffect(() => {
