@@ -81,95 +81,97 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <SidebarProvider>
-      <Sidebar collapsible={isMobile ? "offcanvas" : "icon"}>
-        <SidebarHeader>
-          <Logo />
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={isActive("/")}
-                tooltip={expensesTooltip}
-              >
-                <Link href="/">
-                  <Wallet />
-                  <span className="whitespace-nowrap overflow-hidden transition-[max-width,opacity] duration-200 ease-in-out group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0">
-                    Expenses
-                  </span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={isActive("/dashboard")}
-                tooltip={dashboardTooltip}
-              >
-                <Link href="/dashboard">
-                  <LayoutDashboard />
-                  <span className="whitespace-nowrap overflow-hidden transition-[max-width,opacity] duration-200 ease-in-out group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0">
-                    Dashboard
-                  </span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={isActive("/data")}
-                tooltip={dataTooltip}
-              >
-                <Link href="/data">
-                  <Database />
-                  <span className="whitespace-nowrap overflow-hidden transition-[max-width,opacity] duration-200 ease-in-out group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0">
-                    Data
-                  </span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={isActive("/themes")}
-                tooltip={themesTooltip}
-              >
-                <Link href="/themes">
-                  <Palette />
-                  <span className="whitespace-nowrap overflow-hidden transition-[max-width,opacity] duration-200 ease-in-out group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0">
-                    Themes
-                  </span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={isActive("/settings")}
-                tooltip={settingsTooltip}
-              >
-                <Link href="/settings">
-                  <Settings />
-                  <span className="whitespace-nowrap overflow-hidden transition-[max-width,opacity] duration-200 ease-in-out group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0">
-                    Settings
-                  </span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarContent>
-        <SidebarFooter>
-          {user && (
-            <div className="p-2">
-              <UserMenu />
-            </div>
-          )}
-        </SidebarFooter>
-      </Sidebar>
+      {!isMobile && (
+        <Sidebar collapsible="icon">
+          <SidebarHeader>
+            <Logo />
+          </SidebarHeader>
+          <SidebarContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive("/")}
+                  tooltip={expensesTooltip}
+                >
+                  <Link href="/">
+                    <Wallet />
+                    <span className="whitespace-nowrap overflow-hidden transition-[max-width,opacity] duration-200 ease-in-out group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0">
+                      Expenses
+                    </span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive("/dashboard")}
+                  tooltip={dashboardTooltip}
+                >
+                  <Link href="/dashboard">
+                    <LayoutDashboard />
+                    <span className="whitespace-nowrap overflow-hidden transition-[max-width,opacity] duration-200 ease-in-out group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0">
+                      Dashboard
+                    </span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive("/data")}
+                  tooltip={dataTooltip}
+                >
+                  <Link href="/data">
+                    <Database />
+                    <span className="whitespace-nowrap overflow-hidden transition-[max-width,opacity] duration-200 ease-in-out group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0">
+                      Data
+                    </span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive("/themes")}
+                  tooltip={themesTooltip}
+                >
+                  <Link href="/themes">
+                    <Palette />
+                    <span className="whitespace-nowrap overflow-hidden transition-[max-width,opacity] duration-200 ease-in-out group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0">
+                      Themes
+                    </span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive("/settings")}
+                  tooltip={settingsTooltip}
+                >
+                  <Link href="/settings">
+                    <Settings />
+                    <span className="whitespace-nowrap overflow-hidden transition-[max-width,opacity] duration-200 ease-in-out group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0">
+                      Settings
+                    </span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarContent>
+          <SidebarFooter>
+            {user && (
+              <div className="p-2">
+                <UserMenu />
+              </div>
+            )}
+          </SidebarFooter>
+        </Sidebar>
+      )}
       <SidebarInset>
         <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-md sm:px-6">
-          <SidebarTrigger className="md:hidden" />
+          {!isMobile && <SidebarTrigger />}
           <div className="flex-1">
             {/* You can add a page title or breadcrumbs here */}
           </div>
