@@ -15,7 +15,7 @@ interface AuthFormProps {
 }
 
 export function AuthForm({ mode = 'signin', onModeChange }: AuthFormProps) {
-  const { signIn, signUp, loading, error, clearError } = useAuth()
+  const { signIn, signUp, loading, error, clearError, canFallbackToLocalStorage, switchToLocalStorage } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
@@ -76,6 +76,24 @@ export function AuthForm({ mode = 'signin', onModeChange }: AuthFormProps) {
           {displayError && (
             <Alert variant="destructive">
               <AlertDescription>{displayError}</AlertDescription>
+            </Alert>
+          )}
+          
+          {canFallbackToLocalStorage && (
+            <Alert>
+              <AlertDescription>
+                <div className="flex flex-col gap-2">
+                  <span>You can continue using the app in offline mode with local storage.</span>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={switchToLocalStorage}
+                    className="w-fit"
+                  >
+                    Continue in Offline Mode
+                  </Button>
+                </div>
+              </AlertDescription>
             </Alert>
           )}
           

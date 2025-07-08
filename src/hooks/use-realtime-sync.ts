@@ -7,7 +7,6 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { realtimeSync, SyncEvent, SyncStatus } from '@/lib/realtime-sync'
-import { useAuth } from '@/contexts/auth-context'
 
 export interface UseRealtimeSyncOptions {
   /**
@@ -16,7 +15,7 @@ export interface UseRealtimeSyncOptions {
   tables?: string[]
   
   /**
-   * Whether to automatically initialize sync when user is available
+   * Whether to automatically initialize sync when component mounts
    */
   autoInit?: boolean
   
@@ -87,7 +86,6 @@ export function useRealtimeSync(options: UseRealtimeSyncOptions = {}): UseRealti
     onStatusChange
   } = options
 
-  const { user } = useAuth()
   const [status, setStatus] = useState<SyncStatus>(realtimeSync.getStatus())
   const [isActive, setIsActive] = useState(false)
   const [recentEvents, setRecentEvents] = useState<SyncEvent[]>([])
@@ -128,13 +126,9 @@ export function useRealtimeSync(options: UseRealtimeSyncOptions = {}): UseRealti
    * Start real-time sync
    */
   const start = useCallback(async (): Promise<boolean> => {
-    if (!user?.id) {
-      console.warn('Cannot start sync: user not authenticated')
-      return false
-    }
-
     try {
-      const success = await realtimeSync.initialize(user.id)
+      // Initialize without user ID for shared usage
+      const success = await realtimeSync.initialize(null as any)
       
       if (success) {
         // Clean up previous subscriptions
@@ -163,7 +157,7 @@ export function useRealtimeSync(options: UseRealtimeSyncOptions = {}): UseRealti
       console.error('Failed to start real-time sync:', error)
       return false
     }
-  }, [user?.id, tables, handleSyncEvent, handleStatusChange])
+  }, [tables, handleSyncEvent, handleStatusChange])
 
   /**
    * Stop real-time sync
@@ -207,22 +201,20 @@ export function useRealtimeSync(options: UseRealtimeSyncOptions = {}): UseRealti
    * Resume sync
    */
   const resume = useCallback(async (): Promise<boolean> => {
-    if (!user?.id) return false
-    
     const success = await realtimeSync.resume()
     if (success) {
       setIsActive(true)
       setStatus(realtimeSync.getStatus())
     }
     return success
-  }, [user?.id])
+  }, [])
 
-  // Auto-initialize when user becomes available
+  // Auto-initialize when component mounts
   useEffect(() => {
-    if (autoInit && user?.id && !isInitializedRef.current) {
+    if (autoInit && !isInitializedRef.current) {
       start()
     }
-  }, [autoInit, user?.id, start])
+  }, [autoInit, start])
 
   // Handle visibility change for battery saving
   useEffect(() => {
@@ -231,7 +223,7 @@ export function useRealtimeSync(options: UseRealtimeSyncOptions = {}): UseRealti
     const handleVisibilityChange = () => {
       if (document.hidden && isActive) {
         pause()
-      } else if (!document.hidden && user?.id && !isActive) {
+      } else if (!document.hidden && !isActive) {
         resume()
       }
     }
@@ -241,14 +233,9 @@ export function useRealtimeSync(options: UseRealtimeSyncOptions = {}): UseRealti
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
-  }, [pauseOnHidden, isActive, user?.id, pause, resume])
+  }, [pauseOnHidden, isActive, pause, resume])
 
-  // Handle user logout
-  useEffect(() => {
-    if (!user?.id && isInitializedRef.current) {
-      stop()
-    }
-  }, [user?.id, stop])
+  // No user logout to handle since we don't use authentication
 
   // Cleanup on unmount
   useEffect(() => {

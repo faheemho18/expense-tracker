@@ -26,9 +26,6 @@ import {
 } from "@/components/ui/sidebar"
 import { Logo } from "@/components/logo"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { useAuth } from "@/contexts/auth-context"
-import { UserMenu } from "@/components/auth/user-menu"
-import { AuthPage } from "@/components/auth/auth-page"
 import { MiniSyncStatus } from "@/components/sync/sync-status-indicator"
 import { BottomNav } from "@/components/navigation/bottom-nav"
 import { SwipeNavigation } from "@/components/navigation/swipe-navigation"
@@ -36,7 +33,6 @@ import { SwipeNavigation } from "@/components/navigation/swipe-navigation"
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const isMobile = useIsMobile()
-  const { user, loading, signIn } = useAuth()
 
   const isActive = React.useCallback(
     (path: string) => {
@@ -54,30 +50,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const dataTooltip = React.useMemo(() => ({ children: "Import/Export" }), [])
   const settingsTooltip = React.useMemo(() => ({ children: "Settings" }), [])
   const themesTooltip = React.useMemo(() => ({ children: "Themes" }), [])
-
-  // Show loading state while checking authentication
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-      </div>
-    )
-  }
-
-  // Show auth page if user is not authenticated and Supabase is configured
-  if (!user && typeof window !== 'undefined') {
-    // Check if Supabase is properly configured (not in localStorage mode)
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    const isSupabaseConfigured = supabaseUrl && 
-      supabaseKey && 
-      !supabaseUrl.includes('your_supabase_project_url_here') &&
-      !supabaseKey.includes('your_supabase_anon_key_here')
-    
-    if (isSupabaseConfigured) {
-      return <AuthPage />
-    }
-  }
 
   return (
     <SidebarProvider>
@@ -161,11 +133,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </SidebarMenu>
           </SidebarContent>
           <SidebarFooter>
-            {user && (
-              <div className="p-2">
-                <UserMenu />
-              </div>
-            )}
+            {/* Footer content can go here if needed */}
           </SidebarFooter>
         </Sidebar>
       )}
@@ -175,12 +143,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="flex-1">
             {/* You can add a page title or breadcrumbs here */}
           </div>
-          {user && (
-            <div className="flex items-center gap-4">
-              <MiniSyncStatus />
-              {!isMobile && <UserMenu />}
-            </div>
-          )}
+          <div className="flex items-center gap-4">
+            <MiniSyncStatus />
+          </div>
         </header>
         <main className={isMobile ? "pb-16" : ""}>
           <SwipeNavigation>
