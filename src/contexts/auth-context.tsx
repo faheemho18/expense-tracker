@@ -23,6 +23,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [canFallbackToLocalStorage, setCanFallbackToLocalStorage] = useState(false)
 
   const supabase = createAuthClient()
 
@@ -145,8 +146,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       if (error) throw error
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to sign up'
+      let message = err instanceof Error ? err.message : 'Failed to sign up'
+      let shouldOfferLocalStorage = false
+      
+      // Enhance error messages for common database issues
+      if (message.includes('trigger') || message.includes('function') || message.includes('database')) {
+        message = 'Database setup incomplete. You can continue using the app in offline mode, or contact support to fix the database configuration.'
+        shouldOfferLocalStorage = true
+      } else if (message.includes('connection') || message.includes('timeout')) {
+        message = 'Unable to connect to database. You can continue using the app in offline mode, or check your internet connection and try again.'
+        shouldOfferLocalStorage = true
+      } else if (message.includes('already registered') || message.includes('email')) {
+        message = 'This email is already registered. Please try signing in instead.'
+      }
+      
       setError(message)
+      setCanFallbackToLocalStorage(shouldOfferLocalStorage)
       throw new Error(message)
     } finally {
       setLoading(false)
@@ -175,6 +190,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const clearError = () => {
     setError(null)
+    setCanFallbackToLocalStorage(false)
+  }
+
+  const switchToLocalStorage = () => {
+    // Force reload to localStorage mode by clearing all auth state
+    setUser(null)
+    setLoading(false)
+    setError(null)
+    setCanFallbackToLocalStorage(false)
+    
+    // Clear any stored session data
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('sb-' + process.env.NEXT_PUBLIC_SUPABASE_URL?.replace('https://', '').replace('.supabase.co', '') + '-auth-token')
+    }
+    
+    // Reload the page to reinitialize in localStorage mode
+    window.location.reload()
   }
 
   const value: AuthContextType = {
@@ -185,6 +217,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     signUp,
     signOut,
     clearError,
+    canFallbackToLocalStorage,
+    switchToLocalStorage,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

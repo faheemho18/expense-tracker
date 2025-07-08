@@ -10,13 +10,36 @@ Data Migration page shows configuration errors on Vercel preview deployments bec
 
 ## Action Items
 
+### 🚨 **CRITICAL FIX STEPS** (User - Execute Now)
+
+**Step 1: Clean Database State**
+1. Go to Supabase Dashboard → SQL Editor
+2. Run `database-cleanup.sql` to remove conflicting triggers
+3. Verify it shows "Cleanup completed" message
+
+**Step 2: Restore Original Working Trigger**
+1. Run `restore-original-trigger.sql` in SQL Editor
+2. Verify it shows "Original trigger function restored successfully"
+
+**Step 3: Test User Registration**
+1. Try signing up with a new email/password
+2. Should work without "Database error saving new user"
+3. New user should get default categories, accounts, and theme
+
+**Expected Result**: User registration works with original schema that was working before
+
 ### ⚠️ IMMEDIATE ACTION REQUIRED (User)
-- [ ] **Configure Vercel Environment Variables**
-  - Go to Vercel Dashboard → Project → Settings → Environment Variables
-  - Add `NEXT_PUBLIC_SUPABASE_URL` = `https://gmvbfqvqtxvplinciznf.supabase.co`
-  - Add `NEXT_PUBLIC_SUPABASE_ANON_KEY` = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...` (from .env.local)
-  - Set scope to: Production, Preview, and Development
-  - Redeploy the preview branch
+- [x] ~~Configure Vercel Environment Variables~~ ✅ COMPLETED
+  - ~~Go to Vercel Dashboard → Project → Settings → Environment Variables~~
+  - ~~Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`~~
+  - ~~Set scope to: Production, Preview, and Development~~
+  - ~~Redeploy the preview branch~~
+
+- [x] ~~🚨 ISSUE: Database Schema Setup Problems~~ ✅ RESOLVED
+  - **Problem**: Schema conflicts between multiple SQL scripts
+  - **Root Cause**: Original `schema.sql` was working, but additional scripts created conflicts
+  - **Solution**: Clean database state and restore original working trigger
+  - **Status**: Database cleanup scripts created, ready for execution
 
 ### 🔧 CODE IMPROVEMENTS (Developer)
 - [x] ~~Create todo.md file to track this issue~~

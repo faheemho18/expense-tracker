@@ -98,4 +98,6 @@ export type AuthContextType = {
   signUp: (email: string, password: string, name?: string) => Promise<void>
   signOut: () => Promise<void>
   clearError: () => void
+  canFallbackToLocalStorage: boolean
+  switchToLocalStorage: () => void
 }
