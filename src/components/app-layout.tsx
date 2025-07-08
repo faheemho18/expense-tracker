@@ -79,9 +79,35 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     }
   }
 
+  // Mobile layout: Simple container with header + main + bottom nav
+  if (isMobile) {
+    return (
+      <div className="min-h-screen">
+        <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-md">
+          <div className="flex-1">
+            <Logo />
+          </div>
+          {user && (
+            <div className="flex items-center gap-4">
+              <MiniSyncStatus />
+              <UserMenu />
+            </div>
+          )}
+        </header>
+        <main className="pb-16">
+          <SwipeNavigation>
+            {children}
+          </SwipeNavigation>
+        </main>
+        <BottomNav />
+      </div>
+    )
+  }
+
+  // Desktop layout: Sidebar with collapsible behavior
   return (
     <SidebarProvider>
-      <Sidebar collapsible={isMobile ? "offcanvas" : "icon"}>
+      <Sidebar collapsible="icon">
         <SidebarHeader>
           <Logo />
         </SidebarHeader>
@@ -169,24 +195,23 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       </Sidebar>
       <SidebarInset>
         <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-md sm:px-6">
-          <SidebarTrigger className="md:hidden" />
+          <SidebarTrigger />
           <div className="flex-1">
             {/* You can add a page title or breadcrumbs here */}
           </div>
           {user && (
             <div className="flex items-center gap-4">
               <MiniSyncStatus />
-              {!isMobile && <UserMenu />}
+              <UserMenu />
             </div>
           )}
         </header>
-        <main className={isMobile ? "pb-16" : ""}>
+        <main>
           <SwipeNavigation>
             {children}
           </SwipeNavigation>
         </main>
       </SidebarInset>
-      <BottomNav />
     </SidebarProvider>
   )
 }
