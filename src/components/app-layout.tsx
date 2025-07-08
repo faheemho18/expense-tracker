@@ -64,15 +64,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     )
   }
 
-  // Show loading state while determining mobile layout (prevents hydration mismatch)
-  if (isMobile === undefined) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary"></div>
-      </div>
-    )
-  }
-
   // Show auth page if user is not authenticated and Supabase is configured
   if (!user && typeof window !== 'undefined') {
     // Check if Supabase is properly configured (not in localStorage mode)
@@ -88,35 +79,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // Mobile layout: Simple container with header + main + bottom nav
-  if (isMobile) {
-    return (
-      <div className="min-h-screen">
-        <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-md">
-          <div className="flex-1">
-            <Logo />
-          </div>
-          {user && (
-            <div className="flex items-center gap-4">
-              <MiniSyncStatus />
-              <UserMenu />
-            </div>
-          )}
-        </header>
-        <main className="pb-16" role="main">
-          <SwipeNavigation>
-            {children}
-          </SwipeNavigation>
-        </main>
-        <BottomNav />
-      </div>
-    )
-  }
-
-  // Desktop layout: Sidebar with collapsible behavior
   return (
     <SidebarProvider>
-      <Sidebar collapsible="icon">
+      <Sidebar collapsible={isMobile ? "offcanvas" : "icon"}>
         <SidebarHeader>
           <Logo />
         </SidebarHeader>
@@ -204,23 +169,24 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       </Sidebar>
       <SidebarInset>
         <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-md sm:px-6">
-          <SidebarTrigger />
+          <SidebarTrigger className="md:hidden" />
           <div className="flex-1">
             {/* You can add a page title or breadcrumbs here */}
           </div>
           {user && (
             <div className="flex items-center gap-4">
               <MiniSyncStatus />
-              <UserMenu />
+              {!isMobile && <UserMenu />}
             </div>
           )}
         </header>
-        <main role="main">
+        <main className={isMobile ? "pb-16" : ""}>
           <SwipeNavigation>
             {children}
           </SwipeNavigation>
         </main>
       </SidebarInset>
+      <BottomNav />
     </SidebarProvider>
   )
 }

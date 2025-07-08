@@ -7,14 +7,10 @@ import { useIsMobile } from "@/hooks/use-mobile"
 export function useMobileAccessibility() {
   const isMobile = useIsMobile()
   const [screenReaderActive, setScreenReaderActive] = React.useState(false)
-  const [reducedMotion, setReducedMotion] = React.useState(false)
-  const [highContrast, setHighContrast] = React.useState(false)
 
   React.useEffect(() => {
-    // Detect accessibility preferences (only in browser)
-    const checkAccessibilityPreferences = () => {
-      if (typeof window === 'undefined') return
-      
+    // Detect if screen reader is active
+    const checkScreenReader = () => {
       // Check for common screen reader indicators
       const hasScreenReader = 
         'speechSynthesis' in window ||
@@ -24,20 +20,16 @@ export function useMobileAccessibility() {
         window.navigator.userAgent.includes('TalkBack')
 
       setScreenReaderActive(hasScreenReader)
-      
-      // Check media queries for accessibility preferences
-      setReducedMotion(window.matchMedia('(prefers-reduced-motion: reduce)').matches)
-      setHighContrast(window.matchMedia('(prefers-contrast: high)').matches)
     }
 
-    checkAccessibilityPreferences()
+    checkScreenReader()
   }, [])
 
   return {
     isMobile,
     screenReaderActive,
-    shouldUseReducedMotion: reducedMotion,
-    shouldUseHighContrast: highContrast,
+    shouldUseReducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    shouldUseHighContrast: window.matchMedia('(prefers-contrast: high)').matches,
   }
 }
 
@@ -47,7 +39,7 @@ export function useMobileAnnouncements() {
   const { isMobile, screenReaderActive } = useMobileAccessibility()
 
   const announce = React.useCallback((message: string, priority: 'polite' | 'assertive' = 'polite') => {
-    if (!isMobile || !screenReaderActive || typeof document === 'undefined') return
+    if (!isMobile || !screenReaderActive) return
 
     // Add announcement to state for screen reader
     setAnnouncements(prev => [...prev, message])
@@ -63,9 +55,7 @@ export function useMobileAnnouncements() {
 
     // Clean up after announcement
     setTimeout(() => {
-      if (document.body.contains(liveRegion)) {
-        document.body.removeChild(liveRegion)
-      }
+      document.body.removeChild(liveRegion)
       setAnnouncements(prev => prev.filter(a => a !== message))
     }, 1000)
   }, [isMobile, screenReaderActive])
@@ -120,8 +110,6 @@ export function useMobileTouchAccessibility() {
 
   React.useEffect(() => {
     const checkTouchSupport = () => {
-      if (typeof window === 'undefined') return
-      
       setTouchDevice(
         'ontouchstart' in window ||
         navigator.maxTouchPoints > 0 ||
@@ -199,7 +187,7 @@ export function MobileAccessibilityInstructions() {
 export function MobileSkipLinks() {
   const { isMobile } = useMobileAccessibility()
 
-  if (isMobile === false) return null
+  if (!isMobile) return null
 
   return (
     <div className="sr-only focus-within:not-sr-only">
@@ -225,7 +213,7 @@ export function useMobileKeyboardNavigation() {
   const [keyboardVisible, setKeyboardVisible] = React.useState(false)
 
   React.useEffect(() => {
-    if (isMobile === false || typeof document === 'undefined') return
+    if (!isMobile) return
 
     const handleFocusIn = (e: FocusEvent) => {
       const target = e.target as HTMLElement

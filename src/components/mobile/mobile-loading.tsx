@@ -126,10 +126,7 @@ export function MobileProgressBar({
 
 // Mobile connection status indicator
 export function MobileConnectionStatus() {
-  const [isOnline, setIsOnline] = React.useState<boolean>(() => {
-    // Avoid SSR/hydration mismatch by checking if navigator exists
-    return typeof window !== 'undefined' ? navigator.onLine : true
-  })
+  const [isOnline, setIsOnline] = React.useState(navigator.onLine)
   const [connectionType, setConnectionType] = React.useState<string>('unknown')
   const isMobile = useIsMobile()
 
@@ -137,12 +134,10 @@ export function MobileConnectionStatus() {
     const handleOnline = () => setIsOnline(true)
     const handleOffline = () => setIsOnline(false)
 
-    // Get connection type if available (only in browser)
-    const connection = typeof window !== 'undefined' ? (
-      (navigator as any).connection || 
-      (navigator as any).mozConnection || 
-      (navigator as any).webkitConnection
-    ) : null
+    // Get connection type if available
+    const connection = (navigator as any).connection || 
+                      (navigator as any).mozConnection || 
+                      (navigator as any).webkitConnection
 
     if (connection) {
       setConnectionType(connection.effectiveType || connection.type || 'unknown')
@@ -158,20 +153,16 @@ export function MobileConnectionStatus() {
       }
     }
 
-    if (typeof window !== 'undefined') {
-      window.addEventListener('online', handleOnline)
-      window.addEventListener('offline', handleOffline)
-    }
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
 
     return () => {
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('online', handleOnline)
-        window.removeEventListener('offline', handleOffline)
-      }
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
     }
   }, [])
 
-  if (isMobile === false) return null
+  if (!isMobile) return null
 
   return (
     <div className={`flex items-center gap-2 ${isMobile ? 'p-2' : 'p-1'}`}>

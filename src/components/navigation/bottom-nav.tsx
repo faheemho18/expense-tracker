@@ -25,8 +25,8 @@ export function BottomNav() {
   const pathname = usePathname()
   const isMobile = useIsMobile()
 
-  // Only show on mobile (explicitly check for false, not undefined)
-  if (isMobile === false) return null
+  // Only show on mobile
+  if (!isMobile) return null
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur-md">
