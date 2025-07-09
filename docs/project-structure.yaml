@@ -1,0 +1,483 @@
+---
+# Comprehensive Project Structure - Automation Projects
+# Next.js 15 Expense Tracking Application with AI Integration
+# Generated: 2025-07-09
+
+project:
+  name: "automation_projects"
+  type: "Next.js 15 Application"
+  description: "Expense tracking application with AI integration, dark mode, and shared usage"
+  
+  # Core Configuration Files
+  configuration:
+    package_management:
+      - package.json
+      - package-lock.json
+      - node_modules/
+    
+    typescript:
+      - tsconfig.json
+      - tsconfig.tsbuildinfo
+      - next-env.d.ts
+    
+    build_and_bundling:
+      - next.config.ts
+      - postcss.config.mjs
+      - tailwind.config.ts
+      - components.json
+    
+    testing:
+      - jest.config.js
+      - jest.setup.js
+      - jest-e2e.config.ts
+      - jest-puppeteer.config.js
+    
+    deployment:
+      - Dockerfile
+      - .dockerignore
+      - vercel.json
+      - apphosting.yaml
+    
+    environment:
+      - .env.local
+      - .env.example
+      - .gitignore
+      - .eslintrc.json
+      - .modified
+    
+    database:
+      - schema.sql
+
+  # Project Documentation
+  documentation:
+    main_guide:
+      - CLAUDE.md
+    
+    detailed_docs:
+      - docs/
+        - ai-integration.md
+        - architecture.md  
+        - blueprint.md
+        - database-schema.md
+        - deployment.md
+        - development-history.md
+        - testing-framework.md
+        - testing-guide.md
+    
+    testing_guides:
+      - manual-ui-checklist.md
+      - test-ui-manual.html
+
+  # Source Code Structure
+  source_code:
+    # Main Application Source
+    src:
+      # AI Integration Layer
+      ai:
+        - dev.ts
+        - genkit.ts
+      
+      # Next.js Application Layer
+      app:
+        # API Routes
+        api:
+          ai:
+            categorize:
+              - route.ts
+            ocr:
+              - route.ts
+            status:
+              - route.ts
+        
+        # Page Components
+        pages:
+          - layout.tsx
+          - page.tsx
+          - client-layout.tsx
+          - favicon.ico
+          - globals.css
+          - grid-layout.css
+          
+          dashboard:
+            - page.tsx
+          
+          data:
+            - page.tsx
+          
+          settings:
+            - page.tsx
+          
+          themes:
+            - page.tsx
+      
+      # React Components
+      components:
+        # Core Application Components
+        core:
+          - app-layout.tsx
+          - error-boundary.tsx
+          - logo.tsx
+        
+        # Authentication Components
+        auth:
+          - user-menu.tsx
+        
+        # Dashboard Components
+        dashboard:
+          widgets:
+            - account-pie-chart-widget.tsx
+            - add-widget-sheet.tsx
+            - category-gauges-widget.tsx
+            - category-pie-chart-widget.tsx
+            - chart-zoom-wrapper.tsx
+            - dashboard-grid.tsx
+            - edit-widget-dialog.tsx
+            - heatmap-calendar-widget.tsx
+            - over-time-bar-chart-widget.tsx
+            - simple-dashboard-grid.tsx
+            - stacked-area-chart-widget.tsx
+            - static-dashboard-grid.tsx
+            - stats-widget.tsx
+            - widget-filters-sheet.tsx
+            - widget-wrapper.tsx
+          
+          tests:
+            - projected-savings-widget.test.tsx
+            - stats-widget.test.tsx
+        
+        # Data Management Components
+        data:
+          - import-data-card.tsx
+        
+        # Expense Management Components
+        expenses:
+          - add-expense-sheet.tsx
+          - expenses-filters.tsx
+          - expenses-table.tsx
+          - export-expenses-button.tsx
+          
+          tests:
+            - expenses-table.test.tsx
+        
+        # Magic UI Components
+        magicui:
+          - blur-fade.tsx
+          - number-ticker.tsx
+          - pulsating-button.tsx
+          - rainbow-button.tsx
+          - shimmer-button.tsx
+          
+          tests:
+            - number-ticker.test.tsx
+        
+        # Mobile Components
+        mobile:
+          - mobile-loading.tsx
+          - mobile-shortcuts.tsx
+        
+        # Navigation Components
+        navigation:
+          - bottom-nav.tsx
+          - swipe-navigation.tsx
+        
+        # Settings Components
+        settings:
+          - api-key-monitor.tsx
+          - data-migration.tsx
+          - manage-accounts.tsx
+          - manage-categories.tsx
+          - manage-category-thresholds.tsx
+        
+        # Sync Components
+        sync:
+          - sync-status-indicator.tsx
+        
+        # Theme Components
+        theme:
+          - dark-mode-toggle.tsx
+        
+        # Theme Preview Components
+        themes:
+          - theme-preview.tsx
+        
+        # UI Components (Radix UI Based)
+        ui:
+          base_components:
+            - accordion.tsx
+            - alert-dialog.tsx
+            - alert.tsx
+            - avatar.tsx
+            - badge.tsx
+            - button.tsx
+            - calendar.tsx
+            - card.tsx
+            - carousel.tsx
+            - chart-zoom-wrapper.tsx
+            - chart.tsx
+            - checkbox.tsx
+            - collapsible.tsx
+            - command.tsx
+            - currency-ticker.tsx
+            - dialog.tsx
+            - dropdown-menu.tsx
+            - form.tsx
+            - image-viewer.tsx
+            - input.tsx
+            - label.tsx
+            - menubar.tsx
+            - popover.tsx
+            - progress.tsx
+            - pull-to-refresh.tsx
+            - radio-group.tsx
+            - scroll-area.tsx
+            - select.tsx
+            - separator.tsx
+            - sheet.tsx
+            - sidebar.tsx
+            - skeleton.tsx
+            - slider.tsx
+            - switch.tsx
+            - table.tsx
+            - tabs.tsx
+            - textarea.tsx
+            - toast.tsx
+            - toaster.tsx
+            - tooltip.tsx
+          
+          tests:
+            - currency-ticker.test.tsx
+        
+        # Component Tests
+        tests:
+          - app-layout.test.tsx
+      
+      # React Contexts
+      contexts:
+        - settings-context.tsx
+        
+        tests:
+          - (test directory exists)
+      
+      # Custom Hooks
+      hooks:
+        data_hooks:
+          - use-auth-data-service.ts
+          - use-realtime-sync.ts
+          - use-supabase-data.ts
+        
+        ui_hooks:
+          - use-dark-mode.ts
+          - use-local-storage.ts
+          - use-mobile.tsx
+          - use-mobile-accessibility.tsx
+          - use-mobile-lazy-loading.tsx
+          - use-mobile-pwa.tsx
+          - use-resize-observer.ts
+          - use-toast.ts
+          - use-touch-gestures.ts
+          - use-touch-gestures.tsx
+          - use-viewport.ts
+        
+        ai_hooks:
+          - use-api-key-monitor.ts
+          - use-expense-categorization.ts
+          - use-receipt-ocr.ts
+        
+        chart_hooks:
+          - use-lazy-chart.ts
+        
+        tests:
+          - use-auth-data-service.test.ts
+          - use-local-storage.test.ts
+          - use-realtime-sync.test.ts
+      
+      # Library and Utilities
+      lib:
+        ai_services:
+          - ai-client.ts
+          - ai-services.ts
+          - api-key-manager.ts
+        
+        data_services:
+          - data-migration.ts
+          - data-service.ts
+          - realtime-sync.ts
+          - supabase-data-service.ts
+          - supabase-test.ts
+          - supabase.ts
+        
+        ui_utilities:
+          - chart-configs.ts
+          - dark-mode-utils.ts
+          - theme-utils.ts
+          - touch-utils.ts
+        
+        core_utilities:
+          - constants.ts
+          - types.ts
+          - utils.ts
+        
+        tests:
+          - ai-services.test.ts
+          - realtime-sync.test.ts
+          - utils.test.ts
+      
+      # Test Utilities
+      test:
+        - ai-services-test.ts
+      
+      # Mobile Utilities
+      utils:
+        - mobile-cache.ts
+        - mobile-utils.ts
+
+  # Public Assets
+  public:
+    icons:
+      - (empty directory)
+    
+    pwa:
+      - manifest.json
+      - sw.js
+      - workbox-4754cb34.js
+
+  # Comprehensive Testing Framework
+  testing:
+    # Accessibility Testing
+    accessibility:
+      - tests/accessibility/accessibility.test.ts
+      - tests/accessibility/navigation-accessibility.test.ts
+    
+    # End-to-End Testing
+    e2e:
+      core_tests:
+        - tests/e2e/ai-integration.test.ts
+        - tests/e2e/expense-management.test.ts
+        - tests/e2e/navigation-behavior.test.ts
+      
+      ui_glitch_detection:
+        - tests/e2e/ui-glitch/animation-performance.test.ts
+        - tests/e2e/ui-glitch/dashboard-overflow.test.ts
+        - tests/e2e/ui-glitch/dropdown-visibility.test.ts
+        - tests/e2e/ui-glitch/navigation-validation.test.ts
+        - tests/e2e/ui-glitch/touch-interaction-improvements.test.ts
+        - tests/e2e/ui-glitch/touch-interactions.test.ts
+    
+    # Performance Testing
+    performance:
+      - tests/performance/navigation-performance.test.ts
+      - tests/performance/performance.test.ts
+    
+    # Unit Testing
+    unit:
+      - tests/unit/app-layout.test.tsx
+    
+    # Visual Regression Testing
+    visual:
+      core:
+        - tests/visual/visual-regression.test.ts
+        - tests/visual/visual-helper.ts
+      
+      config:
+        - tests/visual/config/visual-config.ts
+      
+      screenshots:
+        - tests/visual/screenshots/actual/
+        - tests/visual/screenshots/diff/
+        - tests/visual/screenshots/expected/
+    
+    # Manual Testing Tools
+    manual_testing:
+      - manual-testing-script.js
+      - quick-ui-test.js
+      - simple-test.js
+      - ui-analysis.js
+      - validation-checklist.js
+      - verify-ui-tests.js
+
+  # Development and Deployment Scripts
+  scripts:
+    deployment:
+      - scripts/deploy-docker.js
+      - scripts/deploy-vercel.js
+    
+    testing:
+      - scripts/test-supabase.js
+
+  # Project Assets
+  assets:
+    screenshots:
+      - screenshots/Screenshot\ 2025-07-09\ 143850.png
+      - screenshots/Screenshot\ 2025-07-09\ 144132.png
+    
+    logs:
+      - server.log
+      - todo.md
+
+# Key Features and Architecture
+features:
+  authentication:
+    type: "None (Shared Usage)"
+    description: "Direct access for 2 users without authentication"
+  
+  database:
+    provider: "Supabase"
+    type: "Shared cloud database"
+    schema: "PostgreSQL with Row Level Security"
+  
+  ai_integration:
+    provider: "Google AI"
+    features:
+      - "Smart expense categorization"
+      - "Receipt OCR processing"
+      - "Multi-API key rotation"
+  
+  ui_framework:
+    frontend: "React 18 with TypeScript"
+    styling: "Tailwind CSS with HSL-based themes"
+    components: "Radix UI primitives"
+    responsive: "Mobile-first with 768px breakpoint"
+  
+  theme_system:
+    default_mode: "Dark mode"
+    options: ["Light", "Dark", "Auto (System)"]
+    persistence: "localStorage"
+    accessibility: "WCAG AA compliant"
+  
+  testing_framework:
+    unit: "Jest + React Testing Library"
+    e2e: "Puppeteer automation"
+    accessibility: "axe-core WCAG 2.1 AA"
+    performance: "Lighthouse integration"
+    ui_glitch: "24 specialized tests"
+  
+  deployment:
+    primary: "Vercel"
+    alternatives: ["Docker", "Firebase", "Netlify"]
+    build_system: "Next.js 15 with Turbopack"
+    pwa: "Service Worker enabled"
+
+# Development Metrics
+metrics:
+  lines_of_code: "~15,000+ lines"
+  test_coverage: "24 UI tests + comprehensive unit tests"
+  build_time: "~14 seconds"
+  bundle_size: "173kB main page"
+  performance_score: "90+ Lighthouse score"
+  
+# Current Status
+status:
+  production_url: "https://automationprojects-4df0h8yfc-faheems-projects-df0f8e74.vercel.app"
+  git_branch: "feature/dark-mode"
+  development_phase: "Phase 6 - Mobile Navigation Optimization"
+  last_updated: "2025-07-09"
+  
+# Architecture Patterns
+architecture:
+  pattern: "Feature-based component organization"
+  state_management: "React Context + Custom Hooks"
+  data_layer: "Supabase with real-time sync"
+  routing: "Next.js App Router"
+  styling: "Tailwind CSS with CSS-in-JS themes"
+  testing: "Multi-layer testing pyramid"
+  deployment: "Continuous deployment via Vercel"
