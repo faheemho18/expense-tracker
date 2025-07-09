@@ -27,7 +27,6 @@ import { cn } from "@/lib/utils"
 
 import { AppLayout } from "@/components/app-layout"
 import { CategoryGaugesWidget } from "@/components/dashboard/category-gauges-widget"
-import { ProjectedSavingsWidget } from "@/components/dashboard/projected-savings-widget"
 import { AddExpenseSheet } from "@/components/expenses/add-expense-sheet"
 import { ExpensesFilters } from "@/components/expenses/expenses-filters"
 import { ExpensesTable } from "@/components/expenses/expenses-table"
@@ -359,9 +358,6 @@ export default function HomePage() {
                   </Button>
                 </div>
                 <div />
-                <div className="absolute right-[calc(4rem+70px)] top-1/2 z-10 -translate-y-1/2">
-                  <ProjectedSavingsWidget expenses={gaugesMonthExpenses} />
-                </div>
               </CardHeader>
               <CardContent>
                 <div className="mb-4 flex items-center">
