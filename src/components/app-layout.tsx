@@ -29,6 +29,7 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { MiniSyncStatus } from "@/components/sync/sync-status-indicator"
 import { BottomNav } from "@/components/navigation/bottom-nav"
 import { SwipeNavigation } from "@/components/navigation/swipe-navigation"
+import { DarkModeToggle } from "@/components/theme/dark-mode-toggle"
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -144,6 +145,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             {/* You can add a page title or breadcrumbs here */}
           </div>
           <div className="flex items-center gap-4">
+            <DarkModeToggle />
             <MiniSyncStatus />
           </div>
         </header>

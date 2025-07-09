@@ -20,6 +20,15 @@ import {
 import type { Account, Category, Theme } from "@/lib/types"
 import type { DataSource } from "@/lib/supabase-data-service"
 import { getThemeCssProperties } from "@/lib/theme-utils"
+import { 
+  DarkModePreference,
+  shouldUseDarkMode,
+  applyDarkModeClass,
+  getStoredDarkModePreference,
+  setStoredDarkModePreference,
+  onSystemPreferenceChange,
+  getThemeVariant
+} from "@/lib/dark-mode-utils"
 
 interface SettingsContextType {
   // Data
@@ -33,6 +42,11 @@ interface SettingsContextType {
   ) => void
   theme: Theme
   setTheme: (theme: Theme) => void
+  
+  // Dark mode
+  darkModePreference: DarkModePreference
+  setDarkModePreference: (preference: DarkModePreference) => void
+  isDarkMode: boolean
   
   // Data source management
   dataSource: DataSource
@@ -77,6 +91,12 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     DEFAULT_ACCOUNTS
   )
   const [localTheme, setLocalTheme] = useLocalStorage<Theme>("app-theme", DEFAULT_THEME)
+  
+  // Dark mode state
+  const [darkModePreference, setDarkModePreferenceState] = useLocalStorage<DarkModePreference>(
+    "darkModePreference", 
+    "auto"
+  )
 
   // Supabase hooks
   const supabaseAccounts = useSupabaseAccounts()
@@ -89,7 +109,14 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   // Select data based on current source
   const categories = usingSupabase ? supabaseCategories.data : localCategories
   const accounts = usingSupabase ? supabaseAccounts.data : localAccounts
-  const theme = usingSupabase ? supabaseTheme.data : localTheme
+  const baseTheme = usingSupabase ? supabaseTheme.data : localTheme
+  
+  // Dark mode calculations
+  const isDarkMode = shouldUseDarkMode(darkModePreference)
+  const theme = React.useMemo(() => 
+    getThemeVariant(baseTheme, isDarkMode), 
+    [baseTheme, isDarkMode]
+  )
   
   // Aggregate loading and error states
   const isLoading = usingSupabase ? (
@@ -132,6 +159,11 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     }
   }, [usingSupabase, supabaseTheme, setLocalTheme])
 
+  const setDarkModePreference = React.useCallback((preference: DarkModePreference) => {
+    setDarkModePreferenceState(preference)
+    setStoredDarkModePreference(preference)
+  }, [setDarkModePreferenceState])
+
   const setDataSource = React.useCallback((source: DataSource) => {
     updateConfig({ primarySource: source })
   }, [updateConfig])
@@ -170,6 +202,22 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     }
   }, [theme])
 
+  // Apply dark mode class to document
+  React.useEffect(() => {
+    applyDarkModeClass(isDarkMode)
+  }, [isDarkMode])
+
+  // Listen for system preference changes
+  React.useEffect(() => {
+    if (darkModePreference === 'auto') {
+      const cleanup = onSystemPreferenceChange(() => {
+        // Force re-render when system preference changes
+        setDarkModePreferenceState(current => current === 'auto' ? 'auto' : current)
+      })
+      return cleanup
+    }
+  }, [darkModePreference, setDarkModePreferenceState])
+
   const value = React.useMemo(
     () => ({
       // Data
@@ -179,6 +227,11 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       setAccounts,
       theme,
       setTheme,
+      
+      // Dark mode
+      darkModePreference,
+      setDarkModePreference,
+      isDarkMode,
       
       // Data source management
       dataSource: config.primarySource,
@@ -203,6 +256,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       setAccounts,
       theme,
       setTheme,
+      darkModePreference,
+      setDarkModePreference,
+      isDarkMode,
       config.primarySource,
       setDataSource,
       isLoading,

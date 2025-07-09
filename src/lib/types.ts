@@ -72,6 +72,7 @@ export type Theme = {
   background: HSLColor
   accent: HSLColor
   radius: number
+  isDark?: boolean // Optional for backward compatibility, defaults to false
   user_id?: string // Optional for backward compatibility
 }
 
