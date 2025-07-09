@@ -4,21 +4,19 @@
 import * as React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { format } from "date-fns"
-import { CalendarIcon, Loader2, Camera, Sparkles, CheckCircle, Scan } from "lucide-react"
+import { CalendarIcon, Loader2, Camera, Scan } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
 import { useSettings } from "@/contexts/settings-context"
 import type { Expense } from "@/lib/types"
 import { cn, getIcon } from "@/lib/utils"
-import { useExpenseCategorization } from "@/hooks/use-expense-categorization"
 import { useReceiptOCR } from "@/hooks/use-receipt-ocr"
 import { useIsMobile, useHapticFeedback } from "@/hooks/use-mobile"
 import { TOUCH_CLASSES, MOBILE_SPACING } from "@/utils/mobile-utils"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { ShimmerButton } from "@/components/magicui/shimmer-button"
-import { PulsatingButton } from "@/components/magicui/pulsating-button"
 import { Calendar } from "@/components/ui/calendar"
 import {
   Form,
@@ -80,10 +78,7 @@ export function AddExpenseSheet({
   const [isPending, startTransition] = React.useTransition()
   const [isDatePickerOpen, setIsDatePickerOpen] = React.useState(false)
   const { categories, accounts } = useSettings()
-  const { categorizeExpense, isLoading: isCategorizationLoading } = useExpenseCategorization()
   const { processReceipt, isProcessing: isOCRProcessing } = useReceiptOCR()
-  const [aiSuggestions, setAiSuggestions] = React.useState<{category: string, confidence: number, reasoning: string}[]>([])
-  const [showAiSuggestions, setShowAiSuggestions] = React.useState(false)
   const isMobile = useIsMobile()
   const { vibrate } = useHapticFeedback()
 
@@ -247,58 +242,7 @@ export function AddExpenseSheet({
     }
   }
 
-  const handleAiCategorization = async () => {
-    if (!categories) return
-    
-    const description = form.getValues("description")
-    const amount = form.getValues("amount")
-    
-    if (!description || !amount) {
-      toast({
-        title: "Missing Information",
-        description: "Please enter a description and amount first.",
-        variant: "destructive",
-      })
-      return
-    }
 
-    try {
-      const result = await categorizeExpense({
-        description,
-        amount,
-        availableCategories: categories,
-      })
-      
-      setAiSuggestions(result.suggestions)
-      setShowAiSuggestions(true)
-      
-      // Auto-apply the primary suggestion if confidence is high
-      if (result.primarySuggestion.confidence > 0.8) {
-        form.setValue("category", result.primarySuggestion.category, { shouldValidate: true })
-        toast({
-          title: "Category Suggested",
-          description: `AI categorized as "${categories.find(c => c.value === result.primarySuggestion.category)?.label}" with ${Math.round(result.primarySuggestion.confidence * 100)}% confidence.`,
-        })
-      }
-    } catch (error) {
-      toast({
-        title: "Categorization Failed",
-        description: "Unable to categorize expense. Please select manually.",
-        variant: "destructive",
-      })
-    }
-  }
-
-  const applySuggestion = (categoryValue: string) => {
-    form.setValue("category", categoryValue, { shouldValidate: true })
-    setShowAiSuggestions(false)
-    
-    const categoryName = categories?.find(c => c.value === categoryValue)?.label
-    toast({
-      title: "Category Applied",
-      description: `Set category to "${categoryName}"`,
-    })
-  }
 
   const handleReceiptProcessing = async (imageData: string) => {
     try {
@@ -557,43 +501,15 @@ export function AddExpenseSheet({
                 name="category"
                 render={({ field }) => (
                   <FormItem>
-                    <div className="flex items-center justify-between">
-                      <FormLabel className={cn(
-                        "text-sm font-medium",
-                        isMobile ? "text-base" : "text-sm"
-                      )}>
-                        Category
-                      </FormLabel>
-                      <PulsatingButton
-                        type="button"
-                        onClick={handleAiCategorization}
-                        disabled={isCategorizationLoading || isPending}
-                        className={cn(
-                          "h-auto text-xs",
-                          isMobile ? "px-3 py-2 text-sm min-h-[44px]" : "px-2 py-1 text-xs",
-                          TOUCH_CLASSES.TOUCH_FEEDBACK
-                        )}
-                        pulseColor="#8b5cf6"
-                        duration="2s"
-                      >
-                        {isCategorizationLoading ? (
-                          <Loader2 className={cn(
-                            "mr-1 animate-spin",
-                            isMobile ? "h-4 w-4" : "h-3 w-3"
-                          )} />
-                        ) : (
-                          <Sparkles className={cn(
-                            "mr-1",
-                            isMobile ? "h-4 w-4" : "h-3 w-3"
-                          )} />
-                        )}
-                        AI Suggest
-                      </PulsatingButton>
-                    </div>
+                    <FormLabel className={cn(
+                      "text-sm font-medium",
+                      isMobile ? "text-base" : "text-sm"
+                    )}>
+                      Category
+                    </FormLabel>
                     <Select
                       onValueChange={(value) => {
                         field.onChange(value)
-                        setShowAiSuggestions(false)
                         // Haptic feedback for mobile
                         if (isMobile) {
                           vibrate(50)
@@ -636,91 +552,6 @@ export function AddExpenseSheet({
                         })}
                       </SelectContent>
                     </Select>
-                    
-                    {showAiSuggestions && aiSuggestions.length > 0 && (
-                      <div className={cn(
-                        "mt-2",
-                        isMobile ? "space-y-3" : "space-y-2"
-                      )}>
-                        <div className={cn(
-                          "text-muted-foreground",
-                          isMobile ? "text-sm" : "text-sm"
-                        )}>
-                          AI Suggestions:
-                        </div>
-                        {aiSuggestions.map((suggestion, index) => {
-                          const category = categories.find(c => c.value === suggestion.category)
-                          if (!category) return null
-                          
-                          const Icon = getIcon(category.icon)
-                          const confidenceColor = suggestion.confidence > 0.8 
-                            ? "text-green-600" 
-                            : suggestion.confidence > 0.6 
-                            ? "text-yellow-600" 
-                            : "text-orange-600"
-                          
-                          return (
-                            <div
-                              key={index}
-                              className={cn(
-                                "flex items-center justify-between rounded-md border cursor-pointer hover:bg-muted/50",
-                                TOUCH_CLASSES.TOUCH_TARGET,
-                                TOUCH_CLASSES.TOUCH_FEEDBACK,
-                                isMobile ? "p-3" : "p-2"
-                              )}
-                              onClick={() => {
-                                applySuggestion(suggestion.category)
-                                if (isMobile) {
-                                  vibrate(50)
-                                }
-                              }}
-                            >
-                              <div className="flex items-center gap-2">
-                                <Icon className={cn(
-                                  isMobile ? "h-5 w-5" : "h-4 w-4"
-                                )} />
-                                <span className={cn(
-                                  "font-medium",
-                                  isMobile ? "text-base" : "text-sm"
-                                )}>
-                                  {category.label}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className={cn(
-                                  "font-medium",
-                                  confidenceColor,
-                                  isMobile ? "text-sm" : "text-xs"
-                                )}>
-                                  {Math.round(suggestion.confidence * 100)}%
-                                </span>
-                                {suggestion.confidence > 0.8 && (
-                                  <CheckCircle className={cn(
-                                    "text-green-600",
-                                    isMobile ? "h-4 w-4" : "h-3 w-3"
-                                  )} />
-                                )}
-                              </div>
-                            </div>
-                          )
-                        })}
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setShowAiSuggestions(false)}
-                          className={cn(
-                            "w-full",
-                            TOUCH_CLASSES.TOUCH_TARGET,
-                            TOUCH_CLASSES.TOUCH_FEEDBACK,
-                            isMobile ? "h-12 text-sm" : "text-xs"
-                          )}
-                        >
-                          Hide suggestions
-                        </Button>
-                      </div>
-                    )}
-                    
                     <FormMessage />
                   </FormItem>
                 )}
