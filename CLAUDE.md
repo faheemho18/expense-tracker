@@ -34,11 +34,12 @@ This file provides essential guidance to Claude Code (claude.ai/code) when worki
 Next.js 15 expense tracking application with:
 - **Frontend**: React 18, TypeScript, Tailwind CSS, Radix UI
 - **Backend**: Supabase (shared database), Firebase Genkit (AI)
-- **Features**: Shared usage for 2 users, AI categorization, PWA support
+- **Features**: Shared usage for 2 users, AI categorization, dark mode, PWA support
 - **Deployment**: Vercel (production), Docker, Firebase, Netlify
 
 ### Current Status
 - ✅ **Production**: https://automationprojects-4df0h8yfc-faheems-projects-df0f8e74.vercel.app
+- ✅ **Dark Mode**: Comprehensive dark mode implementation with toggle and system preference detection
 - ✅ **Mobile Navigation**: Optimized with sidebar redundancy removed
 - ✅ **Mobile Responsiveness**: Settings tables optimized for mobile viewport
 - ✅ **Shared Usage**: No authentication required - direct access for 2 users
@@ -48,6 +49,7 @@ Next.js 15 expense tracking application with:
 
 ### Key Architecture
 - **Navigation**: Desktop sidebar + Mobile bottom nav (768px breakpoint)
+- **Theme System**: HSL-based themes with dark mode support and system preference detection
 - **Access Model**: No authentication - direct shared access for 2 users
 - **Data Storage**: Supabase cloud with shared database (no user isolation)
 - **AI Integration**: Server-side processing with automatic failover
@@ -132,6 +134,18 @@ Multi-platform deployment, production optimization, environment configuration, a
 
 **📐 For complete navigation system details, see [Architecture Documentation](docs/architecture.md)**
 
+### Dark Mode Implementation
+- **Default Mode**: Dark mode is now the default user preference
+- **Toggle Location**: Header (next to sync status) with dropdown options
+- **Options**: Light, Dark, Auto (system preference)
+- **System Integration**: Automatic detection and response to system preference changes
+- **Theme Integration**: Seamless integration with existing HSL-based theme system
+- **Accessibility**: WCAG AA compliant contrast ratios in all themes
+- **Storage**: Persisted in localStorage as `darkModePreference`
+- **Components**: All UI components adapt automatically to dark mode
+
+**🎨 For complete theme system and dark mode implementation details, see [Architecture Documentation](docs/architecture.md)**
+
 ### Shared Usage Model
 - **Access**: No authentication required - direct app access
 - **Data Sharing**: Shared Supabase database for 2 users
@@ -160,8 +174,9 @@ Multi-platform deployment, production optimization, environment configuration, a
 ### Current Deployment
 - **Live**: Vercel production deployment
 - **Status**: ✅ All features operational
-- **Performance**: 168kB main page, PWA enabled
+- **Performance**: 173kB main page, PWA enabled
 - **Build**: ~14s with Next.js 15.3.3 + Turbopack
+- **Dark Mode**: Enabled by default with full theme integration
 
 **🚀 For deployment configuration and multi-platform setup, see [Deployment Documentation](docs/deployment.md)**
 
