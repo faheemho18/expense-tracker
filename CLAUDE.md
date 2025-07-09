@@ -34,7 +34,7 @@ This file provides essential guidance to Claude Code (claude.ai/code) when worki
 Next.js 15 expense tracking application with:
 - **Frontend**: React 18, TypeScript, Tailwind CSS, Radix UI
 - **Backend**: Supabase (shared database), Firebase Genkit (AI)
-- **Features**: Shared usage for 2 users, AI categorization, dark mode, PWA support
+- **Features**: Shared usage for 2 users, receipt OCR, dark mode, PWA support
 - **Deployment**: Vercel (production), Docker, Firebase, Netlify
 
 ### Current Status
@@ -44,7 +44,7 @@ Next.js 15 expense tracking application with:
 - ✅ **Mobile Responsiveness**: Settings tables optimized for mobile viewport
 - ✅ **Shared Usage**: No authentication required - direct access for 2 users
 - ✅ **Cloud Storage**: Supabase shared database with persistent data
-- ✅ **AI Features**: Google AI with multi-key rotation system
+- ✅ **AI Features**: Receipt OCR with Google AI (expense categorization removed)
 - ✅ **Testing**: 24-test UI framework with comprehensive coverage
 
 ### Key Architecture
@@ -154,11 +154,11 @@ Multi-platform deployment, production optimization, environment configuration, a
 
 **🗄️ For database schema and shared usage implementation, see [Database Schema Documentation](docs/database-schema.md)**
 
-### AI Features (Active)
-- **1 Google AI API Key**: Currently configured and operational
-- **Smart Categorization**: AI-powered expense category suggestions
-- **Receipt OCR**: Automatic receipt data extraction
+### AI Features (OCR Only)
+- **1 Google AI API Key**: Currently configured and operational  
+- **Receipt OCR**: Automatic receipt data extraction from photos
 - **Multi-Key Rotation**: Ready for additional keys (GOOGLE_AI_API_KEY_1, _2, _3)
+- **Smart Categorization**: ❌ **REMOVED** - Manual category selection only
 
 **🤖 For AI integration details and cost optimization, see [AI Integration Documentation](docs/ai-integration.md)**
 

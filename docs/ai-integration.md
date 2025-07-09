@@ -2,7 +2,7 @@
 
 ## Overview
 
-The application includes comprehensive AI features for expense categorization and receipt processing, powered by Google AI with a sophisticated multi-key rotation system for cost optimization.
+The application includes AI-powered receipt OCR processing, powered by Google AI with a sophisticated multi-key rotation system for cost optimization. **Note: AI expense categorization has been removed from the user interface.**
 
 ## AI Components
 
@@ -19,18 +19,18 @@ The application includes comprehensive AI features for expense categorization an
 - `src/app/api/ai/status/route.ts` - API route for API key monitoring and management
 
 ### Client Components
-- `src/hooks/use-expense-categorization.ts` - Client hook calling AI categorization API
+- `src/hooks/use-expense-categorization.ts` - ❌ **REMOVED** - AI categorization no longer available in UI
 - `src/hooks/use-receipt-ocr.ts` - Client hook calling AI OCR API
 - `src/hooks/use-api-key-monitor.ts` - Hook for monitoring API key status via API
 - `src/components/settings/api-key-monitor.tsx` - Real-time UI for API key management
 
 ## AI Features
 
-### Smart Expense Categorization
-- AI-powered category suggestions based on description and amount
-- Confidence scoring (0-1 scale) with visual indicators
-- Manual override system with fallback to rule-based categorization
-- Automatic application of high-confidence suggestions (>80%)
+### ❌ Smart Expense Categorization (REMOVED)
+- **Status**: Removed from user interface as of latest update
+- **Reason**: Streamlined user experience focusing on manual category selection
+- **API**: Backend endpoints still available but not exposed in UI
+- **Alternative**: Manual category selection with enhanced dropdown interface
 
 ### Receipt OCR Processing
 - Automatic extraction of amount, description, date, and merchant from receipts
@@ -83,10 +83,10 @@ GOOGLE_GENAI_API_KEY=your_alternative_api_key_name
 - Comprehensive error handling and logging
 
 ### API Endpoints
-- `POST /api/ai/categorize` - Expense categorization with fallback logic
-- `POST /api/ai/ocr` - Receipt OCR processing with confidence scoring
-- `GET /api/ai/status` - Real-time API key status and statistics
-- `POST /api/ai/status` - Manual API key reset and management
+- `POST /api/ai/categorize` - ❌ **Not exposed in UI** - Expense categorization with fallback logic
+- `POST /api/ai/ocr` - ✅ **Active** - Receipt OCR processing with confidence scoring
+- `GET /api/ai/status` - ✅ **Active** - Real-time API key status and statistics
+- `POST /api/ai/status` - ✅ **Active** - Manual API key reset and management
 
 ## Monitoring & Management
 
@@ -110,19 +110,19 @@ GOOGLE_GENAI_API_KEY=your_alternative_api_key_name
 - ✅ 1 Google AI API key configured and tested
 - ✅ Server successfully builds and runs with AI functionality
 - ✅ Receipt OCR processing working via API routes
-- ✅ Expense categorization working via API routes
+- ❌ **Expense categorization UI removed** - API endpoints remain but not exposed
 - ✅ Real-time monitoring dashboard operational
 - ✅ Automatic failover system ready for additional keys
 
 ### Performance & Costs
 - Typical OCR request: ~600 tokens input + ~100 tokens output = ~$0.000075
-- Categorization request: ~300 tokens input + ~50 tokens output = ~$0.00003
-- Monthly cost for 1000 receipts: ~$0.10 (distributed across keys)
+- ~~Categorization request: ~300 tokens input + ~50 tokens output = ~$0.00003~~ (UI removed)
+- Monthly cost for 1000 receipts: ~$0.075 (reduced cost with categorization UI removed)
 
 ### Error Recovery
 - Exponential backoff: 1s, 2s, 4s delays between retries
 - Conservative confidence scoring prevents unreliable data usage
-- Graceful degradation to rule-based categorization on AI failure
+- ~~Graceful degradation to rule-based categorization on AI failure~~ (categorization UI removed)
 - Comprehensive logging for debugging and monitoring
 
 ## Next Steps
