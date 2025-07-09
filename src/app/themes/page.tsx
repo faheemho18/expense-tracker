@@ -8,6 +8,8 @@ import { useLocalStorage } from "@/hooks/use-local-storage"
 import { DEFAULT_THEME, PRESETS } from "@/lib/constants"
 import type { Theme } from "@/lib/types"
 import { getThemeCssProperties } from "@/lib/theme-utils"
+import { useSettings } from "@/contexts/settings-context"
+import { getThemeVariant } from "@/lib/dark-mode-utils"
 
 import { AppLayout } from "@/components/app-layout"
 import { ThemePreview } from "@/components/themes/theme-preview"
@@ -29,10 +31,7 @@ import {
 import { toast } from "@/hooks/use-toast"
 
 export default function ThemesPage() {
-  const [savedTheme, setSavedTheme] = useLocalStorage<Theme>(
-    "app-theme",
-    DEFAULT_THEME
-  )
+  const { theme: savedTheme, setTheme: setSavedTheme, isDarkMode } = useSettings()
   const [draftTheme, setDraftTheme] = React.useState<Theme | null>(null)
   const [isConfirmOpen, setIsConfirmOpen] = React.useState(false)
 
@@ -43,10 +42,31 @@ export default function ThemesPage() {
     }
   }, [savedTheme])
 
-  const themeStyle = React.useMemo(() => {
-    if (!draftTheme) return {}
-    return getThemeCssProperties(draftTheme)
-  }, [draftTheme])
+  // Apply theme changes to the global theme system with dark mode support
+  React.useEffect(() => {
+    if (draftTheme) {
+      const root = document.documentElement
+      const themeVariant = getThemeVariant(draftTheme, isDarkMode)
+      const properties = getThemeCssProperties(themeVariant)
+      for (const [key, value] of Object.entries(properties)) {
+        root.style.setProperty(key, value as string)
+      }
+    }
+  }, [draftTheme, isDarkMode])
+
+  // Restore saved theme when component unmounts
+  React.useEffect(() => {
+    return () => {
+      if (savedTheme) {
+        const root = document.documentElement
+        const themeVariant = getThemeVariant(savedTheme, isDarkMode)
+        const properties = getThemeCssProperties(themeVariant)
+        for (const [key, value] of Object.entries(properties)) {
+          root.style.setProperty(key, value as string)
+        }
+      }
+    }
+  }, [savedTheme, isDarkMode])
 
   const handleColorChange = (
     colorType: "primary" | "background" | "accent",
@@ -164,7 +184,7 @@ export default function ThemesPage() {
             </Button>
           )}
         </div>
-        <div className="grid gap-8 lg:grid-cols-2" style={themeStyle}>
+        <div className="grid gap-8 lg:grid-cols-2">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
