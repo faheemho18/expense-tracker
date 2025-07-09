@@ -182,14 +182,14 @@ export function applyDarkModeClass(isDark: boolean): void {
  * Gets stored dark mode preference from localStorage
  */
 export function getStoredDarkModePreference(): DarkModePreference {
-  if (typeof window === 'undefined') return 'auto'
+  if (typeof window === 'undefined') return 'dark'
   
   const stored = localStorage.getItem('darkModePreference')
   if (stored === 'light' || stored === 'dark' || stored === 'auto') {
     return stored
   }
   
-  return 'auto'
+  return 'dark'
 }
 
 /**

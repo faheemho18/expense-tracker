@@ -95,7 +95,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   // Dark mode state
   const [darkModePreference, setDarkModePreferenceState] = useLocalStorage<DarkModePreference>(
     "darkModePreference", 
-    "auto"
+    "dark"
   )
 
   // Supabase hooks
