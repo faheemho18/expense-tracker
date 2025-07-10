@@ -1,13 +1,16 @@
 /**
- * Real-time Data Synchronization Service
+ * Real-time Data Synchronization Service - Enhanced with Auto-Sync Integration
  * 
  * Provides real-time data sync across devices using Supabase realtime subscriptions.
  * Handles conflict resolution, offline mode, and automatic reconnection.
+ * Now integrated with auto-sync manager for seamless offline-first experience.
  */
 
 import { supabase } from './supabase'
 import { Account, Category, Expense, Theme } from './types'
 import type { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js'
+import { autoSyncManager } from './auto-sync-manager'
+import { connectivityManager } from './connectivity-manager'
 
 export interface SyncEvent {
   table: string
@@ -22,6 +25,8 @@ export interface SyncStatus {
   lastSync: number | null
   pendingChanges: number
   conflictCount: number
+  autoSyncEnabled: boolean
+  isProcessing: boolean
 }
 
 export type SyncCallback = (event: SyncEvent) => void
@@ -44,19 +49,23 @@ export class RealtimeSyncService {
   private reconnectDelay = 1000 // Start with 1 second
 
   /**
-   * Initialize real-time sync for a user
+   * Initialize real-time sync - now works with auto-sync manager
    */
-  async initialize(userId: string): Promise<boolean> {
+  async initialize(userId: string | null = null): Promise<boolean> {
     if (!supabase) {
       console.warn('Supabase not configured - real-time sync disabled')
       return false
     }
 
-    this.userId = userId
+    // For shared usage, we don't need user-specific filtering
+    this.userId = userId || 'shared'
     this.cleanup() // Clean up any existing subscriptions
     
     try {
-      // Subscribe to all user's data tables
+      // Initialize auto-sync manager first
+      await autoSyncManager.initialize()
+      
+      // Subscribe to all data tables (no user filtering for shared usage)
       await this.subscribeToTable('accounts')
       await this.subscribeToTable('categories') 
       await this.subscribeToTable('expenses')
@@ -68,7 +77,7 @@ export class RealtimeSyncService {
       this.reconnectAttempts = 0
       this.updateStatus()
       
-      console.log('Real-time sync initialized for user:', userId)
+      console.log('Real-time sync initialized with auto-sync integration')
       return true
     } catch (error) {
       console.error('Failed to initialize real-time sync:', error)
@@ -78,12 +87,12 @@ export class RealtimeSyncService {
   }
 
   /**
-   * Subscribe to changes on a specific table
+   * Subscribe to changes on a specific table - simplified for shared usage
    */
   private async subscribeToTable(tableName: string): Promise<void> {
-    if (!supabase || !this.userId) return
+    if (!supabase) return
 
-    const channelName = `${tableName}_${this.userId}`
+    const channelName = `${tableName}_shared`
     
     // Remove existing subscription
     if (this.channels.has(channelName)) {
@@ -98,8 +107,8 @@ export class RealtimeSyncService {
         {
           event: '*',
           schema: 'public',
-          table: tableName,
-          filter: `user_id=eq.${this.userId}`
+          table: tableName
+          // No user filtering for shared usage
         },
         (payload: RealtimePostgresChangesPayload<any>) => {
           this.handleDatabaseChange(tableName, payload)
@@ -189,56 +198,38 @@ export class RealtimeSyncService {
   }
 
   /**
-   * Get current sync status
+   * Get current sync status - enhanced with auto-sync info
    */
-  getStatus(): SyncStatus {
+  async getStatus(): Promise<SyncStatus> {
+    // Get auto-sync status
+    const autoSyncStatus = await autoSyncManager.getStatus()
+    
     return {
       connected: this.isConnected,
       lastSync: this.lastSync,
-      pendingChanges: this.pendingChanges,
-      conflictCount: this.conflictCount
+      pendingChanges: autoSyncStatus.pendingOperations,
+      conflictCount: this.conflictCount,
+      autoSyncEnabled: autoSyncStatus.isEnabled,
+      isProcessing: autoSyncStatus.isRunning
     }
   }
 
   /**
-   * Manually trigger a full data sync
+   * Manually trigger a full data sync - now delegates to auto-sync manager
    */
   async fullSync(): Promise<void> {
-    if (!supabase || !this.userId) return
+    if (!supabase) return
 
     try {
-      this.pendingChanges++
-      this.updateStatus()
-
-      // Fetch latest data from all tables
-      const [accounts, categories, expenses, themes] = await Promise.all([
-        supabase.from('accounts').select('*').eq('user_id', this.userId),
-        supabase.from('categories').select('*').eq('user_id', this.userId),
-        supabase.from('expenses').select('*').eq('user_id', this.userId),
-        supabase.from('themes').select('*').eq('user_id', this.userId)
-      ])
-
-      // Trigger sync events for each table
-      if (accounts.data) {
-        this.triggerSyncEvent('accounts', 'UPDATE', accounts.data)
-      }
-      if (categories.data) {
-        this.triggerSyncEvent('categories', 'UPDATE', categories.data)
-      }
-      if (expenses.data) {
-        this.triggerSyncEvent('expenses', 'UPDATE', expenses.data)
-      }
-      if (themes.data) {
-        this.triggerSyncEvent('themes', 'UPDATE', themes.data)
-      }
-
+      // Force auto-sync to process all pending operations
+      await autoSyncManager.forceSync()
+      
       this.lastSync = Date.now()
-      this.pendingChanges = Math.max(0, this.pendingChanges - 1)
       this.updateStatus()
 
+      console.log('Full sync completed via auto-sync manager')
     } catch (error) {
       console.error('Full sync failed:', error)
-      this.pendingChanges = Math.max(0, this.pendingChanges - 1)
       this.updateStatus()
     }
   }
@@ -318,15 +309,19 @@ export class RealtimeSyncService {
   /**
    * Update sync status and notify callbacks
    */
-  private updateStatus(): void {
-    const status = this.getStatus()
-    this.statusCallbacks.forEach(callback => {
-      try {
-        callback(status)
-      } catch (error) {
-        console.error('Error in status callback:', error)
-      }
-    })
+  private async updateStatus(): Promise<void> {
+    try {
+      const status = await this.getStatus()
+      this.statusCallbacks.forEach(callback => {
+        try {
+          callback(status)
+        } catch (error) {
+          console.error('Error in status callback:', error)
+        }
+      })
+    } catch (error) {
+      console.error('Error getting sync status:', error)
+    }
   }
 
   /**
@@ -343,6 +338,9 @@ export class RealtimeSyncService {
     this.callbacks.clear()
     this.isConnected = false
     this.userId = null
+    
+    // Cleanup auto-sync manager
+    autoSyncManager.cleanup()
   }
 
   /**

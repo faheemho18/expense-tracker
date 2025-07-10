@@ -3,82 +3,27 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
-import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Separator } from "@/components/ui/separator"
+import { Badge } from "@/components/ui/badge"
 import { 
-  Cloud, 
   HardDrive, 
   Download, 
-  Upload, 
-  Check, 
   X, 
   AlertCircle, 
   RefreshCw,
   Database,
   Wifi,
-  WifiOff
+  WifiOff,
+  Check
 } from "lucide-react"
-import { migrateData } from "@/lib/data-migration"
 import { runHealthCheck } from "@/lib/supabase-test"
-import { dataService } from "@/lib/supabase-data-service"
 import { useDataSourceStatus, useDataSync } from "@/hooks/use-supabase-data"
-import { SyncControls } from "@/components/sync/sync-status-indicator"
-import { useSettings } from "@/contexts/settings-context"
-
-interface MigrationStep {
-  id: string
-  title: string
-  description: string
-  status: 'pending' | 'running' | 'completed' | 'error'
-  error?: string
-}
+import { AutoSyncStatus } from "@/components/settings/auto-sync-status"
+import { autoSyncManager } from "@/lib/auto-sync-manager"
 
 export function DataMigration() {
-  const { 
-    isRealtimeSyncEnabled, 
-    isRealtimeSyncActive, 
-    enableRealtimeSync, 
-    disableRealtimeSync 
-  } = useSettings()
-  
-  const [migrationSteps, setMigrationSteps] = useState<MigrationStep[]>([
-    {
-      id: 'health-check',
-      title: 'Supabase Health Check',
-      description: 'Verify database connection and schema',
-      status: 'pending'
-    },
-    {
-      id: 'accounts',
-      title: 'Migrate Accounts',
-      description: 'Transfer account data to Supabase',
-      status: 'pending'
-    },
-    {
-      id: 'categories',
-      title: 'Migrate Categories',
-      description: 'Transfer category data to Supabase',
-      status: 'pending'
-    },
-    {
-      id: 'themes',
-      title: 'Migrate Theme',
-      description: 'Transfer theme settings to Supabase',
-      status: 'pending'
-    },
-    {
-      id: 'expenses',
-      title: 'Migrate Expenses',
-      description: 'Transfer all expense records to Supabase',
-      status: 'pending'
-    }
-  ])
-
-  const [isRunning, setIsRunning] = useState(false)
   const [healthStatus, setHealthStatus] = useState<any>(null)
-  const [dataSource, setDataSource] = useState<'localStorage' | 'supabase'>('localStorage')
   
   const sourceStatus = useDataSourceStatus()
   const { loading: syncLoading, error: syncError, syncAll } = useDataSync()
@@ -97,63 +42,6 @@ export function DataMigration() {
     }
   }
 
-  const updateStep = (id: string, updates: Partial<MigrationStep>) => {
-    setMigrationSteps(prev => prev.map(step => 
-      step.id === id ? { ...step, ...updates } : step
-    ))
-  }
-
-  const runMigration = async () => {
-    setIsRunning(true)
-    
-    try {
-      // Step 1: Health Check
-      updateStep('health-check', { status: 'running' })
-      await checkHealth()
-      
-      if (!healthStatus?.overall) {
-        updateStep('health-check', { 
-          status: 'error', 
-          error: 'Supabase health check failed. Please check your configuration.' 
-        })
-        return
-      }
-      
-      updateStep('health-check', { status: 'completed' })
-      
-      // Step 2-5: Run the actual migration
-      updateStep('accounts', { status: 'running' })
-      updateStep('categories', { status: 'running' })
-      updateStep('themes', { status: 'running' })
-      updateStep('expenses', { status: 'running' })
-      
-      await migrateData()
-      
-      // Mark all as completed (in real scenario, we'd track each step individually)
-      updateStep('accounts', { status: 'completed' })
-      updateStep('categories', { status: 'completed' })
-      updateStep('themes', { status: 'completed' })
-      updateStep('expenses', { status: 'completed' })
-      
-    } catch (error) {
-      console.error('Migration failed:', error)
-      const currentRunning = migrationSteps.find(s => s.status === 'running')
-      if (currentRunning) {
-        updateStep(currentRunning.id, { 
-          status: 'error', 
-          error: error instanceof Error ? error.message : 'Unknown error' 
-        })
-      }
-    } finally {
-      setIsRunning(false)
-    }
-  }
-
-  const toggleDataSource = () => {
-    const newSource = dataSource === 'localStorage' ? 'supabase' : 'localStorage'
-    setDataSource(newSource)
-    dataService.updateConfig({ primarySource: newSource })
-  }
 
   const exportData = () => {
     // Get all localStorage data
@@ -176,8 +64,6 @@ export function DataMigration() {
     URL.revokeObjectURL(url)
   }
 
-  const completedSteps = migrationSteps.filter(s => s.status === 'completed').length
-  const progress = (completedSteps / migrationSteps.length) * 100
 
   return (
     <div className="space-y-6">
@@ -198,7 +84,6 @@ export function DataMigration() {
               variant="outline"
               size="sm"
               onClick={checkHealth}
-              disabled={isRunning}
             >
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
@@ -236,104 +121,80 @@ export function DataMigration() {
           
           <Separator />
           
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="font-medium">Primary Data Source</div>
-              <div className="text-sm text-muted-foreground">
-                Currently using {sourceStatus.currentSource}
-              </div>
+          <div>
+            <div className="font-medium">Primary Data Source</div>
+            <div className="text-sm text-muted-foreground">
+              Currently using {sourceStatus.currentSource} with automatic synchronization
             </div>
-            <Button
-              variant="outline"
-              onClick={toggleDataSource}
-              disabled={!sourceStatus.supabaseAvailable}
-            >
-              Switch to {dataSource === 'localStorage' ? 'Supabase' : 'Local Storage'}
-            </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Real-time Sync Section */}
+      {/* Automatic Sync Status Section */}
       {sourceStatus.supabaseAvailable && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Wifi className="h-5 w-5" />
-              Real-time Synchronization
+              Automatic Synchronization
             </CardTitle>
             <CardDescription>
-              Enable real-time data sync across all your devices for instant updates
+              Your data syncs automatically across all devices - no setup required
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <div className="font-medium">Sync Status</div>
-                <div className="text-sm text-muted-foreground">
-                  Real-time sync is {isRealtimeSyncEnabled ? 'enabled' : 'disabled'}
-                  {isRealtimeSyncActive && ' and active'}
-                </div>
-              </div>
-              <SyncControls />
-            </div>
+            <AutoSyncStatus />
             
             <Separator />
             
             <div className="flex items-center justify-between">
               <div>
-                <div className="font-medium">Enable Real-time Sync</div>
+                <div className="font-medium">Force Sync</div>
                 <div className="text-sm text-muted-foreground">
-                  Automatically sync changes across all your devices
+                  Manually trigger immediate sync (optional)
                 </div>
               </div>
               <Button
-                variant={isRealtimeSyncEnabled ? "destructive" : "default"}
-                onClick={isRealtimeSyncEnabled ? disableRealtimeSync : enableRealtimeSync}
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    await autoSyncManager.forceSync()
+                    console.log('Force sync completed')
+                  } catch (error) {
+                    console.error('Force sync failed:', error)
+                  }
+                }}
                 disabled={!sourceStatus.supabaseAvailable}
               >
-                {isRealtimeSyncEnabled ? 'Disable' : 'Enable'} Sync
+                Sync Now
               </Button>
             </div>
 
-            {isRealtimeSyncEnabled && (
-              <Alert>
-                <Wifi className="h-4 w-4" />
-                <AlertTitle>Real-time Sync Active</AlertTitle>
-                <AlertDescription>
-                  Your data will automatically sync across all devices when changes are made.
-                  You can see the sync status in the header bar.
-                </AlertDescription>
-              </Alert>
-            )}
+            <Alert>
+              <Wifi className="h-4 w-4" />
+              <AlertTitle>Always On</AlertTitle>
+              <AlertDescription>
+                Automatic sync runs in the background. Your changes are saved locally instantly 
+                and uploaded to the cloud when you're online.
+              </AlertDescription>
+            </Alert>
           </CardContent>
         </Card>
       )}
 
-      {/* Migration Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Cloud className="h-5 w-5" />
-            Migrate to Supabase
-          </CardTitle>
-          <CardDescription>
-            Transfer your local data to Supabase for cloud storage and multi-device access
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {!sourceStatus.supabaseAvailable && (
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Supabase Not Available</AlertTitle>
-              <AlertDescription>
-                Please configure your Supabase environment variables before migrating.
-                Check your .env.local file for NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {healthStatus && !healthStatus.overall && (
+      {/* Troubleshooting Section */}
+      {healthStatus && !healthStatus.overall && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5" />
+              Connection Troubleshooting
+            </CardTitle>
+            <CardDescription>
+              Resolve Supabase configuration issues
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
             <Alert variant="destructive">
               <X className="h-4 w-4" />
               <AlertTitle>Configuration Issues</AlertTitle>
@@ -383,53 +244,23 @@ export function DataMigration() {
                 )}
               </AlertDescription>
             </Alert>
-          )}
+          </CardContent>
+        </Card>
+      )}
 
-          {isRunning && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Migration Progress</span>
-                <span className="text-sm text-muted-foreground">{completedSteps}/{migrationSteps.length}</span>
-              </div>
-              <Progress value={progress} />
-            </div>
-          )}
-
-          <div className="space-y-3">
-            {migrationSteps.map((step) => (
-              <div key={step.id} className="flex items-center gap-3 p-3 rounded-lg border">
-                <div className="flex-shrink-0">
-                  {step.status === 'completed' && <Check className="h-5 w-5 text-green-500" />}
-                  {step.status === 'error' && <X className="h-5 w-5 text-red-500" />}
-                  {step.status === 'running' && <RefreshCw className="h-5 w-5 animate-spin text-blue-500" />}
-                  {step.status === 'pending' && <div className="h-5 w-5 rounded-full border-2 border-muted" />}
-                </div>
-                <div className="flex-1">
-                  <div className="font-medium">{step.title}</div>
-                  <div className="text-sm text-muted-foreground">{step.description}</div>
-                  {step.error && (
-                    <div className="text-sm text-red-500 mt-1">{step.error}</div>
-                  )}
-                </div>
-                <Badge variant={
-                  step.status === 'completed' ? 'default' :
-                  step.status === 'error' ? 'destructive' :
-                  step.status === 'running' ? 'secondary' : 'outline'
-                }>
-                  {step.status}
-                </Badge>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex gap-2">
-            <Button
-              onClick={runMigration}
-              disabled={!sourceStatus.supabaseAvailable || isRunning}
-              className="flex-1"
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              {isRunning ? 'Migrating...' : 'Start Migration'}
+      {/* Data Management */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Data Management</CardTitle>
+          <CardDescription>
+            Export your data and manage sync operations
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <Button variant="outline" onClick={exportData}>
+              <Download className="h-4 w-4 mr-2" />
+              Export Backup
             </Button>
             <Button
               variant="outline"
@@ -437,37 +268,16 @@ export function DataMigration() {
               disabled={syncLoading}
             >
               <RefreshCw className={`h-4 w-4 mr-2 ${syncLoading ? 'animate-spin' : ''}`} />
-              Sync All
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Data Management */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Data Management</CardTitle>
-          <CardDescription>
-            Export, import, and manage your expense data
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <Button variant="outline" onClick={exportData}>
-              <Download className="h-4 w-4 mr-2" />
-              Export Data
-            </Button>
-            <Button variant="outline" disabled>
-              <Upload className="h-4 w-4 mr-2" />
-              Import Data
+              Force Sync
             </Button>
           </div>
           
           <Alert>
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Data Safety</AlertTitle>
+            <AlertTitle>Automatic Sync Active</AlertTitle>
             <AlertDescription>
-              Your local data will be preserved during migration. We recommend exporting a backup before proceeding.
+              Your data syncs automatically in the background. Export creates a local backup file, 
+              and Force Sync manually triggers immediate synchronization.
             </AlertDescription>
           </Alert>
         </CardContent>

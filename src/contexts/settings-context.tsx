@@ -12,6 +12,7 @@ import {
 } from "@/hooks/use-supabase-data"
 import { useAuthDataService } from "@/hooks/use-auth-data-service"
 import { useRealtimeSync } from "@/hooks/use-realtime-sync"
+import { autoSyncManager, AutoSyncStatus } from "@/lib/auto-sync-manager"
 import {
   DEFAULT_ACCOUNTS,
   DEFAULT_CATEGORIES,
@@ -58,11 +59,18 @@ interface SettingsContextType {
   syncData: () => Promise<void>
   clearCache: () => void
   
-  // Real-time sync
+  // Real-time sync (legacy - kept for backward compatibility)
   isRealtimeSyncEnabled: boolean
   isRealtimeSyncActive: boolean
   enableRealtimeSync: () => void
   disableRealtimeSync: () => void
+  
+  // Auto-sync status (simplified)
+  isOnline: boolean
+  pendingCount: number
+  lastSync: Date | null
+  autoSyncStatus: AutoSyncStatus | null
+  forceSync: () => Promise<void>
 }
 
 const SettingsContext = React.createContext<SettingsContextType | undefined>(
@@ -75,7 +83,11 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   // Data service configuration
   const { config, updateConfig, clearCache } = useDataServiceConfig()
   
-  // Real-time sync integration
+  // Auto-sync status state
+  const [autoSyncStatus, setAutoSyncStatus] = React.useState<AutoSyncStatus | null>(null)
+  const [isAutoSyncInitialized, setIsAutoSyncInitialized] = React.useState(false)
+  
+  // Real-time sync integration (legacy support)
   const { isActive: isRealtimeSyncActive, start: startRealtimeSync, stop: stopRealtimeSync } = useRealtimeSync({
     autoInit: config.primarySource === 'supabase' && isAuthenticated,
     pauseOnHidden: true
@@ -191,6 +203,22 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     stopRealtimeSync()
   }, [updateConfig, stopRealtimeSync])
 
+  // Auto-sync force sync function
+  const forceSync = React.useCallback(async () => {
+    try {
+      await autoSyncManager.forceSync()
+      console.log('Force sync completed')
+    } catch (error) {
+      console.error('Force sync failed:', error)
+      throw error
+    }
+  }, [])
+
+  // Simplified auto-sync status derivations
+  const isOnline = autoSyncStatus?.connectivity?.isOnline && autoSyncStatus?.connectivity?.isDatabaseReachable
+  const pendingCount = autoSyncStatus?.pendingOperations || 0
+  const lastSync = autoSyncStatus?.lastSuccessfulSync ? new Date(autoSyncStatus.lastSuccessfulSync) : null
+
   // Apply theme to DOM
   React.useEffect(() => {
     if (theme) {
@@ -218,6 +246,66 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     }
   }, [darkModePreference, setDarkModePreferenceState])
 
+  // Auto-initialize sync manager
+  React.useEffect(() => {
+    let mounted = true
+
+    const initializeAutoSync = async () => {
+      if (isAutoSyncInitialized) return
+
+      try {
+        const initialized = await autoSyncManager.initialize()
+        if (mounted) {
+          setIsAutoSyncInitialized(initialized)
+          console.log('Auto-sync manager initialized:', initialized)
+        }
+      } catch (error) {
+        console.error('Failed to initialize auto-sync manager:', error)
+      }
+    }
+
+    initializeAutoSync()
+
+    return () => {
+      mounted = false
+    }
+  }, [isAutoSyncInitialized])
+
+  // Subscribe to auto-sync status updates
+  React.useEffect(() => {
+    if (!isAutoSyncInitialized) return
+
+    let mounted = true
+
+    const updateAutoSyncStatus = async () => {
+      if (!mounted) return
+      
+      try {
+        const status = await autoSyncManager.getStatus()
+        setAutoSyncStatus(status)
+      } catch (error) {
+        console.error('Error getting auto-sync status:', error)
+      }
+    }
+
+    // Initial status update
+    updateAutoSyncStatus()
+
+    // Subscribe to status changes
+    const unsubscribe = autoSyncManager.onStatusChange(() => {
+      updateAutoSyncStatus()
+    })
+
+    // Periodic status updates
+    const interval = setInterval(updateAutoSyncStatus, 10000) // Every 10 seconds
+
+    return () => {
+      mounted = false
+      unsubscribe()
+      clearInterval(interval)
+    }
+  }, [isAutoSyncInitialized])
+
   const value = React.useMemo(
     () => ({
       // Data
@@ -243,11 +331,18 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       syncData,
       clearCache,
       
-      // Real-time sync
+      // Real-time sync (legacy - kept for backward compatibility)
       isRealtimeSyncEnabled: config.enableRealTimeSync,
       isRealtimeSyncActive,
       enableRealtimeSync,
       disableRealtimeSync,
+      
+      // Auto-sync status (simplified)
+      isOnline: isOnline || false,
+      pendingCount,
+      lastSync,
+      autoSyncStatus,
+      forceSync,
     }),
     [
       categories,
@@ -269,6 +364,11 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       isRealtimeSyncActive,
       enableRealtimeSync,
       disableRealtimeSync,
+      isOnline,
+      pendingCount,
+      lastSync,
+      autoSyncStatus,
+      forceSync,
     ]
   )
 
