@@ -4,7 +4,7 @@
 import * as React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { format } from "date-fns"
-import { CalendarIcon, Loader2, Camera, Scan } from "lucide-react"
+import { CalendarIcon, Loader2, Camera, Scan, RotateCcw } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
@@ -13,6 +13,7 @@ import type { Expense } from "@/lib/types"
 import { cn, getIcon } from "@/lib/utils"
 import { useReceiptOCR } from "@/hooks/use-receipt-ocr"
 import { useIsMobile, useHapticFeedback } from "@/hooks/use-mobile"
+import { useCameraSelection } from "@/hooks/use-camera-selection"
 import { TOUCH_CLASSES, MOBILE_SPACING } from "@/utils/mobile-utils"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -84,9 +85,16 @@ export function AddExpenseSheet({
 
   const videoRef = React.useRef<HTMLVideoElement>(null)
   const [showCamera, setShowCamera] = React.useState(false)
-  const [hasCameraPermission, setHasCameraPermission] = React.useState<
-    boolean | null
-  >(null)
+  const {
+    stream,
+    currentFacing,
+    hasPermission,
+    isLoading: isCameraLoading,
+    error: cameraError,
+    startCamera,
+    stopCamera,
+    switchCamera
+  } = useCameraSelection()
 
   const isEditMode = !!expenseToEdit
 
@@ -127,43 +135,31 @@ export function AddExpenseSheet({
   }, [isOpen, isEditMode, expenseToEdit, form])
 
   React.useEffect(() => {
-    let stream: MediaStream | null = null
-    const getCamera = async () => {
-      try {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-          throw new Error("Camera not supported by this browser.")
-        }
-        stream = await navigator.mediaDevices.getUserMedia({ video: true })
-        setHasCameraPermission(true)
-
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream
-        }
-      } catch (error) {
-        console.error("Error accessing camera:", error)
-        setHasCameraPermission(false)
-        toast({
-          variant: "destructive",
-          title: "Camera Access Denied",
-          description:
-            "Please enable camera permissions in your browser settings.",
-        })
-      }
+    if (isOpen && showCamera && !stream) {
+      // Start with rear camera (environment) by default
+      startCamera("environment")
     }
 
-    if (isOpen && showCamera) {
-      getCamera()
+    if (!showCamera && stream) {
+      stopCamera()
     }
+  }, [isOpen, showCamera, stream, startCamera, stopCamera])
 
-    return () => {
-      if (stream) {
-        stream.getTracks().forEach((track) => track.stop())
-      }
-      if (videoRef.current) {
-        videoRef.current.srcObject = null
-      }
+  React.useEffect(() => {
+    if (stream && videoRef.current) {
+      videoRef.current.srcObject = stream
     }
-  }, [isOpen, showCamera])
+  }, [stream])
+
+  React.useEffect(() => {
+    if (cameraError && showCamera) {
+      toast({
+        variant: "destructive",
+        title: "Camera Access Error",
+        description: cameraError,
+      })
+    }
+  }, [cameraError, showCamera])
 
   const onSubmit = (values: ExpenseFormValues) => {
     // Haptic feedback for mobile
@@ -225,7 +221,7 @@ export function AddExpenseSheet({
     }
     
     const video = videoRef.current
-    if (video) {
+    if (video && stream) {
       const canvas = document.createElement("canvas")
       canvas.width = video.videoWidth
       canvas.height = video.videoHeight
@@ -239,6 +235,21 @@ export function AddExpenseSheet({
         // Automatically process the receipt
         handleReceiptProcessing(dataUrl)
       }
+    }
+  }
+
+  const handleCameraSwitch = async () => {
+    if (isMobile) {
+      vibrate(50)
+    }
+    try {
+      await switchCamera()
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Camera Switch Failed",
+        description: "Unable to switch camera. Please try again.",
+      })
     }
   }
 
@@ -669,7 +680,7 @@ export function AddExpenseSheet({
                               muted
                               playsInline
                             />
-                            {hasCameraPermission === false && (
+                            {hasPermission === false && (
                               <Alert variant="destructive" className={cn(
                                 isMobile ? "p-4" : "p-3"
                               )}>
@@ -681,32 +692,54 @@ export function AddExpenseSheet({
                                 <AlertDescription className={cn(
                                   isMobile ? "text-sm" : "text-xs"
                                 )}>
-                                  Please allow camera access to use this feature.
+                                  {cameraError || "Please allow camera access to use this feature."}
                                 </AlertDescription>
                               </Alert>
                             )}
-                            {hasCameraPermission && (
+                            {hasPermission && stream && (
                               <div className={cn(
-                                "flex gap-2",
-                                isMobile ? "flex-col space-y-2" : "flex-row"
+                                "space-y-2"
                               )}>
-                                <Button
-                                  type="button"
-                                  onClick={handleCapture}
-                                  className={cn(
-                                    "flex-1",
-                                    TOUCH_CLASSES.TOUCH_TARGET,
-                                    TOUCH_CLASSES.TOUCH_FEEDBACK,
-                                    isMobile ? "h-12 text-base" : "text-sm"
-                                  )}
-                                  disabled={isPending || !hasCameraPermission}
-                                >
-                                  <Camera className={cn(
-                                    "mr-2",
-                                    isMobile ? "h-5 w-5" : "h-4 w-4"
-                                  )} />
-                                  Take Picture
-                                </Button>
+                                <div className={cn(
+                                  "flex gap-2",
+                                  isMobile ? "flex-col space-y-2" : "flex-row"
+                                )}>
+                                  <Button
+                                    type="button"
+                                    onClick={handleCapture}
+                                    className={cn(
+                                      "flex-1",
+                                      TOUCH_CLASSES.TOUCH_TARGET,
+                                      TOUCH_CLASSES.TOUCH_FEEDBACK,
+                                      isMobile ? "h-12 text-base" : "text-sm"
+                                    )}
+                                    disabled={isPending || isCameraLoading}
+                                  >
+                                    <Camera className={cn(
+                                      "mr-2",
+                                      isMobile ? "h-5 w-5" : "h-4 w-4"
+                                    )} />
+                                    Take Picture
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={handleCameraSwitch}
+                                    className={cn(
+                                      TOUCH_CLASSES.TOUCH_TARGET,
+                                      TOUCH_CLASSES.TOUCH_FEEDBACK,
+                                      isMobile ? "h-12 text-base" : "text-sm"
+                                    )}
+                                    disabled={isPending || isCameraLoading}
+                                    title={`Switch to ${currentFacing === "environment" ? "front" : "rear"} camera`}
+                                  >
+                                    <RotateCcw className={cn(
+                                      "mr-2",
+                                      isMobile ? "h-5 w-5" : "h-4 w-4"
+                                    )} />
+                                    {currentFacing === "environment" ? "Front" : "Rear"}
+                                  </Button>
+                                </div>
                                 <Button
                                   type="button"
                                   variant="outline"
@@ -717,6 +750,7 @@ export function AddExpenseSheet({
                                     }
                                   }}
                                   className={cn(
+                                    "w-full",
                                     isMobile ? "h-12 text-base" : "text-sm",
                                     TOUCH_CLASSES.TOUCH_TARGET,
                                     TOUCH_CLASSES.TOUCH_FEEDBACK
@@ -750,7 +784,9 @@ export function AddExpenseSheet({
                                 type="button"
                                 variant="outline"
                                 onClick={() => {
-                                  handleReceiptProcessing(field.value)
+                                  if (field.value) {
+                                    handleReceiptProcessing(field.value)
+                                  }
                                   if (isMobile) {
                                     vibrate(100)
                                   }
