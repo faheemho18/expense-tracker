@@ -1,12 +1,15 @@
 /**
- * Supabase Data Service
+ * Supabase Data Service - Enhanced with Offline-First Support
  * 
  * Provides bidirectional data synchronization between localStorage and Supabase.
  * Handles CRUD operations for all data types with proper error handling and caching.
+ * Now includes automatic offline queue and connectivity management.
  */
 
 import { supabase } from './supabase'
 import { Account, Category, Expense, Theme, HSLColor, User } from './types'
+import { offlineQueue, QueueUtils } from './offline-queue'
+import { connectivityManager } from './connectivity-manager'
 
 export type DataSource = 'localStorage' | 'supabase'
 
@@ -32,6 +35,8 @@ export interface DataServiceConfig {
   primarySource: DataSource
   fallbackToSecondary: boolean
   enableRealTimeSync: boolean
+  enableOfflineQueue: boolean // NEW: Enable automatic offline queue
+  autoSyncInterval: number // NEW: Auto-sync interval in milliseconds
   cacheTimeout: number // in milliseconds
 }
 
@@ -39,6 +44,8 @@ const DEFAULT_CONFIG: DataServiceConfig = {
   primarySource: 'localStorage',
   fallbackToSecondary: true,
   enableRealTimeSync: false,
+  enableOfflineQueue: true, // Enable offline-first by default
+  autoSyncInterval: 10000, // 10 seconds
   cacheTimeout: 5 * 60 * 1000, // 5 minutes
 }
 
@@ -79,13 +86,15 @@ class DataCache {
 }
 
 /**
- * Main data service class
+ * Main data service class - Enhanced with Offline-First Support
  */
 export class SupabaseDataService {
   private config: DataServiceConfig
   private cache: DataCache
   private isSupabaseEnabled: boolean
   private userId: string | null = null
+  private isInitialized: boolean = false
+  private autoSyncTimer: NodeJS.Timeout | null = null
 
   constructor(config: Partial<DataServiceConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config }
@@ -96,7 +105,300 @@ export class SupabaseDataService {
     if (!this.isSupabaseEnabled) {
       this.config.primarySource = 'localStorage'
       this.config.fallbackToSecondary = false
+      this.config.enableOfflineQueue = false
     }
+  }
+
+  /**
+   * Initialize offline-first capabilities
+   */
+  async initialize(): Promise<void> {
+    if (this.isInitialized) return
+
+    try {
+      // Initialize offline queue if enabled
+      if (this.config.enableOfflineQueue) {
+        await offlineQueue.initialize()
+        console.log('Offline queue initialized')
+      }
+
+      // Initialize connectivity manager
+      await connectivityManager.initialize()
+      console.log('Connectivity manager initialized')
+
+      // Start auto-sync if offline queue is enabled
+      if (this.config.enableOfflineQueue) {
+        this.startAutoSync()
+      }
+
+      this.isInitialized = true
+      console.log('Data service initialized with offline-first support')
+    } catch (error) {
+      console.error('Failed to initialize data service:', error)
+      // Continue without offline features
+      this.isInitialized = true
+    }
+  }
+
+  /**
+   * Start automatic sync process
+   */
+  private startAutoSync(): void {
+    if (this.autoSyncTimer) {
+      clearInterval(this.autoSyncTimer)
+    }
+
+    this.autoSyncTimer = setInterval(async () => {
+      try {
+        await this.processOfflineQueue()
+      } catch (error) {
+        console.error('Auto-sync error:', error)
+      }
+    }, this.config.autoSyncInterval)
+
+    console.log(`Auto-sync started with ${this.config.autoSyncInterval / 1000}s interval`)
+  }
+
+  /**
+   * Process pending offline queue operations
+   */
+  async processOfflineQueue(): Promise<void> {
+    if (!this.config.enableOfflineQueue || !connectivityManager.canAttemptOperations()) {
+      return
+    }
+
+    try {
+      const pendingOps = await offlineQueue.getPending()
+      if (pendingOps.length === 0) return
+
+      console.log(`Processing ${pendingOps.length} pending operations`)
+      offlineQueue.setProcessing(true)
+
+      // Deduplicate operations to optimize processing
+      await offlineQueue.deduplicateOperations()
+      const deduplicatedOps = await offlineQueue.getPending()
+
+      // Process operations in batches
+      for (const operation of deduplicatedOps) {
+        try {
+          await this.executeQueuedOperation(operation)
+          await offlineQueue.remove(operation.id)
+          console.log(`Completed operation: ${operation.type} ${operation.table}`)
+        } catch (error) {
+          console.error(`Failed to execute operation ${operation.id}:`, error)
+          
+          // Update retry count and error
+          operation.retryCount++
+          operation.lastError = error instanceof Error ? error.message : 'Unknown error'
+          
+          if (QueueUtils.canRetry(operation)) {
+            await offlineQueue.update(operation)
+          } else {
+            console.error(`Max retries exceeded for operation ${operation.id}, removing from queue`)
+            await offlineQueue.remove(operation.id)
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error processing offline queue:', error)
+    } finally {
+      offlineQueue.setProcessing(false)
+    }
+  }
+
+  /**
+   * Execute a queued operation
+   */
+  private async executeQueuedOperation(operation: any): Promise<void> {
+    if (!supabase) {
+      throw new Error('Supabase not available')
+    }
+
+    const { type, table, data } = operation
+
+    switch (type) {
+      case 'INSERT':
+        await supabase.from(table).insert(data)
+        break
+      
+      case 'UPDATE':
+        await supabase.from(table).update(data).eq('id', data.id)
+        break
+      
+      case 'DELETE':
+        await supabase.from(table).delete().eq('id', data.id)
+        break
+      
+      default:
+        throw new Error(`Unknown operation type: ${type}`)
+    }
+  }
+
+  /**
+   * Enhanced write operation with offline queue support
+   */
+  private async writeWithOfflineSupport<T>(
+    table: string,
+    operation: 'INSERT' | 'UPDATE' | 'DELETE',
+    data: T,
+    originalData?: T
+  ): Promise<DataServiceResult<T>> {
+    // Always update localStorage immediately for instant UI updates
+    await this.updateLocalStorage(table, operation, data)
+
+    // If we have connectivity, try to write to Supabase immediately
+    if (connectivityManager.canAttemptOperations()) {
+      try {
+        const result = await this.executeSupabaseOperation(table, operation, data)
+        return { data: result, error: null, source: 'supabase' }
+      } catch (error) {
+        console.warn(`Direct Supabase write failed, queuing for later:`, error)
+        // Fall through to queue the operation
+      }
+    }
+
+    // Queue the operation for later if offline or direct write failed
+    if (this.config.enableOfflineQueue) {
+      try {
+        const queueOp = this.createQueueOperation(table, operation, data, originalData)
+        await offlineQueue.add(queueOp)
+        console.log(`Operation queued: ${operation} ${table}`)
+      } catch (error) {
+        console.error('Failed to queue operation:', error)
+        return { data: null, error: error as Error, source: 'localStorage' }
+      }
+    }
+
+    return { data: data, error: null, source: 'localStorage' }
+  }
+
+  /**
+   * Execute Supabase operation directly
+   */
+  private async executeSupabaseOperation<T>(
+    table: string,
+    operation: 'INSERT' | 'UPDATE' | 'DELETE',
+    data: T
+  ): Promise<T> {
+    if (!supabase) {
+      throw new Error('Supabase not available')
+    }
+
+    let query: any
+    
+    switch (operation) {
+      case 'INSERT':
+        query = supabase.from(table).insert(data).select()
+        break
+      
+      case 'UPDATE':
+        query = supabase.from(table).update(data).eq('id', (data as any).id).select()
+        break
+      
+      case 'DELETE':
+        query = supabase.from(table).delete().eq('id', (data as any).id).select()
+        break
+      
+      default:
+        throw new Error(`Unknown operation: ${operation}`)
+    }
+
+    const { data: result, error } = await query
+
+    if (error) {
+      throw new Error(`Supabase ${operation} failed: ${error.message}`)
+    }
+
+    return operation === 'DELETE' ? data : (result?.[0] || data)
+  }
+
+  /**
+   * Update localStorage immediately for UI responsiveness
+   */
+  private async updateLocalStorage<T>(
+    table: string,
+    operation: 'INSERT' | 'UPDATE' | 'DELETE',
+    data: T
+  ): Promise<void> {
+    try {
+      const storageKey = this.getStorageKey(table)
+      const existingData = this.getLocalStorageData<T>(table)
+      let updatedData = [...existingData]
+
+      switch (operation) {
+        case 'INSERT':
+          updatedData.push(data)
+          break
+        
+        case 'UPDATE':
+          const updateIndex = updatedData.findIndex((item: any) => item.id === (data as any).id)
+          if (updateIndex !== -1) {
+            updatedData[updateIndex] = data
+          }
+          break
+        
+        case 'DELETE':
+          updatedData = updatedData.filter((item: any) => item.id !== (data as any).id)
+          break
+      }
+
+      localStorage.setItem(storageKey, JSON.stringify(updatedData))
+      this.cache.invalidate(table)
+    } catch (error) {
+      console.error(`Failed to update localStorage for ${table}:`, error)
+    }
+  }
+
+  /**
+   * Create queue operation from data
+   */
+  private createQueueOperation<T>(
+    table: string,
+    operation: 'INSERT' | 'UPDATE' | 'DELETE',
+    data: T,
+    originalData?: T
+  ): Omit<any, 'id' | 'timestamp' | 'retryCount'> {
+    switch (operation) {
+      case 'INSERT':
+        return QueueUtils.createInsertOperation(table, data, this.userId || undefined)
+      
+      case 'UPDATE':
+        return QueueUtils.createUpdateOperation(table, data, originalData, this.userId || undefined)
+      
+      case 'DELETE':
+        return QueueUtils.createDeleteOperation(table, data, this.userId || undefined)
+      
+      default:
+        throw new Error(`Unknown operation: ${operation}`)
+    }
+  }
+
+  /**
+   * Get offline queue status
+   */
+  async getOfflineStatus(): Promise<{ 
+    isOnline: boolean
+    pendingOperations: number
+    lastSync: number | null
+  }> {
+    const connectivityStatus = connectivityManager.getStatus()
+    const queueStatus = await offlineQueue.getStatus()
+    
+    return {
+      isOnline: connectivityStatus.isDatabaseReachable,
+      pendingOperations: queueStatus.totalPending,
+      lastSync: queueStatus.lastProcessed
+    }
+  }
+
+  /**
+   * Force sync all pending operations
+   */
+  async forceSyncAll(): Promise<void> {
+    if (!this.config.enableOfflineQueue) return
+    
+    console.log('Forcing sync of all pending operations...')
+    await this.processOfflineQueue()
   }
 
   /**
@@ -113,6 +415,31 @@ export class SupabaseDataService {
    */
   getUserId(): string | null {
     return this.userId
+  }
+
+  /**
+   * Cleanup resources and stop auto-sync
+   */
+  cleanup(): void {
+    // Stop auto-sync timer
+    if (this.autoSyncTimer) {
+      clearInterval(this.autoSyncTimer)
+      this.autoSyncTimer = null
+    }
+
+    // Cleanup offline queue
+    if (this.config.enableOfflineQueue) {
+      offlineQueue.cleanup()
+    }
+
+    // Cleanup connectivity manager
+    connectivityManager.cleanup()
+
+    // Clear cache
+    this.cache.clear()
+
+    this.isInitialized = false
+    console.log('Data service cleaned up')
   }
 
   /**

@@ -25,7 +25,9 @@ import { runHealthCheck } from "@/lib/supabase-test"
 import { dataService } from "@/lib/supabase-data-service"
 import { useDataSourceStatus, useDataSync } from "@/hooks/use-supabase-data"
 import { SyncControls } from "@/components/sync/sync-status-indicator"
+import { AutoSyncStatus } from "@/components/settings/auto-sync-status"
 import { useSettings } from "@/contexts/settings-context"
+import { autoSyncManager } from "@/lib/auto-sync-manager"
 
 interface MigrationStep {
   id: string
@@ -254,58 +256,54 @@ export function DataMigration() {
         </CardContent>
       </Card>
 
-      {/* Real-time Sync Section */}
+      {/* Automatic Sync Status Section */}
       {sourceStatus.supabaseAvailable && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Wifi className="h-5 w-5" />
-              Real-time Synchronization
+              Automatic Synchronization
             </CardTitle>
             <CardDescription>
-              Enable real-time data sync across all your devices for instant updates
+              Your data syncs automatically across all devices - no setup required
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <div className="font-medium">Sync Status</div>
-                <div className="text-sm text-muted-foreground">
-                  Real-time sync is {isRealtimeSyncEnabled ? 'enabled' : 'disabled'}
-                  {isRealtimeSyncActive && ' and active'}
-                </div>
-              </div>
-              <SyncControls />
-            </div>
+            <AutoSyncStatus />
             
             <Separator />
             
             <div className="flex items-center justify-between">
               <div>
-                <div className="font-medium">Enable Real-time Sync</div>
+                <div className="font-medium">Force Sync</div>
                 <div className="text-sm text-muted-foreground">
-                  Automatically sync changes across all your devices
+                  Manually trigger immediate sync (optional)
                 </div>
               </div>
               <Button
-                variant={isRealtimeSyncEnabled ? "destructive" : "default"}
-                onClick={isRealtimeSyncEnabled ? disableRealtimeSync : enableRealtimeSync}
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    await autoSyncManager.forceSync()
+                    console.log('Force sync completed')
+                  } catch (error) {
+                    console.error('Force sync failed:', error)
+                  }
+                }}
                 disabled={!sourceStatus.supabaseAvailable}
               >
-                {isRealtimeSyncEnabled ? 'Disable' : 'Enable'} Sync
+                Sync Now
               </Button>
             </div>
 
-            {isRealtimeSyncEnabled && (
-              <Alert>
-                <Wifi className="h-4 w-4" />
-                <AlertTitle>Real-time Sync Active</AlertTitle>
-                <AlertDescription>
-                  Your data will automatically sync across all devices when changes are made.
-                  You can see the sync status in the header bar.
-                </AlertDescription>
-              </Alert>
-            )}
+            <Alert>
+              <Wifi className="h-4 w-4" />
+              <AlertTitle>Always On</AlertTitle>
+              <AlertDescription>
+                Automatic sync runs in the background. Your changes are saved locally instantly 
+                and uploaded to the cloud when you're online.
+              </AlertDescription>
+            </Alert>
           </CardContent>
         </Card>
       )}
