@@ -4,7 +4,7 @@
 import * as React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { format } from "date-fns"
-import { CalendarIcon, Loader2, Camera, Scan, RotateCcw } from "lucide-react"
+import { CalendarIcon, Loader2, Camera, Scan, RotateCcw, X } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
@@ -15,8 +15,6 @@ import { useReceiptOCR } from "@/hooks/use-receipt-ocr"
 import { useIsMobile, useHapticFeedback } from "@/hooks/use-mobile"
 import { useCameraSelection } from "@/hooks/use-camera-selection"
 import { TOUCH_CLASSES, MOBILE_SPACING } from "@/utils/mobile-utils"
-import { FullScreenCamera } from "@/components/camera/full-screen-camera"
-import { receiptImageProcessor } from "@/lib/receipt-image-processor"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { ShimmerButton } from "@/components/magicui/shimmer-button"
@@ -85,8 +83,18 @@ export function AddExpenseSheet({
   const isMobile = useIsMobile()
   const { vibrate } = useHapticFeedback()
 
-  const [showFullScreenCamera, setShowFullScreenCamera] = React.useState(false)
-  const [isProcessingImage, setIsProcessingImage] = React.useState(false)
+  const videoRef = React.useRef<HTMLVideoElement>(null)
+  const [showCamera, setShowCamera] = React.useState(false)
+  const {
+    stream,
+    currentFacing,
+    hasPermission,
+    isLoading: isCameraLoading,
+    error: cameraError,
+    startCamera,
+    stopCamera,
+    switchCamera
+  } = useCameraSelection()
 
   const isEditMode = !!expenseToEdit
 
@@ -126,12 +134,32 @@ export function AddExpenseSheet({
     }
   }, [isOpen, isEditMode, expenseToEdit, form])
 
-  // Close full-screen camera when expense sheet closes
   React.useEffect(() => {
-    if (!isOpen && showFullScreenCamera) {
-      setShowFullScreenCamera(false)
+    if (isOpen && showCamera && !stream) {
+      // Start with rear camera (environment) by default
+      startCamera("environment")
     }
-  }, [isOpen, showFullScreenCamera])
+
+    if (!showCamera && stream) {
+      stopCamera()
+    }
+  }, [isOpen, showCamera, stream, startCamera, stopCamera])
+
+  React.useEffect(() => {
+    if (stream && videoRef.current) {
+      videoRef.current.srcObject = stream
+    }
+  }, [stream])
+
+  React.useEffect(() => {
+    if (cameraError && showCamera) {
+      toast({
+        variant: "destructive",
+        title: "Camera Access Error",
+        description: cameraError,
+      })
+    }
+  }, [cameraError, showCamera])
 
   const onSubmit = (values: ExpenseFormValues) => {
     // Haptic feedback for mobile
@@ -175,7 +203,7 @@ export function AddExpenseSheet({
           })
         }
         setIsOpen(false)
-        setShowFullScreenCamera(false)
+        setShowCamera(false)
       } catch (error) {
         toast({
           title: "Error",
@@ -186,49 +214,37 @@ export function AddExpenseSheet({
     })
   }
 
-  const handleCameraCapture = async (imageData: string) => {
-    try {
-      setIsProcessingImage(true)
-      
-      // Optional: Process image for better OCR
-      const processedResult = await receiptImageProcessor.processImage(imageData, {
-        enhanceContrast: true,
-        normalizeSize: true,
-        maxWidth: 2048,
-        maxHeight: 2048
-      })
-      
-      // Use processed image or original if processing fails
-      const finalImageData = processedResult.processedImage || imageData
-      
-      // Set the image in the form
-      form.setValue("receiptImage", finalImageData, { shouldValidate: true })
-      
-      // Close full-screen camera
-      setShowFullScreenCamera(false)
-      
-      // Show processing feedback if quality is low
-      if (processedResult.qualityScore < 70) {
-        toast({
-          title: "Image Captured",
-          description: `Image quality: ${Math.round(processedResult.qualityScore)}%. Consider retaking for better OCR results.`,
-          variant: "default"
-        })
+  const handleCapture = () => {
+    const video = videoRef.current
+    if (video && stream) {
+      const canvas = document.createElement("canvas")
+      canvas.width = video.videoWidth
+      canvas.height = video.videoHeight
+      const context = canvas.getContext("2d")
+      if (context) {
+        context.drawImage(video, 0, 0, canvas.width, canvas.height)
+        const dataUrl = canvas.toDataURL("image/jpeg")
+        form.setValue("receiptImage", dataUrl, { shouldValidate: true })
+        setShowCamera(false)
+        
+        // Automatically process the receipt
+        handleReceiptProcessing(dataUrl)
       }
-      
-      // Automatically process the receipt with OCR
-      setTimeout(() => {
-        handleReceiptProcessing(finalImageData)
-      }, 100)
-      
+    }
+  }
+
+  const handleCameraSwitch = async () => {
+    if (isMobile) {
+      vibrate(50)
+    }
+    try {
+      await switchCamera()
     } catch (error) {
-      console.error('Error processing captured image:', error)
-      // Fallback to original image
-      form.setValue("receiptImage", imageData, { shouldValidate: true })
-      setShowFullScreenCamera(false)
-      handleReceiptProcessing(imageData)
-    } finally {
-      setIsProcessingImage(false)
+      toast({
+        variant: "destructive",
+        title: "Camera Switch Failed",
+        description: "Unable to switch camera. Please try again.",
+      })
     }
   }
 
@@ -297,7 +313,7 @@ export function AddExpenseSheet({
       open={isOpen}
       onOpenChange={(open) => {
         if (!open) {
-          setShowFullScreenCamera(false)
+          setShowCamera(false)
         }
         setIsOpen(open)
       }}
@@ -633,18 +649,18 @@ export function AddExpenseSheet({
                               isMobile ? "h-12 text-base" : "h-11 text-sm"
                             )}
                             onClick={() => {
-                              setShowFullScreenCamera(true)
+                              setShowCamera(true)
                               if (isMobile) {
                                 vibrate(50)
                               }
                             }}
-                            disabled={isPending || isProcessingImage}
+                            disabled={isPending}
                           >
                             <Camera className={cn(
                               "mr-2",
                               isMobile ? "h-5 w-5" : "h-4 w-4"
                             )} />
-                            {isProcessingImage ? "Processing..." : "Add Receipt"}
+                            Add Receipt
                           </Button>
                         )}
 
@@ -704,7 +720,7 @@ export function AddExpenseSheet({
                                   form.setValue("receiptImage", "", {
                                     shouldValidate: true,
                                   })
-                                  setShowFullScreenCamera(true)
+                                  setShowCamera(true)
                                   if (isMobile) {
                                     vibrate(50)
                                   }
@@ -773,18 +789,111 @@ export function AddExpenseSheet({
       </SheetContent>
 
       {/* Full-Screen Camera */}
-      <FullScreenCamera
-        isOpen={showFullScreenCamera}
-        onClose={() => setShowFullScreenCamera(false)}
-        onCapture={handleCameraCapture}
-        mode="receipt"
-        options={{
-          flashEnabled: true,
-          highResolution: true,
-          documentMode: true,
-          showGrid: true
-        }}
-      />
+      {showCamera && (
+        <div className="fixed inset-0 z-[100] bg-black flex flex-col">
+          {/* Camera Video */}
+          {stream && hasPermission && (
+            <video
+              ref={videoRef}
+              className="w-full h-full object-cover"
+              autoPlay
+              muted
+              playsInline
+            />
+          )}
+          
+          {/* Loading State */}
+          {isCameraLoading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black">
+              <div className="text-white text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4" />
+                <p className="text-lg font-medium">Starting camera...</p>
+              </div>
+            </div>
+          )}
+          
+          {/* Permission Error */}
+          {hasPermission === false && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black p-6">
+              <Alert variant="destructive" className="max-w-md bg-red-900/80 border-red-700 text-white">
+                <AlertTitle className="text-lg font-medium mb-2">
+                  Camera Access Required
+                </AlertTitle>
+                <AlertDescription className="text-sm leading-relaxed">
+                  {cameraError || "Please allow camera access to capture receipts."}
+                </AlertDescription>
+              </Alert>
+            </div>
+          )}
+          
+          {/* WhatsApp-style Controls */}
+          {hasPermission && stream && (
+            <>
+              {/* Top Controls */}
+              <div className="absolute top-0 left-0 right-0 z-50 p-4 safe-area-top">
+                <div className="flex items-center justify-between">
+                  {/* Close Button */}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setShowCamera(false)
+                      if (isMobile) vibrate(50)
+                    }}
+                    className="h-12 w-12 rounded-full bg-black/30 hover:bg-black/50 text-white border-0 backdrop-blur-sm"
+                  >
+                    <X className="h-6 w-6" />
+                  </Button>
+                  
+                  {/* Receipt Mode Indicator */}
+                  <div className="bg-black/50 text-white px-4 py-2 rounded-full backdrop-blur-sm">
+                    <p className="text-sm font-medium">Receipt Mode</p>
+                  </div>
+                  
+                  <div /> {/* Spacer */}
+                </div>
+              </div>
+              
+              {/* Bottom Controls */}
+              <div className="absolute bottom-0 left-0 right-0 z-50 p-6 safe-area-bottom">
+                <div className="flex items-center justify-between">
+                  {/* Camera Switch */}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleCameraSwitch}
+                    className="h-14 w-14 rounded-full bg-black/30 hover:bg-black/50 text-white border-0 backdrop-blur-sm"
+                    disabled={isCameraLoading}
+                  >
+                    <RotateCcw className="h-6 w-6" />
+                  </Button>
+                  
+                  {/* Capture Button */}
+                  <Button
+                    onClick={handleCapture}
+                    disabled={isCameraLoading}
+                    className={cn(
+                      "h-20 w-20 rounded-full",
+                      "bg-white hover:bg-gray-100",
+                      "border-4 border-white",
+                      "shadow-lg shadow-black/30",
+                      "transition-transform duration-150",
+                      "active:scale-95"
+                    )}
+                  >
+                    <Camera className="h-8 w-8 text-black" />
+                  </Button>
+                  
+                  {/* Camera Info */}
+                  <div className="text-white text-sm bg-black/30 px-3 py-2 rounded-full backdrop-blur-sm">
+                    {currentFacing === "environment" ? "Rear" : "Front"}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </Sheet>
   )
 }
