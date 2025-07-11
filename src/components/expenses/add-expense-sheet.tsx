@@ -161,36 +161,6 @@ export function AddExpenseSheet({
     }
   }, [cameraError, showCamera])
 
-  // Mobile-specific handling for full-screen camera
-  React.useEffect(() => {
-    if (showCamera && isMobile) {
-      // Prevent body scroll when camera is open on mobile
-      document.body.style.overflow = 'hidden'
-      document.documentElement.style.overflow = 'hidden'
-      
-      // Force viewport height update on mobile
-      const viewport = document.querySelector('meta[name="viewport"]')
-      if (viewport) {
-        const originalContent = viewport.getAttribute('content')
-        viewport.setAttribute('content', 'width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no')
-        
-        return () => {
-          // Restore on cleanup
-          document.body.style.overflow = ''
-          document.documentElement.style.overflow = ''
-          if (originalContent) {
-            viewport.setAttribute('content', originalContent)
-          }
-        }
-      }
-    }
-    
-    // Cleanup when camera closes
-    if (!showCamera && isMobile) {
-      document.body.style.overflow = ''
-      document.documentElement.style.overflow = ''
-    }
-  }, [showCamera, isMobile])
 
   const onSubmit = (values: ExpenseFormValues) => {
     // Haptic feedback for mobile
@@ -669,7 +639,7 @@ export function AddExpenseSheet({
                       <div className={cn(
                         isMobile ? "space-y-4" : "space-y-2"
                       )}>
-                        {!field.value && (
+                        {!field.value && !showCamera && (
                           <Button
                             type="button"
                             variant="outline"
@@ -693,6 +663,105 @@ export function AddExpenseSheet({
                             )} />
                             Add Receipt
                           </Button>
+                        )}
+
+                        {/* Simple Embedded Camera - Working Approach from Main Branch */}
+                        {showCamera && (
+                          <div className={cn(
+                            "space-y-4",
+                            isMobile ? "space-y-6" : "space-y-4"
+                          )}>
+                            {stream && hasPermission && (
+                              <video
+                                ref={videoRef}
+                                className={cn(
+                                  "w-full rounded-md bg-muted",
+                                  // Make camera much larger - this is what user wanted
+                                  isMobile ? "aspect-[3/4] min-h-[60vh]" : "aspect-[4/3] min-h-[50vh]"
+                                )}
+                                autoPlay
+                                muted
+                                playsInline
+                              />
+                            )}
+                            
+                            {isCameraLoading && (
+                              <div className="flex items-center justify-center py-8">
+                                <div className="text-center">
+                                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2" />
+                                  <p className="text-sm text-muted-foreground">Starting camera...</p>
+                                </div>
+                              </div>
+                            )}
+                            
+                            {hasPermission === false && (
+                              <Alert variant="destructive">
+                                <AlertTitle>Camera Access Required</AlertTitle>
+                                <AlertDescription>
+                                  {cameraError || "Please allow camera access to capture receipts."}
+                                </AlertDescription>
+                              </Alert>
+                            )}
+                            
+                            {/* Simple Camera Controls */}
+                            {hasPermission && stream && (
+                              <div className={cn(
+                                "flex gap-2",
+                                isMobile ? "flex-col space-y-2" : "flex-row"
+                              )}>
+                                <Button
+                                  onClick={handleCapture}
+                                  disabled={isCameraLoading}
+                                  className={cn(
+                                    "flex-1",
+                                    TOUCH_CLASSES.TOUCH_TARGET,
+                                    TOUCH_CLASSES.TOUCH_FEEDBACK,
+                                    isMobile ? "h-12 text-base" : "h-11 text-sm"
+                                  )}
+                                >
+                                  <Camera className={cn(
+                                    "mr-2",
+                                    isMobile ? "h-5 w-5" : "h-4 w-4"
+                                  )} />
+                                  Capture Receipt
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  onClick={handleCameraSwitch}
+                                  disabled={isCameraLoading}
+                                  className={cn(
+                                    TOUCH_CLASSES.TOUCH_TARGET,
+                                    TOUCH_CLASSES.TOUCH_FEEDBACK,
+                                    isMobile ? "h-12 text-base" : "h-11 text-sm"
+                                  )}
+                                >
+                                  <RotateCcw className={cn(
+                                    "mr-2",
+                                    isMobile ? "h-5 w-5" : "h-4 w-4"
+                                  )} />
+                                  Switch ({currentFacing === "environment" ? "Rear" : "Front"})
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  onClick={() => {
+                                    setShowCamera(false)
+                                    if (isMobile) vibrate(50)
+                                  }}
+                                  className={cn(
+                                    TOUCH_CLASSES.TOUCH_TARGET,
+                                    TOUCH_CLASSES.TOUCH_FEEDBACK,
+                                    isMobile ? "h-12 text-base" : "h-11 text-sm"
+                                  )}
+                                >
+                                  <X className={cn(
+                                    "mr-2",
+                                    isMobile ? "h-5 w-5" : "h-4 w-4"
+                                  )} />
+                                  Cancel
+                                </Button>
+                              </div>
+                            )}
+                          </div>
                         )}
 
 
@@ -818,185 +887,6 @@ export function AddExpenseSheet({
           </Form>
         )}
       </SheetContent>
-
-      {/* Full-Screen Camera */}
-      {showCamera && (
-        <div 
-          className={cn(
-            "fixed inset-0 bg-black flex flex-col",
-            // Mobile-specific styles for proper full-screen
-            isMobile ? [
-              "z-[9999]", // Higher z-index for mobile
-              "min-h-screen", // Ensure full height on mobile
-              "w-screen", // Full width override
-              "h-screen", // Full height override
-              "touch-none", // Prevent scroll on mobile
-              "overscroll-none", // Prevent bounce on iOS
-            ] : "z-[100]"
-          )}
-          style={isMobile ? {
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            width: '100vw',
-            height: '100dvh', // Dynamic viewport height for modern mobile browsers
-          } : {}}
-        >
-          {/* Mobile Debug Info (only in development) */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="absolute top-16 left-4 z-[60] bg-red-500 text-white text-xs p-2 rounded">
-              <div>Mobile: {isMobile ? 'Yes' : 'No'}</div>
-              <div>Permission: {hasPermission ? 'Granted' : hasPermission === false ? 'Denied' : 'Pending'}</div>
-              <div>Stream: {stream ? 'Active' : 'None'}</div>
-              <div>Loading: {isCameraLoading ? 'Yes' : 'No'}</div>
-              <div>Error: {cameraError || 'None'}</div>
-            </div>
-          )}
-          
-          {/* Camera Video */}
-          {stream && hasPermission && (
-            <video
-              ref={videoRef}
-              className={cn(
-                "object-cover",
-                isMobile ? [
-                  "w-screen h-screen", // Full screen on mobile
-                  "fixed inset-0", // Ensure it covers everything
-                ] : "w-full h-full"
-              )}
-              autoPlay
-              muted
-              playsInline
-              style={isMobile ? {
-                transform: 'translateZ(0)', // Force hardware acceleration
-                backfaceVisibility: 'hidden', // Improve mobile performance
-              } : {}}
-            />
-          )}
-          
-          {/* Loading State */}
-          {isCameraLoading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black">
-              <div className="text-white text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4" />
-                <p className="text-lg font-medium">Starting camera...</p>
-              </div>
-            </div>
-          )}
-          
-          {/* Permission Error */}
-          {hasPermission === false && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black p-6">
-              <Alert variant="destructive" className="max-w-md bg-red-900/80 border-red-700 text-white">
-                <AlertTitle className="text-lg font-medium mb-2">
-                  Camera Access Required
-                </AlertTitle>
-                <AlertDescription className="text-sm leading-relaxed">
-                  {cameraError || "Please allow camera access to capture receipts."}
-                </AlertDescription>
-              </Alert>
-            </div>
-          )}
-          
-          {/* WhatsApp-style Controls */}
-          {hasPermission && stream && (
-            <>
-              {/* Top Controls */}
-              <div className={cn(
-                "absolute top-0 left-0 right-0 z-50",
-                isMobile ? [
-                  "pt-safe-top px-4 pb-4", // Use safe area padding
-                  "bg-gradient-to-b from-black/50 to-transparent", // Better visibility on mobile
-                ] : "p-4 safe-area-top"
-              )}>
-                <div className="flex items-center justify-between">
-                  {/* Close Button */}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => {
-                      setShowCamera(false)
-                      if (isMobile) vibrate(50)
-                    }}
-                    className={cn(
-                      "rounded-full bg-black/30 hover:bg-black/50 text-white border-0 backdrop-blur-sm",
-                      isMobile ? [
-                        "h-14 w-14", // Larger for mobile touch
-                        "active:scale-95", // Touch feedback
-                        "touch-manipulation", // Better touch handling
-                      ] : "h-12 w-12"
-                    )}
-                  >
-                    <X className={cn(isMobile ? "h-7 w-7" : "h-6 w-6")} />
-                  </Button>
-                  
-                  {/* Receipt Mode Indicator */}
-                  <div className="bg-black/50 text-white px-4 py-2 rounded-full backdrop-blur-sm">
-                    <p className="text-sm font-medium">Receipt Mode</p>
-                  </div>
-                  
-                  <div /> {/* Spacer */}
-                </div>
-              </div>
-              
-              {/* Bottom Controls */}
-              <div className={cn(
-                "absolute bottom-0 left-0 right-0 z-50",
-                isMobile ? [
-                  "pb-safe-bottom px-4 pt-6", // Use safe area padding for mobile
-                  "bg-gradient-to-t from-black/50 to-transparent", // Better visibility
-                ] : "p-6 safe-area-bottom"
-              )}>
-                <div className="flex items-center justify-between">
-                  {/* Camera Switch */}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleCameraSwitch}
-                    className={cn(
-                      "rounded-full bg-black/30 hover:bg-black/50 text-white border-0 backdrop-blur-sm",
-                      "h-14 w-14", // Good size for both desktop and mobile
-                      "active:scale-95 touch-manipulation", // Touch feedback
-                    )}
-                    disabled={isCameraLoading}
-                  >
-                    <RotateCcw className="h-6 w-6" />
-                  </Button>
-                  
-                  {/* Capture Button */}
-                  <Button
-                    onClick={handleCapture}
-                    disabled={isCameraLoading}
-                    className={cn(
-                      "rounded-full bg-white hover:bg-gray-100 border-4 border-white shadow-lg shadow-black/30",
-                      "transition-transform duration-150 active:scale-95 touch-manipulation",
-                      isMobile ? [
-                        "h-24 w-24", // Larger on mobile for easier touch
-                        "active:bg-gray-200", // Better mobile feedback
-                      ] : "h-20 w-20"
-                    )}
-                    style={{
-                      WebkitTapHighlightColor: 'transparent', // Remove mobile tap highlight
-                    }}
-                  >
-                    <Camera className={cn(
-                      "text-black",
-                      isMobile ? "h-10 w-10" : "h-8 w-8"
-                    )} />
-                  </Button>
-                  
-                  {/* Camera Info */}
-                  <div className="text-white text-sm bg-black/30 px-3 py-2 rounded-full backdrop-blur-sm">
-                    {currentFacing === "environment" ? "Rear" : "Front"}
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-      )}
     </Sheet>
   )
 }
