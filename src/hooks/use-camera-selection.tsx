@@ -20,7 +20,7 @@ export interface CameraSelectionState {
 
 export interface CameraSelectionActions {
   switchCamera: () => Promise<void>
-  startCamera: (facing?: CameraFacing) => Promise<void>
+  startCamera: (facing?: CameraFacing, documentMode?: boolean) => Promise<void>
   stopCamera: () => void
   requestPermission: () => Promise<boolean>
 }
@@ -78,16 +78,27 @@ export function useCameraSelection(): CameraSelectionState & CameraSelectionActi
     return "environment"
   }, [])
 
-  // Get camera constraints with fallback priority
-  const getCameraConstraints = React.useCallback((facing: CameraFacing): MediaStreamConstraints[] => {
+  // Get camera constraints with fallback priority and document optimization
+  const getCameraConstraints = React.useCallback((facing: CameraFacing, documentMode = false): MediaStreamConstraints[] => {
     const constraints: MediaStreamConstraints[] = []
     
-    // Primary: Use exact facing mode
+    // Document mode uses higher resolution and specific focus settings
+    const baseConstraints = documentMode ? {
+      width: { ideal: 2560, min: 1920 },
+      height: { ideal: 1440, min: 1080 },
+      focusMode: "continuous",
+      exposureMode: "continuous",
+      whiteBalanceMode: "continuous"
+    } : {
+      width: { ideal: 1920 },
+      height: { ideal: 1080 }
+    }
+    
+    // Primary: Use exact facing mode with optimized settings
     constraints.push({
       video: { 
         facingMode: { exact: facing },
-        width: { ideal: 1920 },
-        height: { ideal: 1080 }
+        ...baseConstraints
       }
     })
     
@@ -95,8 +106,7 @@ export function useCameraSelection(): CameraSelectionState & CameraSelectionActi
     constraints.push({
       video: { 
         facingMode: facing,
-        width: { ideal: 1920 },
-        height: { ideal: 1080 }
+        ...baseConstraints
       }
     })
     
@@ -141,8 +151,8 @@ export function useCameraSelection(): CameraSelectionState & CameraSelectionActi
     }
   }, [])
 
-  // Start camera with specified facing mode
-  const startCamera = React.useCallback(async (facing: CameraFacing = "environment") => {
+  // Start camera with specified facing mode and optional document mode
+  const startCamera = React.useCallback(async (facing: CameraFacing = "environment", documentMode = false) => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }))
 
@@ -151,7 +161,7 @@ export function useCameraSelection(): CameraSelectionState & CameraSelectionActi
         state.stream.getTracks().forEach(track => track.stop())
       }
 
-      const constraints = getCameraConstraints(facing)
+      const constraints = getCameraConstraints(facing, documentMode)
       let stream: MediaStream | null = null
       let lastError: Error | null = null
 

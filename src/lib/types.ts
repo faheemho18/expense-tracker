@@ -107,3 +107,26 @@ export type AuthContextType = {
   canFallbackToLocalStorage: boolean
   switchToLocalStorage: () => void
 }
+
+// Camera-related types
+export type CameraMode = "receipt" | "general"
+
+export interface CameraOptions {
+  flashEnabled?: boolean
+  highResolution?: boolean
+  documentMode?: boolean
+  showGrid?: boolean
+}
+
+export interface CameraPreset {
+  width: { ideal: number }
+  height: { ideal: number }
+  facingMode: string | { exact: string }
+  focusMode?: string
+}
+
+export interface FlashState {
+  supported: boolean
+  enabled: boolean
+  available: boolean
+}
