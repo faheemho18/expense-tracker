@@ -239,7 +239,7 @@ export function useTouchGestures(callbacks: {
     },
     onTouchEnd: (e: TouchEvent) => {
       swipeHandlers.onTouchEnd(e)
-      longPressHandlers.onTouchEnd(e)
+      longPressHandlers.onTouchEnd()
       tapHandlers.onTouchEnd(e)
     },
     onMouseDown: (e: MouseEvent) => {
@@ -250,11 +250,11 @@ export function useTouchGestures(callbacks: {
       longPressHandlers.onMouseMove(e)
     },
     onMouseUp: (e: MouseEvent) => {
-      longPressHandlers.onMouseUp(e)
+      longPressHandlers.onMouseUp()
       tapHandlers.onMouseUp(e)
     },
     onMouseLeave: (e: MouseEvent) => {
-      longPressHandlers.onMouseLeave(e)
+      longPressHandlers.onMouseLeave()
     },
   }), [swipeHandlers, longPressHandlers, tapHandlers])
 }

@@ -75,16 +75,16 @@ export class ConflictResolver {
 
     switch (context.tableName) {
       case 'expenses':
-        result = this.resolveExpenseConflict(context, conflictId, conflictType)
+        result = this.resolveExpenseConflict(context, conflictId, conflictType) as ConflictResolutionResult<T>
         break
       case 'categories':
-        result = this.resolveCategoryConflict(context, conflictId, conflictType)
+        result = this.resolveCategoryConflict(context, conflictId, conflictType) as ConflictResolutionResult<T>
         break
       case 'accounts':
-        result = this.resolveAccountConflict(context, conflictId, conflictType)
+        result = this.resolveAccountConflict(context, conflictId, conflictType) as ConflictResolutionResult<T>
         break
       case 'themes':
-        result = this.resolveThemeConflict(context, conflictId, conflictType)
+        result = this.resolveThemeConflict(context, conflictId, conflictType) as ConflictResolutionResult<T>
         break
       default:
         result = this.resolveGenericConflict(context, conflictId, conflictType)
@@ -419,13 +419,7 @@ export class ConflictResolver {
       return { ...remoteData }
     }
 
-    // If local is more recent, but merge specific fields that might be additive
-    if (localData.tags && remoteData.tags) {
-      // Merge tags by combining unique values
-      const localTags = Array.isArray(localData.tags) ? localData.tags : []
-      const remoteTags = Array.isArray(remoteData.tags) ? remoteData.tags : []
-      result.tags = [...new Set([...localTags, ...remoteTags])]
-    }
+    // Note: Tags merging removed - Expense type doesn't have tags property
 
     return result
   }
@@ -471,8 +465,8 @@ export class ConflictResolver {
    * Handle duplicate category creation
    */
   private handleDuplicateCategory(localData: Category, remoteData: Category): Category {
-    // If names are identical, use the one with more recent timestamp or better data
-    if (localData.name === remoteData.name) {
+    // If labels are identical, use the one with more recent timestamp or better data
+    if (localData.label === remoteData.label) {
       // Prefer the one with a color or icon set
       if (localData.color && !remoteData.color) return localData
       if (!localData.color && remoteData.color) return remoteData
@@ -481,10 +475,10 @@ export class ConflictResolver {
       return localData
     }
 
-    // If names are different but similar, rename one to avoid confusion
+    // If labels are different but similar, rename one to avoid confusion
     return {
       ...localData,
-      name: `${localData.name} (Copy)`
+      label: `${localData.label} (Copy)`
     }
   }
 

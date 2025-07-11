@@ -10,7 +10,7 @@ import type { Account, Expense, WidgetConfig, WidgetFilters } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { useSwipeGestures } from "@/hooks/use-touch-gestures"
+import { useSwipeGesture } from "@/hooks/use-touch-gestures"
 
 import { AccountPieChartWidget } from "./account-pie-chart-widget"
 import { CategoryPieChartWidget } from "./category-pie-chart-widget"
@@ -75,22 +75,22 @@ export function DashboardGrid({
   const isMobile = useIsMobile()
   
   // Handle swipe gestures for widget navigation on mobile
-  const { ref: swipeRef } = useSwipeGestures(
-    React.useCallback((direction: 'left' | 'right' | 'up' | 'down') => {
-      if ((direction === 'left' || direction === 'right') && isMobile && onWidgetSwipe) {
+  const swipeRef = React.useRef<HTMLDivElement>(null)
+  const swipeGestures = useSwipeGesture(
+    React.useCallback((gesture: { direction: 'left' | 'right' | 'up' | 'down'; distance: number; velocity: number }) => {
+      if ((gesture.direction === 'left' || gesture.direction === 'right') && isMobile && onWidgetSwipe) {
         // For now, we'll implement basic swipe detection
         // In a more advanced implementation, we could detect which widget is being swiped
         // and pass its ID to the callback
         const currentWidget = widgets[0] // Simplified for demo
         if (currentWidget) {
-          onWidgetSwipe(direction as 'left' | 'right', currentWidget.id)
+          onWidgetSwipe(gesture.direction as 'left' | 'right', currentWidget.id)
         }
       }
     }, [isMobile, onWidgetSwipe, widgets]),
     {
-      enableSwipe: isMobile,
       swipeThreshold: 80, // Require longer swipe on mobile
-      swipeVelocityThreshold: 0.3,
+      velocityThreshold: 0.3,
     }
   )
   
@@ -206,10 +206,15 @@ export function DashboardGrid({
     if (swipeRef.current !== node) {
       ;(swipeRef as React.MutableRefObject<HTMLDivElement | null>).current = node
     }
-  }, [swipeRef])
+  }, [])
 
   return (
-    <div ref={combinedRef} className="w-full h-full">
+    <div 
+      ref={combinedRef} 
+      className="w-full h-full"
+      onTouchStart={(e) => swipeGestures.onTouchStart(e.nativeEvent)}
+      onTouchEnd={(e) => swipeGestures.onTouchEnd(e.nativeEvent)}
+    >
       <ResponsiveGridLayout
       layouts={layouts}
       breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}

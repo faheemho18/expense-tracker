@@ -10,6 +10,11 @@ export type Category = {
   user_id?: string // Optional for backward compatibility
 }
 
+export type CategoryThreshold = {
+  categoryId: string
+  threshold: number
+}
+
 export type AccountOwner = "Fayim" | "Nining" | "Conjugal"
 
 export type Account = {

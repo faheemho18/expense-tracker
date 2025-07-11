@@ -14,10 +14,10 @@ export function useMobileAccessibility() {
       // Check for common screen reader indicators
       const hasScreenReader = 
         'speechSynthesis' in window ||
-        window.navigator.userAgent.includes('JAWS') ||
-        window.navigator.userAgent.includes('NVDA') ||
-        window.navigator.userAgent.includes('VoiceOver') ||
-        window.navigator.userAgent.includes('TalkBack')
+        (typeof navigator !== 'undefined' && navigator.userAgent.includes('JAWS')) ||
+        (typeof navigator !== 'undefined' && navigator.userAgent.includes('NVDA')) ||
+        (typeof navigator !== 'undefined' && navigator.userAgent.includes('VoiceOver')) ||
+        (typeof navigator !== 'undefined' && navigator.userAgent.includes('TalkBack'))
 
       setScreenReaderActive(hasScreenReader)
     }
@@ -28,8 +28,8 @@ export function useMobileAccessibility() {
   return {
     isMobile,
     screenReaderActive,
-    shouldUseReducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-    shouldUseHighContrast: window.matchMedia('(prefers-contrast: high)').matches,
+    shouldUseReducedMotion: typeof window !== 'undefined' ? window.matchMedia('(prefers-reduced-motion: reduce)').matches : false,
+    shouldUseHighContrast: typeof window !== 'undefined' ? window.matchMedia('(prefers-contrast: high)').matches : false,
   }
 }
 

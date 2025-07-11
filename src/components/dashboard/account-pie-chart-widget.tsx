@@ -2,7 +2,13 @@
 "use client"
 
 import * as React from "react"
-import type { LegendPayload } from "recharts"
+// Note: LegendPayload is not exported from recharts v2.15+
+type LegendPayload = {
+  value: string
+  type?: string
+  id?: string
+  color?: string
+}
 import * as RechartsPrimitive from "recharts"
 import { Cell, Pie, PieChart, Tooltip } from "recharts"
 

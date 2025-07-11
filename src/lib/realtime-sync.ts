@@ -330,8 +330,10 @@ export class RealtimeSyncService {
   cleanup(): void {
     if (!supabase) return
 
+    // Store reference to avoid null check issues in async callback
+    const supabaseClient = supabase
     this.channels.forEach(async (channel) => {
-      await supabase.removeChannel(channel)
+      await supabaseClient.removeChannel(channel)
     })
     
     this.channels.clear()
@@ -387,8 +389,8 @@ export class RealtimeSyncService {
   /**
    * Check network status and attempt reconnection if needed
    */
-  async checkNetworkAndReconnect(): Promise<void> {
-    if (typeof navigator === 'undefined') return
+  async checkNetworkAndReconnect(): Promise<() => void> {
+    if (typeof navigator === 'undefined') return () => {}
     
     // Listen for network status changes
     const handleOnline = async () => {

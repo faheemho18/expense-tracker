@@ -6,7 +6,7 @@ import { ZoomIn, ZoomOut, RotateCcw, Maximize2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { useViewport } from "@/hooks/use-viewport"
-import { useTouchGestures, useZoomGestures } from "@/hooks/use-touch-gestures"
+import { useTouchGestures } from "@/hooks/use-touch-gestures"
 import { TouchOptimizations, TouchDetection } from "@/lib/touch-utils"
 
 export interface ChartZoomWrapperProps {
@@ -53,58 +53,49 @@ export function ChartZoomWrapper({
     isZooming: false,
   })
 
-  // Touch gesture handling for pinch-to-zoom
-  const { ref: touchRef, gestureState } = useZoomGestures(
-    React.useCallback((scale: number, center: { x: number; y: number }) => {
-      if (!enablePinchZoom) return
+  // Touch gesture handling for zoom interactions
+  const touchRef = React.useRef<HTMLDivElement>(null)
+  const gestureState = React.useRef({ isActive: false })
 
-      const clampedScale = Math.max(minZoom, Math.min(maxZoom, scale))
+  // Use the available touch gestures for zoom functionality
+  const zoomGestures = useTouchGestures({
+    onDoubleTap: React.useCallback(() => {
+      if (!enablePinchZoom) return
       
+      // Double tap to zoom in/out
+      const newScale = zoomState.scale > 1 ? 1 : Math.min(maxZoom, 2)
       setZoomState(prev => ({
         ...prev,
-        scale: clampedScale,
+        scale: newScale,
         isZooming: true,
       }))
-
-      onZoomChange?.(clampedScale)
-    }, [enablePinchZoom, minZoom, maxZoom, onZoomChange]),
-    {
-      minZoom,
-      maxZoom,
-      zoomSensitivity: 0.01,
-    }
-  )
+      onZoomChange?.(newScale)
+    }, [enablePinchZoom, zoomState.scale, maxZoom, onZoomChange])
+  })
 
   // Combine refs for container
   const combinedRef = React.useCallback((node: HTMLDivElement) => {
     ;(containerRef as React.MutableRefObject<HTMLDivElement | null>).current = node
     ;(touchRef as React.MutableRefObject<HTMLDivElement | null>).current = node
-  }, [touchRef])
+  }, [])
 
-  // Pan gesture handling for zoomed content
-  const { ref: panRef } = useTouchGestures(
-    {
-      onPan: React.useCallback((state: any) => {
-        if (zoomState.scale <= 1) return // Only allow panning when zoomed
-
-        setZoomState(prev => ({
-          ...prev,
-          translateX: prev.translateX + state.panDelta.x * 0.5,
-          translateY: prev.translateY + state.panDelta.y * 0.5,
-        }))
-      }, [zoomState.scale]),
-
-      onGestureEnd: React.useCallback(() => {
-        setZoomState(prev => ({ ...prev, isZooming: false }))
-      }, []),
-    },
-    {
-      enablePan: true,
-      enableSwipe: false,
-      enableZoom: false,
-      panThreshold: 5,
+  // Gesture end handling
+  React.useEffect(() => {
+    const handleGestureEnd = () => {
+      setZoomState(prev => ({ ...prev, isZooming: false }))
     }
-  )
+    
+    const element = containerRef.current
+    if (element) {
+      element.addEventListener('touchend', handleGestureEnd)
+      element.addEventListener('mouseup', handleGestureEnd)
+      
+      return () => {
+        element.removeEventListener('touchend', handleGestureEnd)
+        element.removeEventListener('mouseup', handleGestureEnd)
+      }
+    }
+  }, [])
 
   // Zoom control handlers
   const handleZoomIn = React.useCallback(() => {
@@ -191,6 +182,13 @@ export function ChartZoomWrapper({
       style={{
         touchAction: enablePinchZoom ? 'none' : 'auto', // Prevent browser zoom when using custom zoom
       }}
+      onTouchStart={(e) => zoomGestures.onTouchStart?.(e.nativeEvent)}
+      onTouchMove={(e) => zoomGestures.onTouchMove?.(e.nativeEvent)}
+      onTouchEnd={(e) => zoomGestures.onTouchEnd?.(e.nativeEvent)}
+      onMouseDown={(e) => zoomGestures.onMouseDown?.(e.nativeEvent)}
+      onMouseMove={(e) => zoomGestures.onMouseMove?.(e.nativeEvent)}
+      onMouseUp={(e) => zoomGestures.onMouseUp?.(e.nativeEvent)}
+      onMouseLeave={(e) => zoomGestures.onMouseLeave?.(e.nativeEvent)}
     >
       {/* Zoom Controls */}
       {enableZoomControls && (viewport.isTouchDevice || viewport.isDesktop) && (
@@ -270,7 +268,7 @@ export function ChartZoomWrapper({
       )}
 
       {/* Touch Instructions (first time only) */}
-      {enablePinchZoom && viewport.isTouchDevice && !gestureState.isActive && (
+      {enablePinchZoom && viewport.isTouchDevice && !gestureState.current.isActive && (
         <div className={cn(
           "absolute inset-0 flex items-center justify-center",
           "bg-background/5 backdrop-blur-sm",

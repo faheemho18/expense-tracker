@@ -86,7 +86,14 @@ export function useRealtimeSync(options: UseRealtimeSyncOptions = {}): UseRealti
     onStatusChange
   } = options
 
-  const [status, setStatus] = useState<SyncStatus>(realtimeSync.getStatus())
+  const [status, setStatus] = useState<SyncStatus>(() => ({
+    connected: false,
+    lastSync: null,
+    pendingChanges: 0,
+    conflictCount: 0,
+    autoSyncEnabled: true,
+    isProcessing: false
+  }))
   const [isActive, setIsActive] = useState(false)
   const [recentEvents, setRecentEvents] = useState<SyncEvent[]>([])
   
@@ -171,7 +178,7 @@ export function useRealtimeSync(options: UseRealtimeSyncOptions = {}): UseRealti
     realtimeSync.cleanup()
     
     setIsActive(false)
-    setStatus(realtimeSync.getStatus())
+    realtimeSync.getStatus().then(setStatus)
     isInitializedRef.current = false
     
     console.log('Real-time sync stopped')
@@ -194,7 +201,7 @@ export function useRealtimeSync(options: UseRealtimeSyncOptions = {}): UseRealti
   const pause = useCallback(() => {
     realtimeSync.pause()
     setIsActive(false)
-    setStatus(realtimeSync.getStatus())
+    realtimeSync.getStatus().then(setStatus)
   }, [])
 
   /**
@@ -204,9 +211,14 @@ export function useRealtimeSync(options: UseRealtimeSyncOptions = {}): UseRealti
     const success = await realtimeSync.resume()
     if (success) {
       setIsActive(true)
-      setStatus(realtimeSync.getStatus())
+      realtimeSync.getStatus().then(setStatus)
     }
     return success
+  }, [])
+
+  // Get initial status
+  useEffect(() => {
+    realtimeSync.getStatus().then(setStatus)
   }, [])
 
   // Auto-initialize when component mounts
@@ -271,9 +283,19 @@ export function useBasicSync() {
  * Hook for monitoring sync status only (no event handling)
  */
 export function useSyncStatus() {
-  const [status, setStatus] = useState<SyncStatus>(realtimeSync.getStatus())
+  const [status, setStatus] = useState<SyncStatus>(() => ({
+    connected: false,
+    lastSync: null,
+    pendingChanges: 0,
+    conflictCount: 0,
+    autoSyncEnabled: true,
+    isProcessing: false
+  }))
 
   useEffect(() => {
+    // Get initial status
+    realtimeSync.getStatus().then(setStatus)
+    
     const unsubscribe = realtimeSync.onStatusChange(setStatus)
     return unsubscribe
   }, [])

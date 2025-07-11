@@ -150,21 +150,30 @@ export function ExpensesTable({
             swipingExpenseId === expense.id ? "scale-95" : "scale-100",
             "transition-transform duration-200"
           )}
-          {...swipeGesture}
-          {...longPressGesture}
           onTouchStart={(e) => {
             setSwipingExpenseId(expense.id)
-            swipeGesture.onTouchStart(e.nativeEvent as any)
-            longPressGesture.onTouchStart(e.nativeEvent as any)
+            swipeGesture.onTouchStart(e.nativeEvent)
+            longPressGesture.onTouchStart(e.nativeEvent)
           }}
           onTouchMove={(e) => {
-            swipeGesture.onTouchMove(e.nativeEvent as any)
-            longPressGesture.onTouchMove(e.nativeEvent as any)
+            longPressGesture.onTouchMove?.(e.nativeEvent)
           }}
           onTouchEnd={(e) => {
             setSwipingExpenseId(null)
-            swipeGesture.onTouchEnd(e.nativeEvent as any)
-            longPressGesture.onTouchEnd(e.nativeEvent as any)
+            swipeGesture.onTouchEnd(e.nativeEvent)
+            longPressGesture.onTouchEnd?.()
+          }}
+          onMouseDown={(e) => {
+            longPressGesture.onMouseDown?.(e.nativeEvent)
+          }}
+          onMouseMove={(e) => {
+            longPressGesture.onMouseMove?.(e.nativeEvent)
+          }}
+          onMouseUp={(e) => {
+            longPressGesture.onMouseUp?.()
+          }}
+          onMouseLeave={(e) => {
+            longPressGesture.onMouseLeave?.()
           }}
         >
           {/* Swipe hints */}

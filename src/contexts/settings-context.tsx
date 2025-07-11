@@ -18,7 +18,7 @@ import {
   DEFAULT_CATEGORIES,
   DEFAULT_THEME,
 } from "@/lib/constants"
-import type { Account, Category, Theme } from "@/lib/types"
+import type { Account, Category, CategoryThreshold, Theme } from "@/lib/types"
 import type { DataSource } from "@/lib/supabase-data-service"
 import { getThemeCssProperties } from "@/lib/theme-utils"
 import { 
@@ -40,6 +40,10 @@ interface SettingsContextType {
   accounts: Account[]
   setAccounts: (
     value: Account[] | ((val: Account[]) => Account[])
+  ) => void
+  categoryThresholds: CategoryThreshold[]
+  setCategoryThresholds: (
+    value: CategoryThreshold[] | ((val: CategoryThreshold[]) => CategoryThreshold[])
   ) => void
   theme: Theme
   setTheme: (theme: Theme) => void
@@ -103,6 +107,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     DEFAULT_ACCOUNTS
   )
   const [localTheme, setLocalTheme] = useLocalStorage<Theme>("app-theme", DEFAULT_THEME)
+  const [localCategoryThresholds, setLocalCategoryThresholds] = useLocalStorage<CategoryThreshold[]>(
+    "category-thresholds",
+    []
+  )
   
   // Dark mode state
   const [darkModePreference, setDarkModePreferenceState] = useLocalStorage<DarkModePreference>(
@@ -313,6 +321,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       setCategories,
       accounts,
       setAccounts,
+      categoryThresholds: localCategoryThresholds,
+      setCategoryThresholds: setLocalCategoryThresholds,
       theme,
       setTheme,
       
@@ -349,6 +359,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       setCategories,
       accounts, 
       setAccounts,
+      localCategoryThresholds,
+      setLocalCategoryThresholds,
       theme,
       setTheme,
       darkModePreference,

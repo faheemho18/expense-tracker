@@ -8,7 +8,7 @@ export interface MobileCacheConfig {
 export class MobileCache {
   private cache: Map<string, { data: any; timestamp: number; size: number }> = new Map()
   private totalSize = 0
-  private config: MobileCacheConfig
+  protected config: MobileCacheConfig
 
   constructor(config: MobileCacheConfig) {
     this.config = config

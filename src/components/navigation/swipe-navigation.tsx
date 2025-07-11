@@ -38,12 +38,19 @@ export function SwipeNavigation({ children }: SwipeNavigationProps) {
     }
   }, [currentIndex, router, vibrate])
 
-  const { handleTouchStart, handleTouchMove, handleTouchEnd, swipeDirection } = useSwipeGesture({
-    onSwipeLeft: () => navigateToRoute('right'), // Swipe left = go to next route
-    onSwipeRight: () => navigateToRoute('left'), // Swipe right = go to previous route
-    threshold: 100,
-    velocityThreshold: 0.3,
-  })
+  const swipeHandlers = useSwipeGesture(
+    (gesture) => {
+      if (gesture.direction === 'left') {
+        navigateToRoute('right') // Swipe left = go to next route
+      } else if (gesture.direction === 'right') {
+        navigateToRoute('left') // Swipe right = go to previous route
+      }
+    },
+    {
+      swipeThreshold: 100,
+      velocityThreshold: 0.3,
+    }
+  )
 
   // Only enable swipe navigation on mobile
   if (!isMobile) {
@@ -53,13 +60,10 @@ export function SwipeNavigation({ children }: SwipeNavigationProps) {
   return (
     <div
       className="h-full w-full overflow-hidden"
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
+      onTouchStart={(e) => swipeHandlers.onTouchStart(e.nativeEvent)}
+      onTouchEnd={(e) => swipeHandlers.onTouchEnd(e.nativeEvent)}
       style={{
-        transform: swipeDirection === 'left' || swipeDirection === 'right' 
-          ? 'translateX(0)' // Keep at center during valid swipes
-          : 'translateX(0)',
+        transform: 'translateX(0)',
         transition: 'transform 0.2s ease-out',
       }}
     >

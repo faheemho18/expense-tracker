@@ -386,6 +386,10 @@ export class AutoSyncManager {
   private async handlePotentialConflict(table: string, localData: any, originalData: any): Promise<any> {
     try {
       // Fetch current remote data to check for conflicts
+      if (!supabase) {
+        throw new Error('Supabase client not available')
+      }
+      
       const { data: remoteData, error } = await supabase
         .from(table)
         .select('*')

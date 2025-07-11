@@ -11,32 +11,32 @@ interface MobileShortcutsProps {
 
 export function MobileShortcuts({ children }: MobileShortcutsProps) {
   const router = useRouter()
-  const { triggerHaptic } = useHapticFeedback()
+  const { vibrate } = useHapticFeedback()
   const [gestureActive, setGestureActive] = React.useState(false)
 
   const gestureHandlers = useTouchGestures({
     onSwipe: (gesture) => {
       // Three-finger swipe shortcuts
       if (gesture.direction === 'up' && gesture.distance > 100) {
-        triggerHaptic('light')
+        vibrate(10)
         // Scroll to top shortcut
         window.scrollTo({ top: 0, behavior: 'smooth' })
       } else if (gesture.direction === 'down' && gesture.distance > 100) {
-        triggerHaptic('light')
+        vibrate(10)
         // Scroll to bottom shortcut
         window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
       }
     },
     onDoubleTap: () => {
       // Double tap to go back
-      triggerHaptic('medium')
+      vibrate(20)
       if (window.history.length > 1) {
         router.back()
       }
     },
     onLongPress: () => {
       // Long press for quick actions menu
-      triggerHaptic('heavy')
+      vibrate(50)
       setGestureActive(true)
       
       // Show quick actions (could be expanded)
@@ -62,9 +62,15 @@ export function MobileShortcuts({ children }: MobileShortcutsProps) {
 
   return (
     <div
-      {...gestureHandlers}
       className={`relative ${gestureActive ? 'bg-accent/10' : ''}`}
       style={{ touchAction: 'manipulation' }}
+      onTouchStart={(e) => gestureHandlers.onTouchStart?.(e.nativeEvent)}
+      onTouchMove={(e) => gestureHandlers.onTouchMove?.(e.nativeEvent)}
+      onTouchEnd={(e) => gestureHandlers.onTouchEnd?.(e.nativeEvent)}
+      onMouseDown={(e) => gestureHandlers.onMouseDown?.(e.nativeEvent)}
+      onMouseMove={(e) => gestureHandlers.onMouseMove?.(e.nativeEvent)}
+      onMouseUp={(e) => gestureHandlers.onMouseUp?.(e.nativeEvent)}
+      onMouseLeave={(e) => gestureHandlers.onMouseLeave?.(e.nativeEvent)}
     >
       {children}
     </div>
@@ -74,7 +80,7 @@ export function MobileShortcuts({ children }: MobileShortcutsProps) {
 // Hook for keyboard shortcuts on mobile (when external keyboard is connected)
 export function useMobileKeyboardShortcuts() {
   const router = useRouter()
-  const { triggerHaptic } = useHapticFeedback()
+  const { vibrate } = useHapticFeedback()
 
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -86,27 +92,27 @@ export function useMobileKeyboardShortcuts() {
         switch (e.key) {
           case 'n':
             e.preventDefault()
-            triggerHaptic('light')
+            vibrate(10)
             router.push('/?add=true')
             break
           case 'd':
             e.preventDefault()
-            triggerHaptic('light')
+            vibrate(10)
             router.push('/dashboard')
             break
           case ',':
             e.preventDefault()
-            triggerHaptic('light')
+            vibrate(10)
             router.push('/settings')
             break
           case 'r':
             e.preventDefault()
-            triggerHaptic('light')
+            vibrate(10)
             window.location.reload()
             break
           case 'h':
             e.preventDefault()
-            triggerHaptic('light')
+            vibrate(10)
             router.push('/')
             break
         }
@@ -115,7 +121,7 @@ export function useMobileKeyboardShortcuts() {
       // Escape key actions
       if (e.key === 'Escape') {
         e.preventDefault()
-        triggerHaptic('light')
+        vibrate(10)
         
         // Close any open modals or navigate back
         if (window.history.length > 1) {
@@ -126,7 +132,7 @@ export function useMobileKeyboardShortcuts() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [router, triggerHaptic])
+  }, [router, vibrate])
 }
 
 // Component for mobile gesture hints

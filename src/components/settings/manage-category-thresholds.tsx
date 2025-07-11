@@ -20,7 +20,7 @@ export function ManageCategoryThresholds() {
     if (categoryThresholds) {
       const initialThresholds = categoryThresholds.reduce(
         (acc, item) => {
-          acc[item.categoryValue] = item.threshold
+          acc[item.categoryId] = item.threshold
           return acc
         },
         {} as Record<string, number>
@@ -40,8 +40,8 @@ export function ManageCategoryThresholds() {
   const handleSave = () => {
     const newThresholds: CategoryThreshold[] = Object.entries(thresholds)
       .filter(([, threshold]) => threshold > 0)
-      .map(([categoryValue, threshold]) => ({
-        categoryValue,
+      .map(([categoryId, threshold]) => ({
+        categoryId,
         threshold,
       }))
     setCategoryThresholds(newThresholds)

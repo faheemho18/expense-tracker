@@ -1087,56 +1087,6 @@ export class SupabaseDataService {
     }
   }
 
-  /**
-   * Process queued offline changes when back online
-   */
-  async processOfflineQueue(): Promise<void> {
-    if (typeof window === 'undefined' || !supabase) return
-
-    try {
-      const queueKey = this.getStorageKey('offline_queue')
-      const queue = JSON.parse(window.localStorage.getItem(queueKey) || '[]')
-      
-      if (queue.length === 0) return
-
-      console.log(`Processing ${queue.length} offline changes...`)
-      
-      for (const change of queue) {
-        try {
-          await this.applyOfflineChange(change)
-        } catch (error) {
-          console.error('Failed to apply offline change:', change, error)
-        }
-      }
-      
-      // Clear the queue after processing
-      window.localStorage.removeItem(queueKey)
-      console.log('Offline queue processed successfully')
-    } catch (error) {
-      console.error('Failed to process offline queue:', error)
-    }
-  }
-
-  /**
-   * Apply a single offline change to Supabase
-   */
-  private async applyOfflineChange(change: any): Promise<void> {
-    if (!supabase) return
-
-    const { table, operation, data } = change
-
-    switch (operation) {
-      case 'INSERT':
-        await supabase.from(table).insert(data)
-        break
-      case 'UPDATE':
-        await supabase.from(table).update(data).eq('id', data.id)
-        break
-      case 'DELETE':
-        await supabase.from(table).delete().eq('id', data.id)
-        break
-    }
-  }
 }
 
 // Export singleton instance

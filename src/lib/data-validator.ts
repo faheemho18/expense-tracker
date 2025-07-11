@@ -204,11 +204,11 @@ export class DataValidator {
     }
 
     // Category validation
-    if (data.categoryId) {
-      const categoryExists = await this.checkCategoryExists(data.categoryId)
+    if (data.category) {
+      const categoryExists = await this.checkCategoryExists(data.category)
       if (!categoryExists) {
         warnings.push({
-          field: 'categoryId',
+          field: 'category',
           message: 'Referenced category does not exist',
           suggestion: 'Category will be created or expense will use default category'
         })
@@ -216,11 +216,11 @@ export class DataValidator {
     }
 
     // Account validation
-    if (data.accountId) {
-      const accountExists = await this.checkAccountExists(data.accountId)
+    if (data.accountTypeId) {
+      const accountExists = await this.checkAccountExists(data.accountTypeId)
       if (!accountExists) {
         warnings.push({
-          field: 'accountId',
+          field: 'accountTypeId',
           message: 'Referenced account does not exist',
           suggestion: 'Account will be created or expense will use default account'
         })
@@ -245,41 +245,41 @@ export class DataValidator {
     let repairedData = { ...data }
 
     // Required fields
-    if (!data.name && operation !== 'DELETE') {
+    if (!data.label && operation !== 'DELETE') {
       errors.push({
-        field: 'name',
-        message: 'Category name is required',
+        field: 'label',
+        message: 'Category label is required',
         code: 'MISSING_REQUIRED_FIELD',
         severity: 'critical'
       })
     }
 
-    // Name validation
-    if (data.name) {
-      if (typeof data.name !== 'string') {
-        repairedData.name = String(data.name)
+    // Label validation
+    if (data.label) {
+      if (typeof data.label !== 'string') {
+        repairedData.label = String(data.label)
         warnings.push({
-          field: 'name',
-          message: 'Name was converted to string',
-          suggestion: 'Ensure name is always a string'
+          field: 'label',
+          message: 'Label was converted to string',
+          suggestion: 'Ensure label is always a string'
         })
       }
 
       // Trim whitespace
-      const trimmedName = data.name.trim()
-      if (trimmedName !== data.name) {
-        repairedData.name = trimmedName
+      const trimmedLabel = data.label.trim()
+      if (trimmedLabel !== data.label) {
+        repairedData.label = trimmedLabel
         warnings.push({
-          field: 'name',
-          message: 'Removed extra whitespace from name',
+          field: 'label',
+          message: 'Removed extra whitespace from label',
           suggestion: 'Trim whitespace before saving'
         })
       }
 
-      if (trimmedName.length === 0) {
+      if (trimmedLabel.length === 0) {
         errors.push({
-          field: 'name',
-          message: 'Category name cannot be empty',
+          field: 'label',
+          message: 'Category label cannot be empty',
           code: 'INVALID_FORMAT',
           severity: 'error'
         })
@@ -316,58 +316,31 @@ export class DataValidator {
     let repairedData = { ...data }
 
     // Required fields
-    if (!data.name && operation !== 'DELETE') {
+    if (!data.label && operation !== 'DELETE') {
       errors.push({
-        field: 'name',
-        message: 'Account name is required',
+        field: 'label',
+        message: 'Account label is required',
         code: 'MISSING_REQUIRED_FIELD',
         severity: 'critical'
       })
     }
 
-    // Name validation
-    if (data.name) {
-      const trimmedName = data.name.trim()
-      if (trimmedName !== data.name) {
-        repairedData.name = trimmedName
+    // Label validation
+    if (data.label) {
+      const trimmedLabel = data.label.trim()
+      if (trimmedLabel !== data.label) {
+        repairedData.label = trimmedLabel
         warnings.push({
-          field: 'name',
-          message: 'Removed extra whitespace from name',
+          field: 'label',
+          message: 'Removed extra whitespace from label',
           suggestion: 'Trim whitespace before saving'
         })
       }
     }
 
-    // Balance validation
-    if (data.balance !== undefined) {
-      if (typeof data.balance !== 'number') {
-        const numBalance = parseFloat(String(data.balance))
-        if (!isNaN(numBalance)) {
-          repairedData.balance = numBalance
-          warnings.push({
-            field: 'balance',
-            message: 'Balance was automatically converted to number',
-            suggestion: 'Ensure balance is always a number'
-          })
-        } else {
-          errors.push({
-            field: 'balance',
-            message: 'Balance must be a valid number',
-            code: 'INVALID_TYPE',
-            severity: 'error'
-          })
-        }
-      }
-    }
+    // Note: Balance validation removed - Account type doesn't have balance property
 
-    // Type validation
-    if (data.type && !['checking', 'savings', 'credit', 'cash', 'investment'].includes(data.type)) {
-      warnings.push({
-        field: 'type',
-        message: 'Unknown account type',
-        suggestion: 'Use standard account types: checking, savings, credit, cash, investment'
-      })
-    }
+    // Note: Type validation removed - Account type doesn't have type property
 
     return {
       isValid: errors.length === 0,
@@ -804,34 +777,6 @@ export class DataValidator {
     }
   }
 
-  /**
-   * Check data consistency across storages
-   */
-  async checkDataConsistency(): Promise<{
-    isConsistent: boolean
-    issues: Array<{ table: string; severity: 'high' | 'medium' | 'low'; message: string }>
-  }> {
-    const issues: Array<{ table: string; severity: 'high' | 'medium' | 'low'; message: string }> = []
-    
-    // Mock consistency check
-    const tables = ['expenses', 'categories', 'accounts']
-    
-    for (const table of tables) {
-      const localData = localStorage.getItem(table)
-      if (!localData) {
-        issues.push({
-          table,
-          severity: 'medium',
-          message: `No local data found for ${table}`
-        })
-      }
-    }
-    
-    return {
-      isConsistent: issues.length === 0,
-      issues
-    }
-  }
 
   /**
    * Get performance statistics

@@ -18,7 +18,7 @@ import {
   Clock, 
   AlertCircle 
 } from "lucide-react"
-import { autoSyncManager, AutoSyncStatus } from "@/lib/auto-sync-manager"
+import { autoSyncManager, type AutoSyncStatus } from "@/lib/auto-sync-manager"
 import { AutoSyncUtils } from "@/lib/auto-sync-manager"
 
 export function AutoSyncStatus() {
