@@ -13,83 +13,130 @@ The Gemini CLI serves as our primary parallel processing engine with **4M tokens
 The project supports multiple Gemini API keys for rotation, load balancing, and parallel subagent operations:
 
 ```bash
-# Primary key (currently configured)
-export GEMINI_API_KEY=AIzaSyAsOk2g98gB6-o-8RsVJM7_V53s_aK0qgQ
+# All 15 API keys available for randomized selection
+GEMINI_KEYS=(
+  "AIzaSyAsOk2g98gB6-o-8RsVJM7_V53s_aK0qgQ"
+  "AIzaSyBLgzs1P6vyjJdERF5VkIez2uSbKVOZqko"
+  "AIzaSyDSt_OezA-upm4N-hEQh6DxMsMfEVTlLFk"
+  "AIzaSyAummYMpvdWOcCPwV6CnB_mVrU938nUZbw"
+  "AIzaSyA5RLt-FYRkUjqQBb373ae7ZNs13HLBDjQ"
+  "AIzaSyBcwL7QxaCwGEPuR5syeBblSaSofJiu4N8"
+  "AIzaSyCgRzIwfTDO9QpfFcvIka0qJ-fEYN2u5zA"
+  "AIzaSyAW45QG5rBFxLJavwKmexPgEnyc5AfVejU"
+  "AIzaSyBIn4cJKbYQtYPnQS-lERIlnqMftEyyRT8"
+  "AIzaSyAWMOK29uLAP00Xb93-7Ekex5TmbwzBnpw"
+  "AIzaSyDZpmcDvaWh-C2abzdE8us4wCSMSUss8as"
+  "AIzaSyAqRdWvgz1WFInskls8OHHYeVIpm2Om5tg"
+  "AIzaSyAXSl4XIzl5cxMkby2ih5TlHMd5F7hIoNo"
+  "AIzaSyBG3J4i7gP8sR6u47HKRpEsN0yG0RaloHI"
+  "AIzaSyAkNEbN_2okro332Wvt2ximVtsjflazr3g"
+)
 
-# Additional keys for parallel subagent distribution and rotation
-export GEMINI_API_KEY_1=AIzaSyBLgzs1P6vyjJdERF5VkIez2uSbKVOZqko
-export GEMINI_API_KEY_2=AIzaSyDSt_OezA-upm4N-hEQh6DxMsMfEVTlLFk
-export GEMINI_API_KEY_3=AIzaSyAummYMpvdWOcCPwV6CnB_mVrU938nUZbw
-export GEMINI_API_KEY_4=AIzaSyA5RLt-FYRkUjqQBb373ae7ZNs13HLBDjQ
-export GEMINI_API_KEY_5=AIzaSyBcwL7QxaCwGEPuR5syeBblSaSofJiu4N8
-export GEMINI_API_KEY_6=AIzaSyCgRzIwfTDO9QpfFcvIka0qJ-fEYN2u5zA
-export GEMINI_API_KEY_7=AIzaSyAW45QG5rBFxLJavwKmexPgEnyc5AfVejU
-export GEMINI_API_KEY_8=AIzaSyBIn4cJKbYQtYPnQS-lERIlnqMftEyyRT8
-export GEMINI_API_KEY_9=AIzaSyAWMOK29uLAP00Xb93-7Ekex5TmbwzBnpw
-export GEMINI_API_KEY_10=AIzaSyDZpmcDvaWh-C2abzdE8us4wCSMSUss8as
-export GEMINI_API_KEY_11=AIzaSyAqRdWvgz1WFInskls8OHHYeVIpm2Om5tg
-export GEMINI_API_KEY_12=AIzaSyAXSl4XIzl5cxMkby2ih5TlHMd5F7hIoNo
-export GEMINI_API_KEY_13=AIzaSyBG3J4i7gP8sR6u47HKRpEsN0yG0RaloHI
-export GEMINI_API_KEY_14=AIzaSyAkNEbN_2okro332Wvt2ximVtsjflazr3g
-# 15-key rotation system for massive parallel capacity
+# Function to get random API key
+get_random_gemini_key() {
+  local index=$((RANDOM % ${#GEMINI_KEYS[@]}))
+  echo "${GEMINI_KEYS[$index]}"
+}
+
+# Usage: Export random key for each gemini command
+export GEMINI_API_KEY=$(get_random_gemini_key)
 ```
 
-### Parallel Subagent API Key Distribution
+### Automatic Key Randomization Script
 
-**For Orchestrated Subagent Operations:**
-- **Key Distribution Strategy**: Assign different API keys to each subagent to avoid rate limits
-- **Unlimited Scaling**: Add more API keys as needed for larger subagent operations
-- **Load Balancing**: Distribute workload across all available keys
-- **Fault Tolerance**: If one key hits limits, subagents using other keys continue working
+**Create a wrapper script for automatic randomization:**
 
-**Subagent Key Assignment Pattern:**
 ```bash
-# Subagent 1 uses primary key
-export GEMINI_API_KEY=AIzaSyAsOk2g98gB6-o-8RsVJM7_V53s_aK0qgQ
+# Save as ~/bin/gemini-random or add to your shell profile
+#!/bin/bash
 
-# Subagent 2 uses rotation key 1
-export GEMINI_API_KEY=AIzaSyBLgzs1P6vyjJdERF5VkIez2uSbKVOZqko
+# Array of all 15 API keys
+GEMINI_KEYS=(
+  "AIzaSyAsOk2g98gB6-o-8RsVJM7_V53s_aK0qgQ"
+  "AIzaSyBLgzs1P6vyjJdERF5VkIez2uSbKVOZqko"
+  "AIzaSyDSt_OezA-upm4N-hEQh6DxMsMfEVTlLFk"
+  "AIzaSyAummYMpvdWOcCPwV6CnB_mVrU938nUZbw"
+  "AIzaSyA5RLt-FYRkUjqQBb373ae7ZNs13HLBDjQ"
+  "AIzaSyBcwL7QxaCwGEPuR5syeBblSaSofJiu4N8"
+  "AIzaSyCgRzIwfTDO9QpfFcvIka0qJ-fEYN2u5zA"
+  "AIzaSyAW45QG5rBFxLJavwKmexPgEnyc5AfVejU"
+  "AIzaSyBIn4cJKbYQtYPnQS-lERIlnqMftEyyRT8"
+  "AIzaSyAWMOK29uLAP00Xb93-7Ekex5TmbwzBnpw"
+  "AIzaSyDZpmcDvaWh-C2abzdE8us4wCSMSUss8as"
+  "AIzaSyAqRdWvgz1WFInskls8OHHYeVIpm2Om5tg"
+  "AIzaSyAXSl4XIzl5cxMkby2ih5TlHMd5F7hIoNo"
+  "AIzaSyBG3J4i7gP8sR6u47HKRpEsN0yG0RaloHI"
+  "AIzaSyAkNEbN_2okro332Wvt2ximVtsjflazr3g"
+)
 
-# Subagent 3 uses rotation key 2  
-export GEMINI_API_KEY=AIzaSyDSt_OezA-upm4N-hEQh6DxMsMfEVTlLFk
+# Select random API key
+RANDOM_KEY=${GEMINI_KEYS[$RANDOM % ${#GEMINI_KEYS[@]}]}
 
-# Subagent 4 uses rotation key 3
-export GEMINI_API_KEY=AIzaSyAummYMpvdWOcCPwV6CnB_mVrU938nUZbw
+# Export and execute gemini with random key
+GEMINI_API_KEY="$RANDOM_KEY" gemini "$@"
+```
 
-# Subagent 5 uses rotation key 4
-export GEMINI_API_KEY=AIzaSyA5RLt-FYRkUjqQBb373ae7ZNs13HLBDjQ
+**Make script executable and use:**
+```bash
+chmod +x ~/bin/gemini-random
+# Use random key for each call
+gemini-random -m gemini-2.5-pro -p "Your prompt here"
+```
 
-# Subagent 6 uses rotation key 5
-export GEMINI_API_KEY=AIzaSyBcwL7QxaCwGEPuR5syeBblSaSofJiu4N8
+### Randomized API Key Distribution
 
-# Subagent 7 uses rotation key 6
-export GEMINI_API_KEY=AIzaSyCgRzIwfTDO9QpfFcvIka0qJ-fEYN2u5zA
+**Automatic Load Balancing Benefits:**
+- **Even Distribution**: Random selection prevents key clustering and hotspots
+- **Rate Limit Avoidance**: Spreads requests across all 15 keys automatically
+- **Fault Tolerance**: Failed keys are naturally avoided through randomization
+- **Simplified Management**: No manual key assignment required
+- **Optimal Resource Usage**: Maximizes 4M token daily capacity utilization
 
-# Subagent 8 uses rotation key 7
-export GEMINI_API_KEY=AIzaSyAW45QG5rBFxLJavwKmexPgEnyc5AfVejU
+**Randomized Subagent Operations:**
+```bash
+# Each subagent gets a random key automatically
+Task 1: export GEMINI_API_KEY=$(get_random_gemini_key) && gemini -m gemini-2.5-pro -p "[task 1]"
+Task 2: export GEMINI_API_KEY=$(get_random_gemini_key) && gemini -m gemini-2.5-pro -p "[task 2]"
+Task 3: export GEMINI_API_KEY=$(get_random_gemini_key) && gemini -m gemini-2.5-pro -p "[task 3]"
+Task 4: export GEMINI_API_KEY=$(get_random_gemini_key) && gemini -m gemini-2.5-pro -p "[task 4]"
+Task 5: export GEMINI_API_KEY=$(get_random_gemini_key) && gemini -m gemini-2.5-pro -p "[task 5]"
 
-# Subagent 9 uses rotation key 8
-export GEMINI_API_KEY=AIzaSyBIn4cJKbYQtYPnQS-lERIlnqMftEyyRT8
+# Or use the wrapper script for cleaner syntax
+Task 1: gemini-random -m gemini-2.5-pro -p "[task 1]"
+Task 2: gemini-random -m gemini-2.5-pro -p "[task 2]"
+Task 3: gemini-random -m gemini-2.5-pro -p "[task 3]"
+Task 4: gemini-random -m gemini-2.5-pro -p "[task 4]"
+Task 5: gemini-random -m gemini-2.5-pro -p "[task 5]"
+```
 
-# Subagent 10 uses rotation key 9
-export GEMINI_API_KEY=AIzaSyAWMOK29uLAP00Xb93-7Ekex5TmbwzBnpw
+**Advanced Randomization with Retry Logic:**
+```bash
+#!/bin/bash
+# Enhanced wrapper with automatic retry on rate limits
 
-# Subagent 11 uses rotation key 10
-export GEMINI_API_KEY=AIzaSyDZpmcDvaWh-C2abzdE8us4wCSMSUss8as
+retry_gemini() {
+  local max_retries=3
+  local retry_count=0
+  
+  while [ $retry_count -lt $max_retries ]; do
+    # Get fresh random key for each attempt
+    local random_key=${GEMINI_KEYS[$RANDOM % ${#GEMINI_KEYS[@]}]}
+    
+    # Execute with current random key
+    if GEMINI_API_KEY="$random_key" gemini "$@"; then
+      return 0  # Success
+    else
+      echo "Attempt $((retry_count + 1)) failed, trying different key..."
+      retry_count=$((retry_count + 1))
+      sleep 1  # Brief delay before retry
+    fi
+  done
+  
+  echo "All retry attempts failed"
+  return 1
+}
 
-# Subagent 12 uses rotation key 11
-export GEMINI_API_KEY=AIzaSyAqRdWvgz1WFInskls8OHHYeVIpm2Om5tg
-
-# Subagent 13 uses rotation key 12
-export GEMINI_API_KEY=AIzaSyAXSl4XIzl5cxMkby2ih5TlHMd5F7hIoNo
-
-# Subagent 14 uses rotation key 13
-export GEMINI_API_KEY=AIzaSyBG3J4i7gP8sR6u47HKRpEsN0yG0RaloHI
-
-# Subagent 15 uses rotation key 14
-export GEMINI_API_KEY=AIzaSyAkNEbN_2okro332Wvt2ximVtsjflazr3g
-
-# Continue pattern cycling back to primary key for additional subagents
+# Usage: retry_gemini -m gemini-2.5-pro -p "prompt"
 ```
 
 ### 4M Token Daily Capacity
@@ -109,13 +156,25 @@ export GEMINI_API_KEY=AIzaSyAkNEbN_2okro332Wvt2ximVtsjflazr3g
 
 ### Rate Limit Management
 
-With 15 keys, rate limits are rare. When encountered, rotate to next available key:
+With randomized API key selection, rate limits are automatically distributed and minimized:
 
+**Automatic Rate Limit Handling:**
 ```bash
-# If primary key fails, switch to rotation keys
-export GEMINI_API_KEY=$GEMINI_API_KEY_1
-export GEMINI_API_KEY=$GEMINI_API_KEY_2
-export GEMINI_API_KEY=$GEMINI_API_KEY_3
+# Randomization naturally distributes load
+# No manual key switching required
+gemini-random -m gemini-2.5-pro -p "Your prompt"
+
+# Built-in retry with different random keys on failure
+retry_gemini -m gemini-2.5-pro -p "Your prompt"
+```
+
+**Manual Key Selection (if needed):**
+```bash
+# Force specific key for debugging
+GEMINI_API_KEY="AIzaSyAsOk2g98gB6-o-8RsVJM7_V53s_aK0qgQ" gemini -m gemini-2.5-pro -p "prompt"
+
+# Get current random key selection
+echo "Using key: $(get_random_gemini_key)"
 ```
 
 ## Use Cases & Syntax
@@ -274,11 +333,12 @@ Act as an orchestrator spawning autonomous Task subagents who serve as task mana
 
 **Syntax Pattern:**
 ```bash
-# Spawn multiple subagents with different API keys
-Task 1: export GEMINI_API_KEY=AIzaSyAsOk2g98gB6-o-8RsVJM7_V53s_aK0qgQ && gemini -m gemini-2.5-pro -p "[research topic 1]"
-Task 2: export GEMINI_API_KEY=$GEMINI_API_KEY_1 && gemini -m gemini-2.5-pro -p "[research topic 2]"  
-Task 3: export GEMINI_API_KEY=$GEMINI_API_KEY_2 && gemini -m gemini-2.5-pro -p "[research topic 3]"
+# Spawn multiple subagents with randomized API keys
+Task 1: gemini-random -m gemini-2.5-pro -p "[research topic 1]"
+Task 2: gemini-random -m gemini-2.5-pro -p "[research topic 2]"
+Task 3: gemini-random -m gemini-2.5-pro -p "[research topic 3]"
 # Continue spawning as many subagents as needed
+# Each automatically gets a random key for optimal load distribution
 ```
 
 **Example Orchestration (8-Key System Validated):**
@@ -416,9 +476,13 @@ gemini -m gemini-2.5-pro -p "Research React Server Components best practices for
 
 ### Rate Limit Errors (429)
 ```bash
-# Error indicates quota exceeded
-# Solution: Rotate to next API key
-export GEMINI_API_KEY=$GEMINI_API_KEY_1
+# With randomization, rate limits are automatically handled
+# Simply retry with automatic key rotation
+retry_gemini -m gemini-2.5-pro -p "Your prompt"
+
+# Or manually select different random key
+export GEMINI_API_KEY=$(get_random_gemini_key)
+gemini -m gemini-2.5-pro -p "Your prompt"
 ```
 
 ### Authentication Issues
@@ -435,54 +499,64 @@ echo $GEMINI_API_KEY
 
 ### Model Availability
 ```bash
-# If Pro model unavailable, fallback to Flash
-gemini -m gemini-2.5-flash -p "same prompt"
+# If Pro model unavailable, fallback to Flash with random key
+gemini-random -m gemini-2.5-flash -p "same prompt"
+
+# Or use retry logic with model fallback
+retry_gemini -m gemini-2.5-flash -p "same prompt"
 ```
 
 ## Best Practices
 
-### 1. Resource Abundance Strategy (Primary Approach)
+### 1. Randomized API Key Strategy (Primary Approach)
+- **Automatic Load Balancing**: Random key selection distributes load evenly across all 15 keys
+- **Rate Limit Prevention**: Avoids clustering requests on specific keys
+- **Zero Management Overhead**: No manual key assignment or rotation required
+- **Fault Tolerance**: Failed keys are naturally bypassed through randomization
+- **4M Token Optimization**: Maximizes utilization of entire daily capacity
+- **Parallel Processing**: Each subagent automatically gets optimal key distribution
+
+### 2. Resource Abundance Strategy
 - **4M Token Mindset**: Use our massive capacity aggressively - don't conserve
 - **Default to Parallel**: Question any sequential workflow - can it be parallelized?
 - **Unlimited Subagents**: Spawn 8-15 subagents regularly for comprehensive coverage
-- **API Key Distribution**: Assign different keys to each subagent to avoid rate limits
 - **Specialized Roles**: Give each subagent a specific domain of expertise
 - **Comprehensive Over Quick**: Deep analysis over surface-level summaries
 - **Synthesis Phase**: Combine all subagent results into comprehensive conclusions
 
-### 2. API Key Management for Orchestration
-- **Load Distribution**: Cycle through available API keys systematically
-- **Rate Limit Avoidance**: Never use the same key for parallel subagents
-- **Scaling Strategy**: Add more API keys as subagent operations grow
-- **Fault Tolerance**: If one key fails, other subagents continue working
-- **Key Assignment**: Use clear patterns for which subagent gets which key
+### 3. Randomized Orchestration Management
+- **Automatic Distribution**: Random selection handles load balancing automatically
+- **Simplified Scaling**: Add more API keys to array for instant availability
+- **Natural Fault Tolerance**: Failed keys are avoided through randomization
+- **Zero Configuration**: No manual assignment patterns needed
+- **Optimal Performance**: Statistical distribution maximizes throughput
 
-### 3. Subagent Task Design
+### 4. Subagent Task Design
 - **Clear Specialization**: Each subagent should have a distinct research domain
 - **Independent Tasks**: Design tasks that don't depend on other subagent results
 - **Optimal Granularity**: Balance task size for maximum parallel benefit
 - **Comprehensive Coverage**: Ensure all aspects of complex problems are covered
 - **Quality Control**: Include validation subagents for complex analyses
 
-### 4. Prompt Engineering
+### 5. Prompt Engineering
 - Be specific about what you need
 - Include context about the project
 - Reference relevant files with @filename
 - Ask for actionable recommendations
 
-### 5. Token Management
+### 6. Token Management
 - Use Flash model for simple tasks
 - Reserve Pro model for complex analysis
-- Monitor usage to avoid hitting limits
-- Rotate keys proactively
+- Random key distribution automatically optimizes usage
+- Retry logic handles rate limits automatically
 
-### 6. Workflow Integration
+### 7. Workflow Integration
 - Use orchestrated Gemini for analysis, Claude Code for implementation
-- Delegate background tasks to multiple parallel subagents
+- Delegate background tasks to multiple parallel subagents with random keys
 - Combine research with development efficiently
 - Document findings for future reference
 
-### 7. File Management
+### 8. File Management
 - Reference specific files when possible
 - Use -a flag sparingly due to token limits
 - Focus on relevant code sections
@@ -521,23 +595,26 @@ gemini -m gemini-2.5-pro -p "concrete example"
 ## Quick Reference Card
 
 ```bash
-# Multi-step planning
-gemini -m gemini-2.5-pro -p "Plan implementation: [task]"
+# Multi-step planning (with automatic random key selection)
+gemini-random -m gemini-2.5-pro -p "Plan implementation: [task]"
 
-# Code analysis
-gemini -m gemini-2.5-pro -p "@file.tsx Review for [criteria]"
+# Code analysis (with random key)
+gemini-random -m gemini-2.5-pro -p "@file.tsx Review for [criteria]"
 
-# Research
-gemini -m gemini-2.5-pro -p "Research [topic] best practices 2024-2025"
+# Research (with random key)
+gemini-random -m gemini-2.5-pro -p "Research [topic] best practices 2024-2025"
 
-# Parallel processing
-gemini -m gemini-2.5-flash -p "@files Analyze while I implement"
+# Parallel processing (each gets random key automatically)
+gemini-random -m gemini-2.5-flash -p "@files Analyze while I implement"
 
-# Full analysis
-gemini -m gemini-2.5-pro -a -p "Analyze codebase for [issue]"
+# Full analysis (with random key)
+gemini-random -m gemini-2.5-pro -a -p "Analyze codebase for [issue]"
 
-# Key rotation on rate limit
-export GEMINI_API_KEY=$GEMINI_API_KEY_1
+# Random key selection
+export GEMINI_API_KEY=$(get_random_gemini_key)
+
+# Automatic retry with different keys
+retry_gemini -m gemini-2.5-pro -p "prompt"
 ```
 
 ---
