@@ -45,7 +45,7 @@ Next.js 15 expense tracking application with:
 - ✅ **Shared Usage**: No authentication required - direct access for 2 users
 - ✅ **Cloud Storage**: Supabase shared database with persistent data
 - ✅ **AI Features**: Receipt OCR with Google AI (expense categorization removed)
-- ✅ **Camera Selection**: Rear camera default with front/rear toggle for mobile-first receipt capture
+- ✅ **Camera Interface**: Large embedded camera with rear camera default and front/rear toggle for receipt capture
 - ✅ **Testing**: 24-test UI framework with comprehensive coverage
 - ✅ **TypeScript**: Zero compilation errors - complete type safety across entire codebase
 
@@ -159,7 +159,7 @@ Multi-platform deployment, production optimization, environment configuration, a
 ### AI Features (OCR Only)
 - **1 Google AI API Key**: Currently configured and operational  
 - **Receipt OCR**: Automatic receipt data extraction from photos with rear camera default
-- **Camera Selection**: Smart camera defaults (rear camera for receipts) with toggle functionality
+- **Camera Interface**: Large embedded camera with smart defaults (rear camera for receipts) and toggle functionality
 - **Multi-Key Rotation**: Ready for additional keys (GOOGLE_AI_API_KEY_1, _2, _3)
 - **Smart Categorization**: ❌ **REMOVED** - Manual category selection only
 
