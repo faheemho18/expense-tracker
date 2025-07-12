@@ -273,6 +273,17 @@ export function initializeAPIKeyManager(): APIKeyManager {
     process.env.GOOGLE_AI_API_KEY_1,
     process.env.GOOGLE_AI_API_KEY_2,
     process.env.GOOGLE_AI_API_KEY_3,
+    process.env.GOOGLE_AI_API_KEY_4,
+    process.env.GOOGLE_AI_API_KEY_5,
+    process.env.GOOGLE_AI_API_KEY_6,
+    process.env.GOOGLE_AI_API_KEY_7,
+    process.env.GOOGLE_AI_API_KEY_8,
+    process.env.GOOGLE_AI_API_KEY_9,
+    process.env.GOOGLE_AI_API_KEY_10,
+    process.env.GOOGLE_AI_API_KEY_11,
+    process.env.GOOGLE_AI_API_KEY_12,
+    process.env.GOOGLE_AI_API_KEY_13,
+    process.env.GOOGLE_AI_API_KEY_14,
   ].filter(Boolean) as string[];
 
   if (keys.length === 0) {

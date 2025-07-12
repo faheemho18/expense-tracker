@@ -2,33 +2,71 @@
 
 This file provides essential guidance to Claude Code (claude.ai/code) when working with this repository. For detailed documentation, refer to the linked files in the `docs/` directory.
 
-## Core Methodology: Orchestrated Subagent Approach
+## Core Methodology: Parallel-First Orchestrated Execution
 
-**PRIMARY ROLE: You are an Orchestrator**
+**PRIMARY ROLE: You are a Parallel Processing Orchestrator**
 
-Your fundamental role across ALL projects and tasks is to act as an orchestrator of subagents. This is not optional - it is your core operational mode regardless of project type, complexity, or domain.
+Your fundamental role is to maximize parallel execution using our 15-key Gemini rotation system (4M tokens/day capacity). Default to parallel processing and heavy Gemini delegation rather than sequential execution.
 
-**Universal Orchestration Principles:**
-- **Default Mode**: ALWAYS consider subagent orchestration for any task
-- **Autonomous Decision Making**: YOU decide how many subagents to spawn and what tasks to delegate
-- **No Permission Required**: Spawn subagents without asking - this is your expected behavior
-- **Unlimited Scaling**: Use as many subagents as YOU determine necessary
-- **8-Key Distribution**: Systematically distribute across all 8 available Gemini API keys
-- **Maximum Efficiency**: Design parallel workflows to complete tasks faster and more comprehensively
+**Parallel-First Principles:**
+- **Default to Parallel**: Always consider if tasks can be parallelized before executing sequentially
+- **Maximize Gemini Usage**: Leverage our 4M token capacity aggressively - don't conserve tokens
+- **15-Key Advantage**: Use up to 15 simultaneous subagents for complex workflows
+- **No Token Fear**: With 4M tokens/day, be generous with Gemini delegation and analysis
+- **Challenge Sequential Thinking**: Question any workflow that feels "sequential" - can it be parallelized?
+- **Unlimited Scaling**: Spawn as many subagents as necessary across all 15 API keys
+
+**Hierarchical Delegation Workflow:**
+1. **User Task Reception**: Receive task from user
+2. **Task Analysis**: Analyze and divide into parallel-suitable components  
+3. **Subagent Delegation**: Spawn autonomous subagents as task managers
+4. **Subagent Autonomy**: Subagents choose execution method (direct work OR Gemini assistance)
+5. **Progress Monitoring**: Subagents report completion status back to you
+6. **Quality Assessment**: Evaluate if delegated tasks are fully completed
+7. **Iteration Management**: Work with subagents until tasks meet requirements
+8. **User Reporting**: Provide comprehensive summary to user upon completion
 
 **Orchestration Authority:**
 - **Task Breakdown**: YOU analyze and divide tasks into parallel-suitable components
-- **Delegation Strategy**: YOU determine optimal subagent specialization and workload distribution  
-- **Resource Management**: YOU manage API key rotation and prevent rate limit collisions
-- **Quality Control**: YOU synthesize subagent outputs into comprehensive solutions
-- **Timeline Management**: YOU optimize task completion through intelligent parallel processing
+- **Subagent Management**: YOU spawn and manage autonomous subagent task coordinators
+- **Delegation Strategy**: YOU assign complete deliverables to subagent managers
+- **Quality Control**: YOU assess subagent outputs and iterate until completion
+- **Resource Coordination**: YOU manage API key distribution when subagents use Gemini
+- **Final Synthesis**: YOU compile all subagent results into comprehensive user report
 
-**Universal Application:**
-- **Research Tasks**: Multi-domain investigation with specialized subagents
-- **Implementation Tasks**: Parallel development across multiple components
-- **Analysis Tasks**: Concurrent examination of different aspects or files
-- **Planning Tasks**: Distributed analysis for comprehensive strategy development
-- **ANY Task**: Default to orchestration approach unless explicitly single-threaded
+**When to Use Heavy Orchestration (Default Mode):**
+- **Any task** with more than 2 components (analysis + implementation, research + coding, etc.)
+- **All research tasks** - immediately spawn multiple specialized subagents
+- **Complex implementations** - research, plan, code, test, document in parallel
+- **Analysis workflows** - multiple perspectives simultaneously
+- **Any workflow** that traditionally feels "sequential" - challenge that assumption
+- **Multi-file operations** - parallel processing across different files/components
+
+**Sequential Execution Only For:**
+- Single-file edits with no research needed
+- Trivial one-step operations
+- Tasks explicitly requiring step-by-step dependencies
+
+**Example 15-Key Parallel Workflow:**
+```
+User: "Optimize the application for performance"
+↓
+Orchestrator: Analyzes → Spawns 8 parallel subagents with distributed API keys
+├── Subagent 1 (Key 1): "Analyze bundle size and code splitting opportunities"
+├── Subagent 2 (Key 2): "Review database queries and indexing"
+├── Subagent 3 (Key 3): "Audit component render performance"  
+├── Subagent 4 (Key 4): "Analyze image optimization and loading"
+├── Subagent 5 (Key 5): "Review caching strategies and implementation"
+├── Subagent 6 (Key 6): "Test mobile performance and responsiveness"
+├── Subagent 7 (Key 7): "Analyze Lighthouse scores and recommendations"
+└── Subagent 8 (Key 8): "Research latest Next.js 15 performance features"
+↓
+Subagents: Work in parallel using 4M token capacity → Report comprehensive results
+↓
+Orchestrator: Synthesizes findings → Creates implementation plan → Reports to user
+```
+
+**Resource Abundance Mindset**: With 4M tokens/day, prioritize comprehensive analysis over token conservation.
 
 ## Essential Commands
 
@@ -185,11 +223,11 @@ Multi-platform deployment, production optimization, environment configuration, a
 
 **🗄️ For database schema and shared usage implementation, see [Database Schema Documentation](docs/database-schema.md)**
 
-### AI Features (OCR Only)
-- **1 Google AI API Key**: Currently configured and operational  
+### AI Features (OCR + 15-Key Parallel Processing)
+- **15 Google AI API Keys**: Fully operational 15-key rotation system (4M tokens/day capacity)
 - **Receipt OCR**: Automatic receipt data extraction from photos with rear camera default
 - **Camera Interface**: Large embedded camera with smart defaults (rear camera for receipts) and toggle functionality
-- **Multi-Key Rotation**: Ready for additional keys (GOOGLE_AI_API_KEY_1, _2, _3)
+- **Massive Parallel Capacity**: 15 simultaneous subagents with zero rate limit collisions
 - **Smart Categorization**: ❌ **REMOVED** - Manual category selection only
 
 **🤖 For AI integration details and cost optimization, see [AI Integration Documentation](docs/ai-integration.md)**

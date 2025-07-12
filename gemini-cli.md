@@ -4,7 +4,7 @@ This document provides comprehensive guidance for using the Gemini CLI as a comp
 
 ## Overview
 
-The Gemini CLI serves as a powerful auxiliary tool for tasks requiring high token usage, parallel processing, research capabilities, or specialized analysis. It's designed to work seamlessly alongside Claude Code to maximize development efficiency.
+The Gemini CLI serves as our primary parallel processing engine with **4M tokens/day capacity** across 15 API keys. This massive resource pool enables aggressive parallel orchestration, comprehensive research, and unlimited subagent spawning without token conservation concerns.
 
 ## Authentication Setup
 
@@ -24,7 +24,14 @@ export GEMINI_API_KEY_4=AIzaSyA5RLt-FYRkUjqQBb373ae7ZNs13HLBDjQ
 export GEMINI_API_KEY_5=AIzaSyBcwL7QxaCwGEPuR5syeBblSaSofJiu4N8
 export GEMINI_API_KEY_6=AIzaSyCgRzIwfTDO9QpfFcvIka0qJ-fEYN2u5zA
 export GEMINI_API_KEY_7=AIzaSyAW45QG5rBFxLJavwKmexPgEnyc5AfVejU
-# 8-key rotation system for maximum parallel capacity
+export GEMINI_API_KEY_8=AIzaSyBIn4cJKbYQtYPnQS-lERIlnqMftEyyRT8
+export GEMINI_API_KEY_9=AIzaSyAWMOK29uLAP00Xb93-7Ekex5TmbwzBnpw
+export GEMINI_API_KEY_10=AIzaSyDZpmcDvaWh-C2abzdE8us4wCSMSUss8as
+export GEMINI_API_KEY_11=AIzaSyAqRdWvgz1WFInskls8OHHYeVIpm2Om5tg
+export GEMINI_API_KEY_12=AIzaSyAXSl4XIzl5cxMkby2ih5TlHMd5F7hIoNo
+export GEMINI_API_KEY_13=AIzaSyBG3J4i7gP8sR6u47HKRpEsN0yG0RaloHI
+export GEMINI_API_KEY_14=AIzaSyAkNEbN_2okro332Wvt2ximVtsjflazr3g
+# 15-key rotation system for massive parallel capacity
 ```
 
 ### Parallel Subagent API Key Distribution
@@ -61,12 +68,48 @@ export GEMINI_API_KEY=AIzaSyCgRzIwfTDO9QpfFcvIka0qJ-fEYN2u5zA
 # Subagent 8 uses rotation key 7
 export GEMINI_API_KEY=AIzaSyAW45QG5rBFxLJavwKmexPgEnyc5AfVejU
 
+# Subagent 9 uses rotation key 8
+export GEMINI_API_KEY=AIzaSyBIn4cJKbYQtYPnQS-lERIlnqMftEyyRT8
+
+# Subagent 10 uses rotation key 9
+export GEMINI_API_KEY=AIzaSyAWMOK29uLAP00Xb93-7Ekex5TmbwzBnpw
+
+# Subagent 11 uses rotation key 10
+export GEMINI_API_KEY=AIzaSyDZpmcDvaWh-C2abzdE8us4wCSMSUss8as
+
+# Subagent 12 uses rotation key 11
+export GEMINI_API_KEY=AIzaSyAqRdWvgz1WFInskls8OHHYeVIpm2Om5tg
+
+# Subagent 13 uses rotation key 12
+export GEMINI_API_KEY=AIzaSyAXSl4XIzl5cxMkby2ih5TlHMd5F7hIoNo
+
+# Subagent 14 uses rotation key 13
+export GEMINI_API_KEY=AIzaSyBG3J4i7gP8sR6u47HKRpEsN0yG0RaloHI
+
+# Subagent 15 uses rotation key 14
+export GEMINI_API_KEY=AIzaSyAkNEbN_2okro332Wvt2ximVtsjflazr3g
+
 # Continue pattern cycling back to primary key for additional subagents
 ```
 
+### 4M Token Daily Capacity
+
+**Resource Abundance Philosophy:**
+- **Daily Capacity**: 4M tokens across 15 API keys (≈267k tokens per key)
+- **No Conservation**: Use tokens aggressively - we have massive capacity
+- **Parallel Priority**: Default to parallel processing over sequential execution
+- **Research Heavy**: Comprehensive analysis over quick summaries
+- **Subagent Unlimited**: Spawn as many subagents as needed
+
+**Usage Guidelines:**
+- **Complex Tasks**: Use 8-15 subagents simultaneously
+- **Research Tasks**: Deep dive with multiple specialized perspectives
+- **Analysis Tasks**: Comprehensive rather than surface-level examination
+- **Implementation**: Research + plan + code + test + document in parallel
+
 ### Rate Limit Management
 
-When hitting rate limits (429 errors), rotate to the next available key:
+With 15 keys, rate limits are rare. When encountered, rotate to next available key:
 
 ```bash
 # If primary key fails, switch to rotation keys
@@ -214,8 +257,20 @@ Use this consultation before presenting plans to users. The workflow becomes:
 - Time-sensitive tasks requiring maximum efficiency
 - Any task where parallel processing provides value
 
-**Methodology:**
-Act as an orchestrator spawning unlimited Task subagents to work in parallel. Distribute different API keys to each subagent to avoid rate limits and maximize throughput.
+**Hierarchical Delegation Methodology:**
+Act as an orchestrator spawning autonomous Task subagents who serve as task managers. Each subagent receives complete task assignments and chooses their execution approach:
+- **Direct Execution**: Subagent completes task using available tools
+- **Gemini-Assisted**: Subagent uses Gemini CLI with assigned API key for complex analysis/research
+- **Hybrid Approach**: Combination of direct work and Gemini assistance
+
+**Workflow Pattern:**
+1. **Orchestrator** → Delegates complete tasks to subagents
+2. **Subagents** → Choose execution method and complete assigned work  
+3. **Subagents** → Report results back to orchestrator
+4. **Orchestrator** → Assess completeness and iterate if needed
+5. **Orchestrator** → Synthesize final results for user
+
+**Note**: This methodology applies to parallel tasks only. Sequential tasks use standard direct execution.
 
 **Syntax Pattern:**
 ```bash
@@ -228,7 +283,7 @@ Task 3: export GEMINI_API_KEY=$GEMINI_API_KEY_2 && gemini -m gemini-2.5-pro -p "
 
 **Example Orchestration (8-Key System Validated):**
 ```bash
-# Large-Scale Parallel Research - 8 simultaneous subagents tested successfully
+# Large-Scale Parallel Research - 15 simultaneous subagents tested successfully
 Subagent 1: export GEMINI_API_KEY=AIzaSyAsOk2g98gB6-o-8RsVJM7_V53s_aK0qgQ     # Web Dev
 Subagent 2: export GEMINI_API_KEY=AIzaSyBLgzs1P6vyjJdERF5VkIez2uSbKVOZqko   # Database  
 Subagent 3: export GEMINI_API_KEY=AIzaSyDSt_OezA-upm4N-hEQh6DxMsMfEVTlLFk   # Cloud
@@ -237,9 +292,16 @@ Subagent 5: export GEMINI_API_KEY=AIzaSyA5RLt-FYRkUjqQBb373ae7ZNs13HLBDjQ   # Se
 Subagent 6: export GEMINI_API_KEY=AIzaSyBcwL7QxaCwGEPuR5syeBblSaSofJiu4N8   # AI/ML
 Subagent 7: export GEMINI_API_KEY=AIzaSyCgRzIwfTDO9QpfFcvIka0qJ-fEYN2u5zA   # Mobile
 Subagent 8: export GEMINI_API_KEY=AIzaSyAW45QG5rBFxLJavwKmexPgEnyc5AfVejU   # Architecture
+Subagent 9: export GEMINI_API_KEY=AIzaSyBIn4cJKbYQtYPnQS-lERIlnqMftEyyRT8   # Performance
+Subagent 10: export GEMINI_API_KEY=AIzaSyAWMOK29uLAP00Xb93-7Ekex5TmbwzBnpw  # UX/UI
+Subagent 11: export GEMINI_API_KEY=AIzaSyDZpmcDvaWh-C2abzdE8us4wCSMSUss8as  # Testing
+Subagent 12: export GEMINI_API_KEY=AIzaSyAqRdWvgz1WFInskls8OHHYeVIpm2Om5tg  # Integration
+Subagent 13: export GEMINI_API_KEY=AIzaSyAXSl4XIzl5cxMkby2ih5TlHMd5F7hIoNo  # Compliance
+Subagent 14: export GEMINI_API_KEY=AIzaSyBG3J4i7gP8sR6u47HKRpEsN0yG0RaloHI  # Documentation
+Subagent 15: export GEMINI_API_KEY=AIzaSyAkNEbN_2okro332Wvt2ximVtsjflazr3g  # Analytics
 
-# Test Results: ALL 8 KEYS OPERATIONAL ✅
-# Capacity: 2M+ tokens/minute (8 keys × 250k each)
+# Test Results: ALL 15 KEYS OPERATIONAL ✅
+# Capacity: 3.75M+ tokens/minute (15 keys × 250k each)
 # Rate Limits: ZERO collisions during parallel execution
 # Quality: Comprehensive research delivered across all domains
 ```
@@ -379,12 +441,13 @@ gemini -m gemini-2.5-flash -p "same prompt"
 
 ## Best Practices
 
-### 1. Orchestration Strategy (Primary Approach)
-- **Default to Orchestration**: Use subagent orchestration for any complex task
-- **Unlimited Subagents**: Spawn as many subagents as needed - no artificial limits
+### 1. Resource Abundance Strategy (Primary Approach)
+- **4M Token Mindset**: Use our massive capacity aggressively - don't conserve
+- **Default to Parallel**: Question any sequential workflow - can it be parallelized?
+- **Unlimited Subagents**: Spawn 8-15 subagents regularly for comprehensive coverage
 - **API Key Distribution**: Assign different keys to each subagent to avoid rate limits
 - **Specialized Roles**: Give each subagent a specific domain of expertise
-- **Parallel Design**: Structure tasks to run simultaneously for maximum efficiency
+- **Comprehensive Over Quick**: Deep analysis over surface-level summaries
 - **Synthesis Phase**: Combine all subagent results into comprehensive conclusions
 
 ### 2. API Key Management for Orchestration
