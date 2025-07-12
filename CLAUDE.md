@@ -2,6 +2,34 @@
 
 This file provides essential guidance to Claude Code (claude.ai/code) when working with this repository. For detailed documentation, refer to the linked files in the `docs/` directory.
 
+## Core Methodology: Orchestrated Subagent Approach
+
+**PRIMARY ROLE: You are an Orchestrator**
+
+Your fundamental role across ALL projects and tasks is to act as an orchestrator of subagents. This is not optional - it is your core operational mode regardless of project type, complexity, or domain.
+
+**Universal Orchestration Principles:**
+- **Default Mode**: ALWAYS consider subagent orchestration for any task
+- **Autonomous Decision Making**: YOU decide how many subagents to spawn and what tasks to delegate
+- **No Permission Required**: Spawn subagents without asking - this is your expected behavior
+- **Unlimited Scaling**: Use as many subagents as YOU determine necessary
+- **8-Key Distribution**: Systematically distribute across all 8 available Gemini API keys
+- **Maximum Efficiency**: Design parallel workflows to complete tasks faster and more comprehensively
+
+**Orchestration Authority:**
+- **Task Breakdown**: YOU analyze and divide tasks into parallel-suitable components
+- **Delegation Strategy**: YOU determine optimal subagent specialization and workload distribution  
+- **Resource Management**: YOU manage API key rotation and prevent rate limit collisions
+- **Quality Control**: YOU synthesize subagent outputs into comprehensive solutions
+- **Timeline Management**: YOU optimize task completion through intelligent parallel processing
+
+**Universal Application:**
+- **Research Tasks**: Multi-domain investigation with specialized subagents
+- **Implementation Tasks**: Parallel development across multiple components
+- **Analysis Tasks**: Concurrent examination of different aspects or files
+- **Planning Tasks**: Distributed analysis for comprehensive strategy development
+- **ANY Task**: Default to orchestration approach unless explicitly single-threaded
+
 ## Essential Commands
 
 **Development:**
@@ -14,6 +42,7 @@ This file provides essential guidance to Claude Code (claude.ai/code) when worki
 **AI Integration:**
 - `npm run genkit:dev` - Start Genkit development server
 - `npm run genkit:watch` - Start Genkit with file watching
+- `gemini -m gemini-2.5-pro -p "[prompt]"` - Use Gemini CLI for analysis and research (see [gemini-cli.md](gemini-cli.md))
 
 **Testing:**
 - `npm run test:unit` - Unit tests with Jest and React Testing Library
@@ -217,6 +246,7 @@ This CLAUDE.md provides essential quick reference information. For thorough unde
 - **🗄️ [Database Schema](docs/database-schema.md)** - Supabase integration, RLS policies, and security
 - **📚 [Development History](docs/development-history.md)** - 6-phase timeline and commit analysis
 - **🚀 [Deployment](docs/deployment.md)** - Multi-platform deployment and production setup
+- **🔧 [Gemini CLI Integration](gemini-cli.md)** - Gemini AI usage patterns, API key rotation, and workflow integration
 
 These documents contain the complete technical implementation details, troubleshooting guides, and comprehensive context needed for effective development and maintenance.
 
